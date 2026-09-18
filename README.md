@@ -1,14 +1,14 @@
-# 🚀 Nome do Projeto
+# Fhive - Mobile
 
 > Uma aplicação desenvolvida com foco em simplicidade, usabilidade e uma experiência intuitiva para o usuário.
 
-## 📌 Sobre o Projeto
+## Sobre o Projeto
 
 Este projeto foi desenvolvido com o objetivo de oferecer uma solução simples, funcional e acessível para os usuários.
 
 O aplicativo possui um **design moderno, limpo e intuitivo**, pensado para que qualquer pessoa consiga compreender suas funcionalidades e navegar pela plataforma de forma rápida e fácil.
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 * Interface simples e intuitiva
 * Navegação fácil e organizada
@@ -16,13 +16,13 @@ O aplicativo possui um **design moderno, limpo e intuitivo**, pensado para que q
 * Experiência de usuário (UX) focada em praticidade
 * Estrutura preparada para futuras melhorias e funcionalidades
 
-## 🖥️ Interface
+## Interface
 
 A interface do aplicativo foi projetada para priorizar a clareza das informações e facilitar a interação do usuário.
 
 > **Princípio do projeto:** quanto mais simples for a interface, mais fácil será para o usuário entender e utilizar a aplicação.
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 As principais tecnologias utilizadas no desenvolvimento do projeto são:
 
@@ -31,7 +31,7 @@ As principais tecnologias utilizadas no desenvolvimento do projeto são:
 * **[Tecnologia 3]** — descrição
 * **[Tecnologia 4]** — descrição
 
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```text
 📦 projeto
@@ -46,7 +46,7 @@ As principais tecnologias utilizadas no desenvolvimento do projeto são:
 └── 📄 ...
 ```
 
-## ⚙️ Instalação
+## Instalação
 
 ### 1. Clone o repositório
 
@@ -63,18 +63,18 @@ cd seu-projeto
 ### 3. Instale as dependências
 
 ```bash
-npm install
+flutter pub get
 ```
 
 ### 4. Execute o projeto
 
 ```bash
-npm run dev
+flutter run
 ```
 
 Após iniciar a aplicação, acesse o endereço exibido no terminal.
 
-## 🔧 Configuração
+## Configuração
 
 Caso o projeto utilize variáveis de ambiente, crie um arquivo `.env` na raiz do projeto:
 
@@ -84,7 +84,7 @@ VARIABLE_NAME=value
 
 Consulte o arquivo `.env.example` para verificar quais configurações são necessárias.
 
-## 🎯 Objetivos
+## Objetivos
 
 O projeto busca proporcionar:
 
@@ -94,7 +94,7 @@ O projeto busca proporcionar:
 * Desempenho e praticidade;
 * Uma experiência agradável para o usuário.
 
-## 📱 Responsividade
+## Responsividade
 
 A aplicação foi desenvolvida pensando em diferentes tamanhos de tela, buscando oferecer uma experiência consistente em:
 
@@ -102,7 +102,7 @@ A aplicação foi desenvolvida pensando em diferentes tamanhos de tela, buscando
 * 📱 Smartphones
 * 📟 Tablets
 
-## 🔮 Próximas Melhorias
+## Próximas Melhorias
 
 Algumas funcionalidades que podem ser adicionadas futuramente:
 
@@ -113,7 +113,7 @@ Algumas funcionalidades que podem ser adicionadas futuramente:
 * [ ] Melhorias de desempenho
 * [ ] Testes automatizados
 
-## 🤝 Contribuição
+## Contribuição
 
 Contribuições são bem-vindas!
 
@@ -137,13 +137,13 @@ git push origin minha-feature
 
 Depois, abra um **Pull Request** para que sua contribuição possa ser analisada.
 
-## 📄 Licença
+## Licença
 
 Este projeto está sob a licença **[MIT / Apache 2.0 / outra]**.
 
 Consulte o arquivo `LICENSE` para mais informações.
 
-## 👨‍💻 Autor
+## Autor
 
 Desenvolvido por **[Seu Nome]**.
 
