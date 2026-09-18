@@ -145,7 +145,7 @@ Consulte o arquivo `LICENSE` para mais informações.
 
 ## Autor
 
-Desenvolvido por **[Seu Nome]**.
+Desenvolvido por **Higor Leandro**.
 
 [![GitHub](https://img.shields.io/badge/GitHub-000?style=for-the-badge\&logo=github)](https://github.com/seu-usuario)
 
