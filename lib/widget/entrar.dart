@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'package:tcc_mobile/widget/home.dart';
 
 class TelaDeLogin extends StatefulWidget {
@@ -50,15 +51,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
           height: 844,
           clipBehavior: Clip.antiAlias,
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFF59D),
-                Color(0xFFFFE44D),
-                Color(0xFFFFC107),
-              ],
-            ),
+            gradient: AppGradients.auth,
           ),
           child: Stack(
             children: [
@@ -143,14 +136,14 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                       children: [
                         Icon(
                           Icons.arrow_back,
-                          color: Color(0xFF964800),
+                          color: AppColors.primary,
                           size: 18,
                         ),
                         SizedBox(width: 5),
                         Text(
                           'Voltar',
                           style: TextStyle(
-                            color: Color(0xFF964800),
+                            color: AppColors.primary,
                             fontSize: 14,
                             fontFamily: 'Arvo',
                           ),
@@ -173,7 +166,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   child: Text(
                     'Entrar',
                     style: TextStyle(
-                      color: Color(0xFF964800),
+                      color: AppColors.primary,
                       fontSize: 40,
                       fontFamily: 'Arvo',
                       fontWeight: FontWeight.w700,
@@ -192,7 +185,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 child: Text(
                   'Email',
                   style: TextStyle(
-                    color: Color(0xFF964800),
+                    color: AppColors.primary,
                     fontSize: 18,
                     fontFamily: 'Arvo',
                     fontWeight: FontWeight.w700,
@@ -214,7 +207,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   style: const TextStyle(
-                    color: Color(0xFF964800),
+                    color: AppColors.primary,
                     fontFamily: 'Arvo',
                     fontSize: 15,
                   ),
@@ -229,7 +222,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                     ),
                     prefixIcon: const Icon(
                       Icons.email_outlined,
-                      color: Color(0xFF964800),
+                      color: AppColors.primary,
                       size: 20,
                     ),
                     border: OutlineInputBorder(
@@ -243,7 +236,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: const BorderSide(
-                        color: Color(0xFF964800),
+                        color: AppColors.primary,
                         width: 1.5,
                       ),
                     ),
@@ -265,7 +258,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 child: Text(
                   'Senha',
                   style: TextStyle(
-                    color: Color(0xFF964800),
+                    color: AppColors.primary,
                     fontSize: 18,
                     fontFamily: 'Arvo',
                     fontWeight: FontWeight.w700,
@@ -288,7 +281,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => entrar(),
                   style: const TextStyle(
-                    color: Color(0xFF964800),
+                    color: AppColors.primary,
                     fontFamily: 'Arvo',
                     fontSize: 15,
                   ),
@@ -303,7 +296,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                     ),
                     prefixIcon: const Icon(
                       Icons.lock_outline,
-                      color: Color(0xFF964800),
+                      color: AppColors.primary,
                       size: 20,
                     ),
                     suffixIcon: IconButton(
@@ -316,7 +309,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                         mostrarSenha
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
-                        color: const Color(0xFF964800),
+                        color: AppColors.primary,
                         size: 20,
                       ),
                     ),
@@ -331,7 +324,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: const BorderSide(
-                        color: Color(0xFF964800),
+                        color: AppColors.primary,
                         width: 1.5,
                       ),
                     ),
@@ -363,7 +356,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   child: const Text(
                     'Esqueci minha senha',
                     style: TextStyle(
-                      color: Color(0xFF964800),
+                      color: AppColors.primary,
                       fontSize: 13,
                       fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w500,
@@ -408,7 +401,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
 
     style: ElevatedButton.styleFrom(
       backgroundColor: const Color(0xFFFFF261),
-      foregroundColor: const Color(0xFF964800),
+      foregroundColor: AppColors.primary,
       elevation: 4,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
@@ -436,7 +429,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 top: 660,
                 width: 130,
                 child: Divider(
-                  color: Color(0xFF964800),
+                  color: AppColors.primary,
                   thickness: 1,
                 ),
               ),
@@ -447,7 +440,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 child: Text(
                   'ou',
                   style: TextStyle(
-                    color: Color(0xFF964800),
+                    color: AppColors.primary,
                     fontSize: 14,
                     fontFamily: 'Montserrat',
                   ),
@@ -459,7 +452,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 top: 660,
                 width: 130,
                 child: Divider(
-                  color: Color(0xFF964800),
+                  color: AppColors.primary,
                   thickness: 1,
                 ),
               ),
@@ -518,7 +511,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                       const Text(
                         'Google',
                         style: TextStyle(
-                          color: Color(0xFF964800),
+                          color: AppColors.primary,
                           fontSize: 14,
                           fontFamily: 'Arvo',
                         ),
@@ -581,7 +574,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                       const Text(
                         'Facebook',
                         style: TextStyle(
-                          color: Color(0xFF964800),
+                          color: AppColors.primary,
                           fontSize: 14,
                           fontFamily: 'Arvo',
                         ),

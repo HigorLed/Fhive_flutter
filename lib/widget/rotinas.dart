@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'barra_navegacao.dart';
 
 class TelaRotinas extends StatefulWidget {
@@ -9,9 +10,9 @@ class TelaRotinas extends StatefulWidget {
 }
 
 class _TelaRotinasState extends State<TelaRotinas> {
-  static const Color marrom = Color(0xFF964900);
-  static const Color creme = Color(0xFFFFF6C9);
-  static const Color amareloCard = Color(0xFFFFE778);
+  static const Color marrom = AppColors.primary;
+  static const Color creme = AppColors.surface;
+  static const Color amareloCard = AppColors.surfaceStrong;
 
   String localSelecionado = 'Locais';
   bool salaAberta = true;
@@ -30,15 +31,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE72B),
-              Color(0xFFFFCC0A),
-              Color(0xFFF5A800),
-            ],
-          ),
+          gradient: AppGradients.main,
         ),
         child: SafeArea(
           child: Column(
@@ -46,10 +39,10 @@ class _TelaRotinasState extends State<TelaRotinas> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    16,
-                    20,
-                    16,
-                    20,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageTop,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,11 +89,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
         const Expanded(
           child: Text(
             'Minha casa',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.pageTitle,
           ),
         ),
 
@@ -113,7 +102,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           icon: const Icon(
             Icons.add,
             color: marrom,
-            size: 29,
+            size: 30,
           ),
         ),
 
@@ -124,7 +113,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           icon: const Icon(
             Icons.more_vert,
             color: marrom,
-            size: 25,
+            size: 26,
           ),
           onSelected: (valor) {
             if (valor == 'atualizar') {

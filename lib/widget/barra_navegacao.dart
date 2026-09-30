@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 
 class BarraNavegacao extends StatelessWidget {
 
@@ -12,7 +13,7 @@ class BarraNavegacao extends StatelessWidget {
 
   });
 
-  static const Color marrom = Color(0xFF9A4F00);
+  static const Color marrom = AppColors.primary;
 
   void _navegar(BuildContext context, int index) {
 
@@ -57,17 +58,17 @@ class BarraNavegacao extends StatelessWidget {
 
     return Container(
 
-      height: 67,
+      height: 68,
 
       decoration: const BoxDecoration(
 
-        color: Color.fromARGB(255, 255, 252, 203),
+        color: AppColors.surfaceLight,
 
         borderRadius: BorderRadius.only(
 
-          topLeft: Radius.circular(30),
+          topLeft: Radius.circular(AppRadius.navigation),
 
-          topRight: Radius.circular(30),
+          topRight: Radius.circular(AppRadius.navigation),
 
         ),
 
@@ -161,9 +162,9 @@ class BarraNavegacao extends StatelessWidget {
 
         duration: const Duration(milliseconds: 200),
 
-        width: 55,
+        width: 52,
 
-        height: 55,
+        height: 52,
 
         decoration: BoxDecoration(
 
@@ -183,7 +184,7 @@ class BarraNavegacao extends StatelessWidget {
 
           color: marrom,
 
-          size: selecionado ? 34 : 31,
+          size: selecionado ? 31 : 28,
 
         ),
 

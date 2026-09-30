@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 
 import 'package:tcc_mobile/widget/confi.dart';
 import 'package:tcc_mobile/widget/barra_navegacao.dart';
+import 'package:tcc_mobile/widget/tela_tutorial.dart';
 
 class TelaHome extends StatefulWidget {
   const TelaHome({super.key});
@@ -11,26 +13,45 @@ class TelaHome extends StatefulWidget {
 }
 
 class _TelaHomeState extends State<TelaHome> {
-  final Color marrom = const Color(0xFF9A4F00);
-  final Color amarelo = const Color(0xFFFFDE20);
-  final Color amareloClaro = const Color(0xFFFFF6B5);
+  final Color marrom = AppColors.primary;
+  final Color amarelo = AppColors.accent;
+  final Color amareloClaro = AppColors.surface;
 
-  void mostrarMensagem(String mensagem) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+void mostrarMensagem(String mensagem) {
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensagem),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: marrom,
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        mensagem,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-    );
-  }
+      behavior: SnackBarBehavior.floating,
 
+      // Controla a distância das bordas
+      margin: const EdgeInsets.only(
+        left: 18,
+        right: 18,
+        bottom: 69,
+      ),
+
+      backgroundColor: marrom,
+
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
   void abrirAdicionar() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFFFEF0),
+      backgroundColor: AppColors.surfaceLight,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(25),
@@ -106,7 +127,7 @@ class _TelaHomeState extends State<TelaHome> {
   void abrirMenu() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFFFFEF0),
+      backgroundColor: AppColors.surfaceLight,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(25),
@@ -262,15 +283,7 @@ class _TelaHomeState extends State<TelaHome> {
           height: double.infinity,
 
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFE832),
-                Color(0xFFFFCD1B),
-                Color(0xFFF4A91A),
-              ],
-            ),
+            gradient: AppGradients.main,
           ),
 
           child: Column(
@@ -278,10 +291,10 @@ class _TelaHomeState extends State<TelaHome> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    20,
-                    27,
-                    20,
-                    20,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageTop,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
 
                   child: Column(
@@ -294,12 +307,7 @@ class _TelaHomeState extends State<TelaHome> {
                         children: [
                           Text(
                             'Minha casa',
-                            style: TextStyle(
-                              color: marrom,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'Arvo',
-                            ),
+                            style: AppTextStyles.pageTitle,
                           ),
 
                           const Spacer(),
@@ -309,7 +317,7 @@ class _TelaHomeState extends State<TelaHome> {
                             icon: Icon(
                               Icons.add,
                               color: marrom,
-                              size: 34,
+                              size: 30,
                             ),
                             tooltip: 'Adicionar',
                           ),
@@ -319,7 +327,7 @@ class _TelaHomeState extends State<TelaHome> {
                             icon: Icon(
                               Icons.more_vert,
                               color: marrom,
-                              size: 28,
+                              size: 26,
                             ),
                             tooltip: 'Menu',
                           ),
@@ -333,7 +341,7 @@ class _TelaHomeState extends State<TelaHome> {
                         'Painel',
                         style: TextStyle(
                           color: marrom,
-                          fontSize: 21,
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                           fontFamily: 'Arvo',
                         ),
@@ -345,7 +353,7 @@ class _TelaHomeState extends State<TelaHome> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE86E),
+                          color: AppColors.surfaceStrong,
                           borderRadius:
                               BorderRadius.circular(21),
                         ),
@@ -529,7 +537,7 @@ class _TelaHomeState extends State<TelaHome> {
         ),
 
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8CF),
+          color: AppColors.surfaceSoft,
           borderRadius: BorderRadius.circular(14),
         ),
 
@@ -589,125 +597,82 @@ class _TelaHomeState extends State<TelaHome> {
   }
 
   Widget _cartaoTutorial() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(15),
+  return InkWell(
+    borderRadius: BorderRadius.circular(15),
 
-      onTap: () {
-        showDialog(
-          context: context,
+    onTap: () {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black.withOpacity(0.55),
+    builder: (context) {
+      return const TelaTutorial();
+    },
+  );
+},
 
-          builder: (context) {
-            return AlertDialog(
-              backgroundColor:
-                  const Color(0xFFFFFEF0),
+    child: Container(
+      width: double.infinity,
+      height: 98,
+      padding: const EdgeInsets.all(12),
 
-              title: Text(
-                'Tutorial',
-                style: TextStyle(
-                  color: marrom,
-                  fontWeight: FontWeight.bold,
+      decoration: BoxDecoration(
+        color: amareloClaro,
+        borderRadius: BorderRadius.circular(15),
+      ),
+
+      child: Row(
+        children: [
+          Container(
+            width: 80,
+            height: 75,
+
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDE8),
+              borderRadius: BorderRadius.circular(16),
+            ),
+
+            child: Icon(
+              Icons.play_circle_outline,
+              color: marrom,
+              size: 47,
+            ),
+          ),
+
+          const SizedBox(width: 13),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Tutorial',
+                  style: TextStyle(
+                    color: marrom,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Arvo',
+                  ),
                 ),
-              ),
 
-              content: Text(
-                'Aqui você encontrará instruções para '
-                'configurar e utilizar os recursos da sua casa.',
-                style: TextStyle(
-                  color: marrom,
-                  height: 1.4,
-                ),
-              ),
+                const SizedBox(height: 3),
 
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-
-                  child: Text(
-                    'Fechar',
-                    style: TextStyle(
-                      color: marrom,
-                    ),
+                Text(
+                  'Aprenda rapidamente como utilizar o Fhive.',
+                  style: TextStyle(
+                    color: marrom,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
                   ),
                 ),
               ],
-            );
-          },
-        );
-      },
-
-      child: Container(
-        width: double.infinity,
-        height: 98,
-        padding: const EdgeInsets.all(12),
-
-        decoration: BoxDecoration(
-          color: amareloClaro,
-          borderRadius:
-              BorderRadius.circular(15),
-        ),
-
-        child: Row(
-          children: [
-            Container(
-              width: 80,
-              height: 75,
-
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFDE8),
-                borderRadius:
-                    BorderRadius.circular(16),
-              ),
-
-              child: Icon(
-                Icons.video_library_outlined,
-                color: marrom,
-                size: 47,
-              ),
             ),
-
-            const SizedBox(width: 13),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                children: [
-                  Text(
-                    'Tutorial',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 20,
-                      fontWeight:
-                          FontWeight.w800,
-                      fontFamily: 'Arvo',
-                    ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    'Caso fique com dúvidas acerca das '
-                    'ferramentas, utilize-se de nosso tutorial',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 11,
-                      fontWeight:
-                          FontWeight.w600,
-                      height: 1.05,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

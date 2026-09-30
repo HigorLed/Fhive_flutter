@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'package:tcc_mobile/widget/entrar.dart';
 
 class TelaDeCadastro extends StatefulWidget {
@@ -136,7 +137,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
 
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFF964800),
+        color: AppColors.primary,
         size: 18,
       ),
 
@@ -160,7 +161,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(13),
         borderSide: const BorderSide(
-          color: Color(0xFF964800),
+          color: AppColors.primary,
           width: 1.2,
         ),
       ),
@@ -191,15 +192,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                 Positioned.fill(
                   child: Container(
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFFFFF06A),
-                          Color(0xFFFFD91A),
-                          Color(0xFFFFBD00),
-                        ],
-                      ),
+                      gradient: AppGradients.auth,
                     ),
                   ),
                 ),
@@ -276,13 +269,13 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           Icon(
                             Icons.arrow_back,
                             size: 16,
-                            color: Color(0xFF964800),
+                            color: AppColors.primary,
                           ),
                           SizedBox(width: 3),
                           Text(
                             'Voltar',
                             style: TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontFamily: 'Arvo',
                               fontSize: 12,
                             ),
@@ -339,7 +332,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             child: Text(
                               'Cadastrar',
                               style: TextStyle(
-                                color: Color(0xFF964800),
+                                color: AppColors.primary,
                                 fontSize: 25,
                                 fontFamily: 'Arvo',
                                 fontWeight: FontWeight.w700,
@@ -356,7 +349,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           const Text(
                             'Nome',
                             style: TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                               fontWeight: FontWeight.w700,
@@ -370,7 +363,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             textInputAction: TextInputAction.next,
                             keyboardType: TextInputType.name,
                             style: const TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                             ),
@@ -400,7 +393,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           const Text(
                             'Email',
                             style: TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                               fontWeight: FontWeight.w700,
@@ -414,7 +407,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             textInputAction: TextInputAction.next,
                             keyboardType: TextInputType.emailAddress,
                             style: const TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                             ),
@@ -452,7 +445,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           const Text(
                             'Senha',
                             style: TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                               fontWeight: FontWeight.w700,
@@ -466,7 +459,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             obscureText: !mostrarSenha,
                             textInputAction: TextInputAction.done,
                             style: const TextStyle(
-                              color: Color(0xFF964800),
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontFamily: 'Arvo',
                             ),
@@ -484,7 +477,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                       ? Icons.visibility
                                       : Icons.visibility_off,
                                   size: 18,
-                                  color: const Color(0xFF964800),
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -579,7 +572,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     activeColor:
                                         const Color(0xFFFFC107),
                                     checkColor:
-                                        const Color(0xFF964800),
+                                        AppColors.primary,
                                     side: const BorderSide(
                                       color: Color(0xFFB8A77B),
                                     ),
@@ -606,7 +599,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                               'termos do Site!',
                                           style: TextStyle(
                                             color:
-                                                Color(0xFF964800),
+                                                AppColors.primary,
                                             fontSize: 11,
                                             fontFamily:
                                                 'Montserrat',
@@ -697,7 +690,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             child: Text(
                               'Ou Cadastre com',
                               style: TextStyle(
-                                color: Color(0xFF964800),
+                                color: AppColors.primary,
                                 fontSize: 11,
                                 fontFamily: 'Montserrat',
                               ),
@@ -882,7 +875,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             child: Text(
                               'Já possui uma conta?',
                               style: TextStyle(
-                                color: Color(0xFF964800),
+                                color: AppColors.primary,
                                 fontSize: 10,
                                 fontFamily: 'Montserrat',
                               ),
@@ -909,7 +902,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 'Entre na agora!',
                                 style: TextStyle(
                                   color:
-                                      Color(0xFF964800),
+                                      AppColors.primary,
                                   fontSize: 10,
                                   fontFamily: 'Arvo',
                                   fontWeight:

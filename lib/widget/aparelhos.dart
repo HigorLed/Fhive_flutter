@@ -1,34 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'package:tcc_mobile/widget/barra_navegacao.dart';
 import 'package:tcc_mobile/widget/aparelho_detalhes.dart';
 
 class TelaAparelhos extends StatelessWidget {
   const TelaAparelhos({super.key});
 
-  static const Color marrom = Color(0xFF9A4F00);
+  static const Color marrom = AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFE51A),
-              Color(0xFFF5A900),
-            ],
-          ),
+          gradient: AppGradients.main,
         ),
         child: SafeArea(
           child: Column(
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 15,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageTop,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,28 +34,24 @@ class TelaAparelhos extends StatelessWidget {
                         children: [
                           const Text(
                             'Minha casa',
-                            style: TextStyle(
-                              color: marrom,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTextStyles.pageTitle,
                           ),
                           const Spacer(),
                           const Icon(
                             Icons.add,
                             color: marrom,
-                            size: 35,
+                            size: 30,
                           ),
-                          const SizedBox(width: 15),
+                          const SizedBox(width: 12),
                           const Icon(
                             Icons.more_vert,
                             color: marrom,
-                            size: 28,
+                            size: 26,
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 26),
+                      const SizedBox(height: AppSpacing.section),
 
                       // PESQUISA + LOCAIS
                       Row(

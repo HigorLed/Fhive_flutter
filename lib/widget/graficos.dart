@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+
+import 'package:tcc_mobile/theme.dart';
 import 'package:tcc_mobile/widget/barra_navegacao.dart';
 
 enum TipoAparelho {
   tv,
   arCondicionado,
 }
+
+// ================================================================
+// TELA PRINCIPAL DE GRÁFICOS
+// ================================================================
 
 class TelaGraficos extends StatefulWidget {
   const TelaGraficos({super.key});
@@ -14,9 +20,9 @@ class TelaGraficos extends StatefulWidget {
 }
 
 class _TelaGraficosState extends State<TelaGraficos> {
-  static const Color marrom = Color(0xFF9A4F00);
-  static const Color fundoCard = Color(0xFFFFFABE);
-  static const Color fundoCardExterno = Color(0xFFFFE675);
+  static const Color marrom = AppColors.primary;
+  static const Color fundoCard = AppColors.input;
+  static const Color fundoCardExterno = AppColors.surfaceStrong;
 
   bool locaisAbertos = true;
 
@@ -27,15 +33,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF9E51C),
-              Color(0xFFFFC400),
-              Color(0xFFE89A00),
-            ],
-          ),
+          gradient: AppGradients.main,
         ),
         child: SafeArea(
           child: Column(
@@ -43,14 +41,13 @@ class _TelaGraficosState extends State<TelaGraficos> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    20,
-                    28,
-                    20,
-                    20,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageTop,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ==================================================
                       // CABEÇALHO
@@ -61,52 +58,47 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           const Expanded(
                             child: Text(
                               'Minha casa',
-                              style: TextStyle(
-                                color: marrom,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Arvo',
-                              ),
+                              style: AppTextStyles.pageTitle,
                             ),
                           ),
 
                           IconButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Adicionar gráfico'),
+                                  content: Text(
+                                    'Adicionar gráfico',
+                                  ),
                                 ),
                               );
                             },
                             padding: EdgeInsets.zero,
-                            constraints:
-                                const BoxConstraints(),
+                            constraints: const BoxConstraints(),
                             icon: const Icon(
                               Icons.add,
                               color: marrom,
-                              size: 36,
+                              size: 30,
                             ),
                           ),
 
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 12),
 
                           IconButton(
                             onPressed: _abrirMenu,
                             padding: EdgeInsets.zero,
-                            constraints:
-                                const BoxConstraints(),
+                            constraints: const BoxConstraints(),
                             icon: const Icon(
                               Icons.more_vert,
                               color: marrom,
-                              size: 30,
+                              size: 26,
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(
+                        height: AppSpacing.section,
+                      ),
 
                       // ==================================================
                       // GRÁFICOS DISPONÍVEIS
@@ -129,8 +121,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                locaisAbertos =
-                                    !locaisAbertos;
+                                locaisAbertos = !locaisAbertos;
                               });
                             },
                             child: Row(
@@ -140,17 +131,14 @@ class _TelaGraficosState extends State<TelaGraficos> {
                                   style: TextStyle(
                                     color: marrom,
                                     fontSize: 17,
-                                    fontWeight:
-                                        FontWeight.w700,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(width: 3),
                                 Icon(
                                   locaisAbertos
-                                      ? Icons
-                                          .keyboard_arrow_up
-                                      : Icons
-                                          .keyboard_arrow_down,
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
                                   color: marrom,
                                   size: 22,
                                 ),
@@ -183,8 +171,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: fundoCardExterno,
-                            borderRadius:
-                                BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
@@ -219,15 +206,14 @@ class _TelaGraficosState extends State<TelaGraficos> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             const TelaGraficosDetalhes(
-                                          tipo: TipoAparelho
-                                              .arCondicionado,
+                                          tipo:
+                                              TipoAparelho.arCondicionado,
                                         ),
                                       ),
                                     );
                                   },
                                   child: _cardAparelho(
-                                    nome:
-                                        'Ar condicionado',
+                                    nome: 'Ar condicionado',
                                     subtitulo: 'Disponível',
                                     icone: Icons.air,
                                   ),
@@ -251,27 +237,24 @@ class _TelaGraficosState extends State<TelaGraficos> {
                                 style: TextStyle(
                                   color: marrom,
                                   fontSize: 19,
-                                  fontWeight:
-                                      FontWeight.w800,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ),
 
                             Row(
-                              children: [
-                                const Text(
+                              children: const [
+                                Text(
                                   'Locais',
                                   style: TextStyle(
                                     color: marrom,
                                     fontSize: 17,
-                                    fontWeight:
-                                        FontWeight.w700,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                const SizedBox(width: 3),
-                                const Icon(
-                                  Icons
-                                      .keyboard_arrow_down,
+                                SizedBox(width: 3),
+                                Icon(
+                                  Icons.keyboard_arrow_down,
                                   color: marrom,
                                   size: 22,
                                 ),
@@ -284,8 +267,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
                         GestureDetector(
                           onTap: () {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(
+                            ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
                                   'O gráfico deste aparelho está indisponível.',
@@ -297,39 +279,36 @@ class _TelaGraficosState extends State<TelaGraficos> {
                             width: 166,
                             height: 110,
                             decoration: BoxDecoration(
-                              color:
-                                  const Color(0xFFFFF4B2),
-                              borderRadius:
-                                  BorderRadius.circular(21),
+                              color: const Color(
+                                0xFFFFF4B2,
+                              ).withOpacity(0.60),
+                              borderRadius: BorderRadius.circular(21),
                             ),
                             child: Column(
                               mainAxisAlignment:
                                   MainAxisAlignment.center,
-                              children: [
-                                const Icon(
+                              children: const [
+                                Icon(
                                   Icons.devices_other,
                                   color: marrom,
                                   size: 34,
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8),
+                                Text(
                                   'Outro aparelho',
-                                  textAlign:
-                                      TextAlign.center,
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: marrom,
                                     fontSize: 15,
-                                    fontWeight:
-                                        FontWeight.w800,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'Indisponível',
                                   style: TextStyle(
                                     color: marrom,
                                     fontSize: 13,
-                                    fontWeight:
-                                        FontWeight.w700,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
@@ -352,6 +331,10 @@ class _TelaGraficosState extends State<TelaGraficos> {
     );
   }
 
+  // ================================================================
+  // CARD DE APARELHO
+  // ================================================================
+
   Widget _cardAparelho({
     required String nome,
     required String subtitulo,
@@ -365,8 +348,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icone,
@@ -399,14 +381,22 @@ class _TelaGraficosState extends State<TelaGraficos> {
     );
   }
 
+  // ================================================================
+  // MENU
+  // ================================================================
+
   void _abrirMenu() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding:
-              const EdgeInsets.fromLTRB(20, 20, 20, 30),
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            30,
+          ),
           decoration: const BoxDecoration(
             color: Color(0xFFFFF4B2),
             borderRadius: BorderRadius.vertical(
@@ -431,11 +421,11 @@ class _TelaGraficosState extends State<TelaGraficos> {
                 onTap: () {
                   Navigator.pop(context);
 
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content:
-                          Text('Gráficos atualizados!'),
+                      content: Text(
+                        'Gráficos atualizados!',
+                      ),
                     ),
                   );
                 },
@@ -464,8 +454,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           'Gráficos',
                           style: TextStyle(
                             color: marrom,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         content: const Text(
@@ -502,7 +491,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
 // TELA DE DETALHES
 // ================================================================
 
-class TelaGraficosDetalhes extends StatelessWidget {
+class TelaGraficosDetalhes extends StatefulWidget {
   final TipoAparelho tipo;
 
   const TelaGraficosDetalhes({
@@ -510,16 +499,29 @@ class TelaGraficosDetalhes extends StatelessWidget {
     required this.tipo,
   });
 
-  static const Color marrom = Color(0xFF9A4F00);
-  static const Color vermelho = Color(0xFFE10D00);
-  static const Color amareloCard = Color(0xFFFFE48A);
+  @override
+  State<TelaGraficosDetalhes> createState() =>
+      _TelaGraficosDetalhesState();
+}
 
-  bool get isTv => tipo == TipoAparelho.tv;
+class _TelaGraficosDetalhesState
+    extends State<TelaGraficosDetalhes> {
+  static const Color marrom = AppColors.primary;
+  static const Color laranja = Color(0xFFE56C1F);
+  static const Color amareloCard = Color(0xFFFFE48A);
+  static const Color amareloClaro = Color(0xFFFFF4B2);
+  static const Color textoSecundario = Color(0xFF8C743B);
+
+  // ================================================================
+  // PERÍODO DO GRÁFICO
+  // ================================================================
+
+  String periodoSelecionado = '7 dias';
+
+  bool get isTv => widget.tipo == TipoAparelho.tv;
 
   String get nomeAparelho {
-    return isTv
-        ? 'TV - Cristal'
-        : 'Ar condicionado';
+    return isTv ? 'TV - Cristal' : 'Ar condicionado';
   }
 
   IconData get iconeAparelho {
@@ -542,6 +544,108 @@ class TelaGraficosDetalhes extends StatelessWidget {
     return isTv ? '72%' : '23°C';
   }
 
+  String get avaliacao {
+    return pontos >= 80
+        ? 'Bom controle'
+        : pontos >= 60
+            ? 'Controle moderado'
+            : 'Precisa de atenção';
+  }
+
+  // ================================================================
+  // DADOS DO GRÁFICO
+  // ================================================================
+
+  List<double> get valoresGrafico {
+    if (periodoSelecionado == '7 dias') {
+      return isTv
+          ? [
+              0.64,
+              0.49,
+              0.57,
+              0.35,
+              0.61,
+              0.43,
+              0.22,
+            ]
+          : [
+              0.72,
+              0.61,
+              0.75,
+              0.51,
+              0.69,
+              0.43,
+              0.32,
+            ];
+    }
+
+    if (periodoSelecionado == '4 semanas') {
+      return isTv
+          ? [
+              0.67,
+              0.48,
+              0.58,
+              0.36,
+            ]
+          : [
+              0.80,
+              0.62,
+              0.73,
+              0.49,
+            ];
+    }
+
+    return isTv
+        ? [
+            0.70,
+            0.58,
+            0.46,
+            0.61,
+            0.41,
+            0.32,
+          ]
+        : [
+            0.82,
+            0.72,
+            0.77,
+            0.63,
+            0.58,
+            0.47,
+          ];
+  }
+
+  List<String> get etiquetasGrafico {
+    if (periodoSelecionado == '7 dias') {
+      return [
+        'Seg',
+        'Ter',
+        'Qua',
+        'Qui',
+        'Sex',
+        'Sáb',
+        'Dom',
+      ];
+    }
+
+    if (periodoSelecionado == '4 semanas') {
+      return [
+        'Sem. 1',
+        'Sem. 2',
+        'Sem. 3',
+        'Sem. 4',
+      ];
+    }
+
+    return [
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -549,15 +653,7 @@ class TelaGraficosDetalhes extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFE832),
-              Color(0xFFFFCD1B),
-              Color(0xFFF4A91A),
-            ],
-          ),
+          gradient: AppGradients.main,
         ),
         child: SafeArea(
           child: Column(
@@ -565,58 +661,144 @@ class TelaGraficosDetalhes extends StatelessWidget {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    20,
-                    28,
-                    20,
-                    20,
+                    18,
+                    16,
+                    18,
+                    24,
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ==================================================
+                      // CABEÇALHO
+                      // ==================================================
+
                       Row(
                         children: [
-                          Icon(
-                            iconeAparelho,
-                            color: marrom,
-                            size: 30,
-                          ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Text(
-                              nomeAparelho,
-                              style: const TextStyle(
-                                color: marrom,
-                                fontSize: 23,
-                                fontWeight:
-                                    FontWeight.w800,
-                                fontFamily: 'Arvo',
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: amareloClaro.withOpacity(0.80),
+                                shape: BoxShape.circle,
                               ),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: marrom,
+                                size: 25,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      iconeAparelho,
+                                      color: marrom,
+                                      size: 23,
+                                    ),
+
+                                    const SizedBox(width: 6),
+
+                                    Expanded(
+                                      child: Text(
+                                        nomeAparelho,
+                                        style: const TextStyle(
+                                          color: marrom,
+                                          fontSize: 22,
+                                          fontWeight:
+                                              FontWeight.w800,
+                                          fontFamily: 'Arvo',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 3),
+
+                                const Text(
+                                  'Visão geral do aparelho',
+                                  style: TextStyle(
+                                    color: textoSecundario,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // ==================================================
+                          // STATUS
+                          // ==================================================
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 9,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  Colors.white.withOpacity(0.60),
+                              borderRadius:
+                                  BorderRadius.circular(22),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration:
+                                      const BoxDecoration(
+                                    color: Color(0xFF63A33B),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+
+                                const SizedBox(width: 6),
+
+                                const Text(
+                                  'Ativo',
+                                  style: TextStyle(
+                                    color: marrom,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 20),
 
-                      const Text(
-                        'Gráfico',
-                        style: TextStyle(
-                          color: marrom,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'Arvo',
-                        ),
-                      ),
-
-                      const SizedBox(height: 18),
+                      // ==================================================
+                      // RESUMO PRINCIPAL
+                      // ==================================================
 
                       _cardResumo(),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 22),
+
+                      // ==================================================
+                      // CONSUMO
+                      // ==================================================
 
                       const Text(
-                        'graphics',
+                        'Seu consumo',
                         style: TextStyle(
                           color: marrom,
                           fontSize: 20,
@@ -625,38 +807,51 @@ class TelaGraficosDetalhes extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
 
                       Row(
                         children: [
                           Expanded(
-                            child: _cardGastoEnergia(),
+                            child: _cardConsumo(),
                           ),
-                          const SizedBox(width: 8),
+
+                          const SizedBox(width: 10),
+
                           Expanded(
-                            child: _cardHoras(),
+                            child: _cardHorasUso(),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
+
+                      // ==================================================
+                      // GRÁFICO
+                      // ==================================================
+
+                      _cardGrafico(),
+
+                      const SizedBox(height: 24),
+
+                      // ==================================================
+                      // INFORMAÇÕES EXTRAS
+                      // ==================================================
 
                       Row(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child:
-                                _cardInformacaoEspecifica(),
+                            child: _cardInfoEspecifica(),
                           ),
-                          const SizedBox(width: 8),
+
+                          const SizedBox(width: 10),
+
                           Expanded(
-                            child: _cardSla(),
+                            child: _cardEficiencia(),
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 12),
-
-                      _cardRecomendacoes(),
                     ],
                   ),
                 ),
@@ -672,49 +867,57 @@ class TelaGraficosDetalhes extends StatelessWidget {
     );
   }
 
+  // ================================================================
+  // CARD RESUMO COM PENTÁGONO
+  // ================================================================
+
   Widget _cardResumo() {
     return Container(
       width: double.infinity,
-      height: 143,
-      padding: const EdgeInsets.all(14),
+      height: 150,
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE27A),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x55000000),
+            color: Color(0x33000000),
             offset: Offset(0, 4),
-            blurRadius: 4,
+            blurRadius: 6,
           ),
         ],
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 112,
-            height: 95,
+            width: 105,
+            height: 105,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 CustomPaint(
-                  size: const Size(100, 90),
+                  size: const Size(
+                    100,
+                    95,
+                  ),
                   painter: PentagonoPainter(
                     color: marrom,
                   ),
                 ),
+
                 Text(
                   '$pontos',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 27,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
           Expanded(
             child: Column(
@@ -724,27 +927,46 @@ class TelaGraficosDetalhes extends StatelessWidget {
                   CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Pontos de\ngestão',
+                  'Pontos de gestão',
                   style: TextStyle(
                     color: marrom,
-                    fontSize: 17,
-                    fontWeight:
-                        FontWeight.w800,
-                    height: 1.0,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
 
                 const SizedBox(height: 6),
 
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: marrom.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    avaliacao,
+                    style: const TextStyle(
+                      color: marrom,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 7),
+
                 Text(
                   isTv
-                      ? 'baseado em seus gráficos de gasto de energia e horas de uso'
-                      : 'baseado no consumo, horas de uso e eficiência do aparelho',
+                      ? 'Resultado baseado no uso, gasto de energia e tempo de funcionamento.'
+                      : 'Resultado baseado no consumo, horas de uso e eficiência do aparelho.',
                   style: const TextStyle(
-                    color: Color(0xFFE96D22),
-                    fontSize: 12,
+                    color: laranja,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    height: 1.05,
+                    height: 1.15,
                   ),
                 ),
               ],
@@ -755,201 +977,442 @@ class TelaGraficosDetalhes extends StatelessWidget {
     );
   }
 
-  Widget _cardGastoEnergia() {
+  // ================================================================
+  // CARD ENERGIA
+  // ================================================================
+
+  Widget _cardConsumo() {
     return _cardBase(
-      height: 138,
+      height: 155,
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Gasto de energia',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+          const Row(
+            children: [
+              Icon(
+                Icons.bolt,
+                color: marrom,
+                size: 21,
+              ),
+              SizedBox(width: 5),
+              Text(
+                'Energia',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+
+          const Spacer(),
+
+          Text(
+            '${gastoEnergia.toStringAsFixed(1)} kWh',
+            style: const TextStyle(
+              color: laranja,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
             ),
           ),
 
           const SizedBox(height: 3),
 
-          Expanded(
-            child: Center(
-              child: SizedBox(
-                width: 82,
-                height: 82,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 82,
-                      height: 82,
-                      child:
-                          CircularProgressIndicator(
-                        value: isTv ? 0.72 : 0.63,
-                        strokeWidth: 13,
-                        backgroundColor: marrom,
-                        valueColor:
-                            const AlwaysStoppedAnimation(
-                          vermelho,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration:
-                          const BoxDecoration(
-                        color: amareloCard,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
+          const Text(
+            'consumo de energia',
+            style: TextStyle(
+              color: textoSecundario,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const Spacer(),
+
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF63A33B),
+                  shape: BoxShape.circle,
                 ),
               ),
-            ),
-          ),
 
-          Text(
-            '${gastoEnergia.toStringAsFixed(1)}kWh',
-            style: const TextStyle(
-              color: Color(0xFFF3A51C),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+              const SizedBox(width: 5),
 
-          const Text(
-            'último update',
-            style: TextStyle(
-              color: Color(0xFFB8A96C),
-              fontSize: 8,
-            ),
+              const Text(
+                'Dentro do esperado',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _cardHoras() {
+  // ================================================================
+  // CARD USO
+  // ================================================================
+
+  Widget _cardHorasUso() {
     return _cardBase(
-      height: 138,
+      height: 155,
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Horas usadas',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+          const Row(
+            children: [
+              Icon(
+                Icons.schedule,
+                color: marrom,
+                size: 21,
+              ),
+
+              SizedBox(width: 5),
+
+              Text(
+                'Uso',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+
+          const Spacer(),
+
+          Text(
+            '${horasUsadas} h',
+            style: const TextStyle(
+              color: laranja,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
             ),
           ),
 
+          const SizedBox(height: 3),
+
+          const Text(
+            'tempo de utilização',
+            style: TextStyle(
+              color: textoSecundario,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const Spacer(),
+
+          Row(
+            children: [
+              Icon(
+                isTv
+                    ? Icons.trending_flat
+                    : Icons.trending_up,
+                color: marrom,
+                size: 20,
+              ),
+
+              const SizedBox(width: 4),
+
+              Text(
+                isTv
+                    ? 'Uso estável'
+                    : 'Uso elevado',
+                style: const TextStyle(
+                  color: marrom,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================================================================
+  // CARD GRÁFICO
+  // ================================================================
+
+  Widget _cardGrafico() {
+    return Container(
+      width: double.infinity,
+      height: 225,
+      padding: const EdgeInsets.fromLTRB(
+        14,
+        14,
+        14,
+        11,
+      ),
+      decoration: BoxDecoration(
+        color: amareloCard,
+        borderRadius: BorderRadius.circular(19),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            offset: Offset(0, 3),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          // ==========================================================
+          // TÍTULO E SELETOR
+          // ==========================================================
+
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Uso ao longo do tempo',
+                  style: TextStyle(
+                    color: marrom,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+
+              PopupMenuButton<String>(
+                initialValue: periodoSelecionado,
+                color: amareloClaro,
+                onSelected: (valor) {
+                  setState(() {
+                    periodoSelecionado = valor;
+                  });
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                itemBuilder: (context) {
+                  return const [
+                    PopupMenuItem(
+                      value: '7 dias',
+                      child: Text(
+                        '7 dias',
+                        style: TextStyle(
+                          color: marrom,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+
+                    PopupMenuItem(
+                      value: '4 semanas',
+                      child: Text(
+                        '4 semanas',
+                        style: TextStyle(
+                          color: marrom,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+
+                    PopupMenuItem(
+                      value: '6 meses',
+                      child: Text(
+                        '6 meses',
+                        style: TextStyle(
+                          color: marrom,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ];
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: amareloClaro,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        periodoSelecionado,
+                        style: const TextStyle(
+                          color: marrom,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: marrom,
+                        size: 17,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // ==========================================================
+          // DESCRIÇÃO
+          // ==========================================================
+
+          Text(
+            periodoSelecionado == '7 dias'
+                ? 'Veja como o aparelho foi utilizado durante a semana.'
+                : periodoSelecionado == '4 semanas'
+                    ? 'Compare o tempo de uso entre as últimas semanas.'
+                    : 'Acompanhe a evolução do uso nos últimos meses.',
+            style: const TextStyle(
+              color: textoSecundario,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // ==========================================================
+          // GRÁFICO
+          // ==========================================================
+
           Expanded(
             child: CustomPaint(
-              painter: GraficoLinhaPainter(),
+              painter: GraficoLinhaDetalhadoPainter(
+                valores: valoresGrafico,
+              ),
               child: Container(),
             ),
           ),
 
-          Text(
-            '${horasUsadas}h',
-            style: const TextStyle(
-              color: Color(0xFFF3A51C),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const SizedBox(height: 3),
 
-          const Text(
-            'último update',
-            style: TextStyle(
-              color: Color(0xFFB8A96C),
-              fontSize: 8,
-            ),
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
+            children: etiquetasGrafico
+                .map(
+                  (texto) => Text(
+                    texto,
+                    style: const TextStyle(
+                      color: textoSecundario,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _cardInformacaoEspecifica() {
+  // ================================================================
+  // CARD TEMPERATURA / RECOMENDAÇÕES
+  // ================================================================
+
+  Widget _cardInfoEspecifica() {
     return _cardBase(
-      height: 138,
+      height: 240,
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
           Text(
-            isTv ? 'Recomendações' : 'Temperatura',
+            isTv
+                ? 'Recomendações'
+                : 'Temperatura',
             style: const TextStyle(
               color: marrom,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
 
           if (isTv) ...[
-            const Text(
-              '• reduzir brilho',
-              style: TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Text(
-              '• desligar ao sair',
-              style: TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Text(
-              '• evitar standby',
-              style: TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceEvenly,
+                children: [
+                  _itemRecomendacaoGrande(
+                    Icons.brightness_6_outlined,
+                    'Reduzir brilho',
+                  ),
+
+                  _itemRecomendacaoGrande(
+                    Icons.power_settings_new,
+                    'Desligar ao sair',
+                  ),
+
+                  _itemRecomendacaoGrande(
+                    Icons.battery_alert_outlined,
+                    'Evitar standby',
+                  ),
+                ],
               ),
             ),
           ] else ...[
             Text(
               terceiraValor,
               style: const TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
+                color: laranja,
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: 3),
+
+            const SizedBox(height: 2),
+
             const Text(
               'temperatura atual',
               style: TextStyle(
-                color: Color(0xFFB8A96C),
-                fontSize: 9,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '• manter portas fechadas',
-              style: TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 10,
+                color: textoSecundario,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const Text(
-              '• limpar filtros',
-              style: TextStyle(
-                color: Color(0xFFE56C1F),
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+
+            const SizedBox(height: 15),
+
+            Expanded(
+              child: Column(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceEvenly,
+                children: [
+                  _itemRecomendacaoGrande(
+                    Icons.check_circle_outline,
+                    'Faixa recomendada',
+                  ),
+
+                  _itemRecomendacaoGrande(
+                    Icons.air,
+                    'Boa condição de uso',
+                  ),
+                ],
               ),
             ),
           ],
@@ -958,40 +1421,104 @@ class TelaGraficosDetalhes extends StatelessWidget {
     );
   }
 
-  Widget _cardSla() {
+  // ================================================================
+  // ITEM DE RECOMENDAÇÃO GRANDE
+  // ================================================================
+
+  Widget _itemRecomendacaoGrande(
+    IconData icone,
+    String texto,
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: marrom.withOpacity(0.10),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icone,
+            color: laranja,
+            size: 21,
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        Expanded(
+          child: Text(
+            texto,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: laranja,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ================================================================
+  // CARD EFICIÊNCIA
+  // ================================================================
+
+  Widget _cardEficiencia() {
+    final double eficiencia = isTv ? 0.82 : 0.72;
+
     return _cardBase(
-      height: 138,
+      height: 240,
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
         children: [
-          const Text(
-            'SLA',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
+          const Row(
+            children: [
+              Icon(
+                Icons.speed,
+                color: marrom,
+                size: 21,
+              ),
+
+              SizedBox(width: 6),
+
+              Text(
+                'Eficiência',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
+
+          // ==========================================================
+          // BARRA DE EFICIÊNCIA
+          // ==========================================================
 
           Stack(
-            clipBehavior: Clip.none,
             children: [
               Container(
-                height: 20,
+                height: 21,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEAB1),
+                  color: amareloClaro,
                   borderRadius:
                       BorderRadius.circular(20),
                 ),
               ),
 
               FractionallySizedBox(
-                widthFactor: isTv ? 0.82 : 0.72,
+                widthFactor: eficiencia,
                 child: Container(
-                  height: 20,
+                  height: 21,
                   decoration: BoxDecoration(
                     color: marrom,
                     borderRadius:
@@ -1002,86 +1529,49 @@ class TelaGraficosDetalhes extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 26),
+          const SizedBox(height: 22),
 
           Text(
-            isTv ? '132' : '145',
+            '${(eficiencia * 100).round()}%',
             style: const TextStyle(
-              color: Color(0xFFF3A51C),
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+              color: laranja,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
             ),
           ),
 
+          const SizedBox(height: 2),
+
           const Text(
-            'último update',
+            'aproveitamento',
             style: TextStyle(
-              color: Color(0xFFB8A96C),
-              fontSize: 8,
+              color: textoSecundario,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _cardRecomendacoes() {
-    return _cardBase(
-      height: 105,
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recomendações',
-            style: TextStyle(
+          const SizedBox(height: 14),
+
+          Text(
+            isTv
+                ? 'Bom aproveitamento do aparelho.'
+                : 'Há espaço para reduzir o consumo.',
+            style: const TextStyle(
               color: marrom,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
             ),
           ),
-
-          const SizedBox(height: 5),
-
-          if (isTv) ...[
-            _linhaRecomendacao('reduzir brilho'),
-            _linhaRecomendacao(
-              'desligar quando não estiver usando',
-            ),
-            _linhaRecomendacao(
-              'evitar deixar em standby',
-            ),
-          ] else ...[
-            _linhaRecomendacao(
-              'usar temperatura entre 23°C e 24°C',
-            ),
-            _linhaRecomendacao(
-              'manter filtros limpos',
-            ),
-            _linhaRecomendacao(
-              'evitar ligar e desligar repetidamente',
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _linhaRecomendacao(String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 3,
-      ),
-      child: Text(
-        '• $texto',
-        style: const TextStyle(
-          color: Color(0xFFE56C1F),
-          fontSize: 10.5,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
+  // ================================================================
+  // CARD BASE
+  // ================================================================
 
   Widget _cardBase({
     required double height,
@@ -1089,15 +1579,15 @@ class TelaGraficosDetalhes extends StatelessWidget {
   }) {
     return Container(
       height: height,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: amareloCard,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(19),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x55000000),
+            color: Color(0x33000000),
             offset: Offset(0, 3),
-            blurRadius: 3,
+            blurRadius: 4,
           ),
         ],
       ),
@@ -1126,10 +1616,10 @@ class PentagonoPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    final path = Path();
+    final Path path = Path();
 
     path.moveTo(
-      size.width * 0.5,
+      size.width * 0.50,
       size.height * 0.05,
     );
 
@@ -1155,7 +1645,10 @@ class PentagonoPainter extends CustomPainter {
 
     path.close();
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(
+      path,
+      paint,
+    );
   }
 
   @override
@@ -1170,67 +1663,122 @@ class PentagonoPainter extends CustomPainter {
 // GRÁFICO DE LINHA
 // ================================================================
 
-class GraficoLinhaPainter extends CustomPainter {
+class GraficoLinhaDetalhadoPainter extends CustomPainter {
+  final List<double> valores;
+
+  GraficoLinhaDetalhadoPainter({
+    required this.valores,
+  });
+
   @override
   void paint(
     Canvas canvas,
     Size size,
   ) {
-    final paint = Paint()
-      ..color = const Color(0xFF9A4F00)
-      ..strokeWidth = 4
+    final Paint linhaPaint = Paint()
+      ..color = AppColors.primary
+      ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path();
+    final Paint pontoPaint = Paint()
+      ..color = AppColors.primary
+      ..style = PaintingStyle.fill;
+
+    final Paint gradePaint = Paint()
+      ..color = const Color(0x339A4F00)
+      ..strokeWidth = 1;
+
+    // ==============================================================
+    // GRADE
+    // ==============================================================
+
+    for (int i = 1; i <= 3; i++) {
+      final double y = size.height * (i / 4);
+
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gradePaint,
+      );
+    }
+
+    if (valores.isEmpty) {
+      return;
+    }
+
+    // ==============================================================
+    // PONTOS
+    // ==============================================================
+
+    final List<Offset> pontos = [];
+
+    for (int i = 0; i < valores.length; i++) {
+      final double percentual =
+          valores.length == 1
+              ? 0.5
+              : i / (valores.length - 1);
+
+      final double x =
+          size.width * percentual;
+
+      final double y =
+          size.height * valores[i];
+
+      pontos.add(
+        Offset(x, y),
+      );
+    }
+
+    // ==============================================================
+    // LINHA
+    // ==============================================================
+
+    final Path path = Path();
 
     path.moveTo(
-      0,
-      size.height * 0.65,
+      pontos.first.dx,
+      pontos.first.dy,
     );
 
-    path.lineTo(
-      size.width * 0.15,
-      size.height * 0.52,
+    for (int i = 1; i < pontos.length; i++) {
+      path.lineTo(
+        pontos[i].dx,
+        pontos[i].dy,
+      );
+    }
+
+    canvas.drawPath(
+      path,
+      linhaPaint,
     );
 
-    path.lineTo(
-      size.width * 0.28,
-      size.height * 0.62,
-    );
+    // ==============================================================
+    // MARCADORES
+    // ==============================================================
 
-    path.lineTo(
-      size.width * 0.42,
-      size.height * 0.45,
-    );
+    for (final ponto in pontos) {
+      canvas.drawCircle(
+        ponto,
+        4,
+        pontoPaint,
+      );
 
-    path.lineTo(
-      size.width * 0.56,
-      size.height * 0.65,
-    );
-
-    path.lineTo(
-      size.width * 0.70,
-      size.height * 0.44,
-    );
-
-    path.lineTo(
-      size.width * 0.82,
-      size.height * 0.52,
-    );
-
-    path.lineTo(
-      size.width,
-      size.height * 0.22,
-    );
-
-    canvas.drawPath(path, paint);
+      canvas.drawCircle(
+        ponto,
+        8,
+        Paint()
+          ..color =
+              AppColors.primary.withOpacity(0.10)
+          ..style = PaintingStyle.fill,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(
-    covariant CustomPainter oldDelegate,
+    covariant GraficoLinhaDetalhadoPainter oldDelegate,
   ) {
     return false;
   }

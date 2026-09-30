@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'package:tcc_mobile/widget/rotinas.dart';
 import 'package:tcc_mobile/widget/graficos.dart';
 import 'package:tcc_mobile/widget/home.dart';
@@ -16,6 +17,7 @@ class FhiveApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.data,
 
       initialRoute: '/home',
 

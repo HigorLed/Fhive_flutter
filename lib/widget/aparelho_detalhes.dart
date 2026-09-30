@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/theme.dart';
 import 'barra_navegacao.dart';
 
 class TelaDetalhesAparelho extends StatefulWidget {
@@ -21,8 +22,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   // CORES
   // ==========================================================
 
-  static const Color marrom = Color(0xFF964900);
-  static const Color amareloClaro = Color(0xFFFFF7B7);
+  static const Color marrom = AppColors.primary;
+  static const Color amareloClaro = AppColors.surface;
   static const Color amareloBotao = Color(0xFFFFEE82);
 
   // ==========================================================
@@ -41,7 +42,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFD20D),
+      backgroundColor: AppColors.accent,
 
       body: SafeArea(
         child: Container(
@@ -49,14 +50,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           height: double.infinity,
 
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFE51A),
-                Color(0xFFF5A900),
-              ],
-            ),
+            gradient: AppGradients.main,
           ),
 
           child: Column(
@@ -68,10 +62,10 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
-                    27,
-                    24,
-                    22,
-                    18,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageTop,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
 
                   child: Column(
@@ -110,11 +104,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         const Expanded(
           child: Text(
             'Minha casa',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 27,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.pageTitle,
           ),
         ),
 
@@ -125,18 +115,18 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           child: const Icon(
             Icons.add,
             color: marrom,
-            size: 34,
+            size: 30,
           ),
         ),
 
-        const SizedBox(width: 24),
+        const SizedBox(width: 12),
 
         GestureDetector(
           onTap: _abrirMenu,
           child: const Icon(
             Icons.more_vert,
             color: marrom,
-            size: 29,
+            size: 26,
           ),
         ),
       ],
