@@ -1,6 +1,6 @@
 name: tcc_mobile
 
-description: "A new Flutter project."
+description: "Fhive - aplicativo mobile para controlar a casa inteligente (TCC)."
 
 publish_to: 'none'
 
@@ -24,6 +24,28 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # FONTES - AÇÃO NECESSÁRIA
+  # O app usa as fontes 'Arvo' e 'Montserrat' (fontFamily: 'Arvo' / 'Montserrat'),
+  # mas elas não estavam declaradas aqui, então o Flutter usava a fonte padrão.
+  # 1) Baixe os .ttf em fonts.google.com (Arvo e Montserrat) e coloque em assets/fonts/
+  # 2) Descomente o bloco abaixo (os nomes dos arquivos precisam bater com os seus).
+  #
+  # fonts:
+  #   - family: Arvo
+  #     fonts:
+  #       - asset: assets/fonts/Arvo-Regular.ttf
+  #       - asset: assets/fonts/Arvo-Bold.ttf
+  #         weight: 700
+  #   - family: Montserrat
+  #     fonts:
+  #       - asset: assets/fonts/Montserrat-Regular.ttf
+  #       - asset: assets/fonts/Montserrat-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Montserrat-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Montserrat-Bold.ttf
+  #         weight: 700
 
   assets:
     - assets/images/logo.svg
