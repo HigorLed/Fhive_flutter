@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 
@@ -87,7 +88,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
 
         IconButton(
           onPressed: () {
-            _adicionarRotina();
+            mostrarCriarAparelho(context);
           },
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
@@ -350,18 +351,21 @@ class _TelaRotinasState extends State<TelaRotinas> {
   }
 
   Widget _opcaoLocal(String nome) {
-    return ListTile(
-      title: Text(
-        nome,
-        style: const TextStyle(color: marrom, fontWeight: FontWeight.w600),
-      ),
-      onTap: () {
-        setState(() {
-          localSelecionado = nome;
-        });
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        title: Text(
+          nome,
+          style: const TextStyle(color: marrom, fontWeight: FontWeight.w600),
+        ),
+        onTap: () {
+          setState(() {
+            localSelecionado = nome;
+          });
 
-        Navigator.pop(context);
-      },
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 

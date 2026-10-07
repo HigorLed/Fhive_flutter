@@ -4,11 +4,25 @@ import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 
 class TelaDetalhesAparelho extends StatefulWidget {
   final String nome;
+  final String id;
+  final String tipo;
+  final String fabricante;
+  final String modelo;
+  final String local;
+  final String conexao;
+  final String status;
   final IconData icone;
 
   const TelaDetalhesAparelho({
     super.key,
     this.nome = 'Ar condicionado',
+    this.id = 'FH-AC-SALA-001',
+    this.tipo = 'Ar condicionado',
+    this.fabricante = 'Não informado',
+    this.modelo = 'Não informado',
+    this.local = 'Sala de Estar',
+    this.conexao = 'Wi-Fi',
+    this.status = 'Offline',
     this.icone = Icons.air,
   });
 
@@ -17,68 +31,47 @@ class TelaDetalhesAparelho extends StatefulWidget {
 }
 
 class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
-  // ==========================================================
-  // CORES
-  // ==========================================================
-
   static const Color marrom = AppColors.primary;
-  static const Color amareloClaro = AppColors.surface;
-  static const Color amareloBotao = Color(0xFFFFEE82);
-
-  // ==========================================================
-  // CONTROLES
-  // ==========================================================
+  static const Color amareloCard = Color(0xFFFFF49F);
+  static const Color amareloBotao = Color(0xFFFFEF73);
 
   bool ligado = false;
-  bool desligamentoAutomatico = false;
   bool modoSono = false;
   bool modoEconomico = false;
+  bool mudo = false;
+  bool privacidade = false;
+  bool deteccaoMovimento = true;
+  bool gravacao = false;
+  bool temporizador = false;
+  bool monitoramento = true;
+  bool notificacoes = true;
+  bool alerta = true;
+  bool controleRemoto = false;
 
-  double temperatura = 18;
+  double temperatura = 22;
+  double volume = 35;
+  double brilho = 70;
+  double brilhoLampada = 76;
+  double temperaturaCor = 50;
 
   int velocidadeVentilador = 2;
+  String modoAr = 'Frio';
+  String cenaLampada = 'Relaxar';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.accent,
-
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-
-          decoration: const BoxDecoration(gradient: AppGradients.main),
-
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppGradients.main),
+        child: SafeArea(
           child: Column(
             children: [
-              // ==================================================
-              // CONTEÚDO
-              // ==================================================
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageTop,
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageBottom,
-                  ),
-
-                  child: Column(
-                    children: [
-                      _cabecalho(),
-
-                      const SizedBox(height: 20),
-
-                      _painelAparelho(),
-                    ],
-                  ),
+                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
+                  child: _painelPrincipal(),
                 ),
               ),
-
-              // ==================================================
-              // BARRA DE NAVEGAÇÃO
-              // ==================================================
               const BarraNavegacao(itemSelecionado: 1),
             ],
           ),
@@ -87,671 +80,689 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     );
   }
 
-  // ==========================================================
-  // CABEÇALHO
-  // ==========================================================
-
-  Widget _cabecalho() {
-    return Row(
-      children: [
-        // Esta tela é aberta por cima da lista de aparelhos,
-        // então precisa de um jeito visível de voltar.
-        if (Navigator.canPop(context)) ...[
-          GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(Icons.arrow_back, color: marrom, size: 26),
-          ),
-          const SizedBox(width: 10),
-        ],
-
-        const Expanded(
-          child: Text('Minha casa', style: AppTextStyles.pageTitle),
-        ),
-
-        GestureDetector(
-          onTap: () {
-            _mensagem('Adicionar aparelho');
-          },
-          child: const Icon(Icons.add, color: marrom, size: 30),
-        ),
-
-        const SizedBox(width: 12),
-
-        GestureDetector(
-          onTap: _abrirMenu,
-          child: const Icon(Icons.more_vert, color: marrom, size: 26),
-        ),
-      ],
-    );
-  }
-
-  // ==========================================================
-  // PAINEL
-  // ==========================================================
-
-  Widget _painelAparelho() {
+  Widget _painelPrincipal() {
     return Container(
       width: double.infinity,
-
-      // Não usamos mais uma altura fixa.
-      // Isso impede o BOTTOM OVERFLOWED.
-      constraints: const BoxConstraints(minHeight: 500),
-
-      padding: const EdgeInsets.fromLTRB(21, 17, 21, 20),
-
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
       decoration: BoxDecoration(
-        color: amareloClaro,
-        borderRadius: BorderRadius.circular(30),
+        color: const Color(0xFFFFFBCB),
+        borderRadius: BorderRadius.circular(29),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
-          // ====================================================
-          // NOME DO APARELHO
-          // ====================================================
-          _topoAparelho(),
-
-          const SizedBox(height: 9),
-
-          const Divider(color: Color(0xFFB87817), thickness: 1, height: 1),
-
-          const SizedBox(height: 10),
-
-          // ====================================================
-          // LIGAR / DESLIGAR
-          // ====================================================
-          _linhaLigarDesligar(),
-
-          // ====================================================
-          // TEMPERATURA
-          // ====================================================
-          _linhaTemperatura(),
-
-          // ====================================================
-          // DESLIGAMENTO
-          // ====================================================
-          _linhaSwitch(
-            titulo: 'Desligamento Automático',
-            valor: desligamentoAutomatico,
-            onChanged: (valor) {
-              setState(() {
-                desligamentoAutomatico = valor;
-              });
-            },
-          ),
-
-          // ====================================================
-          // VELOCIDADE
-          // ====================================================
-          _linhaVelocidade(),
-
-          // ====================================================
-          // MODO SONO
-          // ====================================================
-          _linhaSwitch(
-            titulo: 'Modo Sono',
-            valor: modoSono,
-            onChanged: (valor) {
-              setState(() {
-                modoSono = valor;
-              });
-            },
-          ),
-
-          // ====================================================
-          // MODO ECONÔMICO
-          // ====================================================
-          _linhaSwitch(
-            titulo: 'Modo Econômico',
-            valor: modoEconomico,
-            onChanged: (valor) {
-              setState(() {
-                modoEconomico = valor;
-              });
-            },
-          ),
-
-          // ====================================================
-          // GRÁFICOS
-          // ====================================================
-          _linhaTexto(
-            'Gráficos',
-            iconeFinal: Icons.bar_chart,
-            onTap: () {
-              Navigator.pushNamed(context, '/graficos');
-            },
-          ),
-
-          const SizedBox(height: 6),
-
-          // ====================================================
-          // PRÉ-CONFIGURAÇÕES
-          // ====================================================
-          const Text(
-            'Pré - configurações',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-
-          const SizedBox(height: 9),
-
-          _preConfiguracoes(),
-
-          // Espaço vazio dentro do card,
-          // igual ao design do Figma.
-          const SizedBox(height: 80),
+          _cabecalhoAparelho(),
+          const SizedBox(height: 14),
+          _conteudoPorTipo(),
+          const SizedBox(height: 18),
+          _rodapeIdentificacao(),
         ],
       ),
     );
   }
 
-  // ==========================================================
-  // TOPO DO APARELHO
-  // ==========================================================
-
-  Widget _topoAparelho() {
+  Widget _cabecalhoAparelho() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(
-          child: Text(
-            widget.nome,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Padding(
+            padding: EdgeInsets.all(2),
+            child: Icon(Icons.arrow_back_ios_new, color: marrom, size: 20),
           ),
         ),
-
-        Icon(widget.icone, color: marrom, size: 34),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.nome,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: marrom,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.tipo,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: marrom.withValues(alpha: 0.72),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          width: 42,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: amareloBotao,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(widget.icone, color: marrom, size: 25),
+        ),
       ],
     );
   }
 
-  // ==========================================================
-  // LIGAR / DESLIGAR
-  // ==========================================================
+  Widget _conteudoPorTipo() {
+    switch (widget.tipo) {
+      case 'TV':
+        return _conteudoTV();
+      case 'Ar condicionado':
+        return _conteudoAr();
+      case 'Lâmpada':
+        return _conteudoLampada();
+      case 'Câmera':
+        return _conteudoCamera();
+      case 'Tomada inteligente':
+        return _conteudoTomada();
+      case 'Sensor':
+        return _conteudoSensor();
+      default:
+        return _conteudoGenerico();
+    }
+  }
 
-  Widget _linhaLigarDesligar() {
-    return SizedBox(
-      height: 35,
-
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Ligar/Desligar',
-              style: TextStyle(
-                color: marrom,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+  Widget _conteudoTV() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
+            (valor) => setState(() => ligado = valor)),
+        _linhaSlider(
+          titulo: 'Volume',
+          valor: volume,
+          min: 0,
+          max: 100,
+          textoValor: '${volume.round()}%',
+          iconeFinal: Icons.volume_up_rounded,
+          onChanged: (valor) => setState(() => volume = valor),
+        ),
+        _linhaSwitch('Desligamento Automático', temporizador, Icons.timer_outlined,
+            (valor) => setState(() => temporizador = valor)),
+        _linhaSwitch('Controle Remoto', controleRemoto, Icons.settings_remote_outlined,
+            (valor) => setState(() => controleRemoto = valor)),
+        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos de ${widget.nome}.')),
+        const SizedBox(height: 24),
+        const Text(
+          'Streamings',
+          style: TextStyle(
+            color: marrom,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
           ),
-
-          _switchCustom(
-            valor: ligado,
-            onChanged: (valor) {
-              setState(() {
-                ligado = valor;
-              });
-            },
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        _streamingGrid(),
+      ],
     );
   }
 
-  // ==========================================================
-  // TEMPERATURA
-  // ==========================================================
-
-  Widget _linhaTemperatura() {
-    return SizedBox(
-      height: 34,
-
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 108,
-
-            child: Text(
-              'Temperatura',
-              style: TextStyle(
-                color: marrom,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+  Widget _conteudoAr() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
+            (valor) => setState(() => ligado = valor)),
+        _linhaSlider(
+          titulo: 'Temperatura',
+          valor: temperatura,
+          min: 16,
+          max: 30,
+          textoValor: '${temperatura.round()}°C',
+          iconeFinal: Icons.thermostat_auto_outlined,
+          onChanged: (valor) => setState(() => temperatura = valor),
+        ),
+        const SizedBox(height: 7),
+        Row(
+          children: [
+            Expanded(
+              child: _botaoOpcao(
+                icon: Icons.power_settings_new_rounded,
+                label: 'Desligamento\nAutomático',
+                ativo: temporizador,
+                onTap: () => setState(() => temporizador = !temporizador),
               ),
             ),
-          ),
-
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 2,
-
-                activeTrackColor: marrom,
-
-                inactiveTrackColor: const Color(0xFFC8951B),
-
-                thumbColor: marrom,
-
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-
-                overlayShape: SliderComponentShape.noOverlay,
-              ),
-
-              child: Slider(
-                min: 10,
-                max: 30,
-
-                divisions: 20,
-
-                value: temperatura,
-
-                onChanged: (valor) {
-                  setState(() {
-                    temperatura = valor;
-                  });
-                },
+            const SizedBox(width: 50),
+            Expanded(
+              child: _botaoOpcao(
+                icon: Icons.speed_rounded,
+                label: 'Velocidade do\nventilador',
+                onTap: () => setState(
+                  () => velocidadeVentilador = velocidadeVentilador == 4
+                      ? 1
+                      : velocidadeVentilador + 1,
+                ),
               ),
             ),
-          ),
-
-          SizedBox(
-            width: 43,
-
-            child: Text(
-              '${temperatura.round()}°C',
-
-              textAlign: TextAlign.right,
-
-              style: const TextStyle(
-                color: marrom,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _botaoOpcao(
+                icon: Icons.air_rounded,
+                label: 'Modo\nEconômico',
+                ativo: modoEconomico,
+                onTap: () => setState(() => modoEconomico = !modoEconomico),
               ),
             ),
+            const SizedBox(width: 50),
+            Expanded(
+              child: _botaoOpcao(
+                icon: Icons.nightlight_round,
+                label: 'Modo sono',
+                ativo: modoSono,
+                onTap: () => setState(() => modoSono = !modoSono),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos de ${widget.nome}.')),
+        const SizedBox(height: 13),
+        const Text(
+          'Pré-configurações',
+          style: TextStyle(
+            color: marrom,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          children: [
+            _preset('Frio', modoAr == 'Frio'),
+            _preset('Calor', modoAr == 'Quente'),
+            _preset('+', false, icon: Icons.add, largura: 68),
+          ],
+        ),
+      ],
     );
   }
 
-  // ==========================================================
-  // SWITCH
-  // ==========================================================
+  Widget _conteudoLampada() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
+            (valor) => setState(() => ligado = valor)),
+        _linhaSlider(
+          titulo: 'Brilho',
+          valor: brilhoLampada,
+          min: 1,
+          max: 100,
+          textoValor: '${brilhoLampada.round()}%',
+          iconeFinal: Icons.light_mode_outlined,
+          onChanged: (valor) => setState(() => brilhoLampada = valor),
+        ),
+        _linhaSlider(
+          titulo: 'Temperatura da cor',
+          valor: temperaturaCor,
+          min: 0,
+          max: 100,
+          textoValor: temperaturaCor < 45
+              ? 'Quente'
+              : temperaturaCor > 65
+                  ? 'Fria'
+                  : 'Neutra',
+          iconeFinal: Icons.palette_outlined,
+          onChanged: (valor) => setState(() => temperaturaCor = valor),
+        ),
+        _linkTitulo('Cenas', () => _mensagem('Cenas da iluminação abertas.')),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final cena in ['Relaxar', 'Leitura', 'Filme'])
+              _preset(cena, cena == cenaLampada),
+          ],
+        ),
+      ],
+    );
+  }
 
-  Widget _linhaSwitch({
-    required String titulo,
-    required bool valor,
-    required ValueChanged<bool> onChanged,
-  }) {
+  Widget _conteudoCamera() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _infoBanner(Icons.videocam_outlined,
+            'Visualização disponível quando a integração de vídeo estiver ativa.'),
+        const SizedBox(height: 14),
+        _linhaSwitch('Privacidade', privacidade, Icons.visibility_off_outlined,
+            (valor) => setState(() => privacidade = valor)),
+        _linhaSwitch('Detecção de movimento', deteccaoMovimento,
+            Icons.directions_run_rounded,
+            (valor) => setState(() => deteccaoMovimento = valor)),
+        _linhaSwitch('Gravação', gravacao, Icons.fiber_manual_record_outlined,
+            (valor) => setState(() => gravacao = valor)),
+        _linkTitulo('Gráficos', () => _mensagem('Abrindo dados da câmera.')),
+      ],
+    );
+  }
+
+  Widget _conteudoTomada() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
+            (valor) => setState(() => ligado = valor)),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(child: _indicador('Potência', '184 W', Icons.bolt_outlined)),
+            const SizedBox(width: 10),
+            Expanded(child: _indicador('Hoje', '1,8 kWh', Icons.bar_chart_outlined)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _linhaSwitch('Temporizador', temporizador, Icons.timer_outlined,
+            (valor) => setState(() => temporizador = valor)),
+        _linhaSwitch('Economia de energia', modoEconomico, Icons.eco_outlined,
+            (valor) => setState(() => modoEconomico = valor)),
+      ],
+    );
+  }
+
+  Widget _conteudoSensor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _indicador('Temperatura', '23°C', Icons.thermostat_outlined)),
+            const SizedBox(width: 10),
+            Expanded(child: _indicador('Umidade', '58%', Icons.water_drop_outlined)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _linhaSwitch('Monitoramento ativo', monitoramento, Icons.sensors_outlined,
+            (valor) => setState(() => monitoramento = valor)),
+        _linhaSwitch('Notificar alterações', notificacoes,
+            Icons.notifications_none_outlined,
+            (valor) => setState(() => notificacoes = valor)),
+        _linhaSwitch('Alertas de limite', alerta, Icons.warning_amber_outlined,
+            (valor) => setState(() => alerta = valor)),
+      ],
+    );
+  }
+
+  Widget _conteudoGenerico() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
+            (valor) => setState(() => ligado = valor)),
+        _linhaSwitch('Notificações', notificacoes,
+            Icons.notifications_none_outlined,
+            (valor) => setState(() => notificacoes = valor)),
+        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos do aparelho.')),
+      ],
+    );
+  }
+
+  Widget _linhaSwitch(
+    String titulo,
+    bool valor,
+    IconData icone,
+    ValueChanged<bool> onChanged,
+  ) {
     return SizedBox(
-      height: 35,
-
+      height: 36,
       child: Row(
         children: [
           Expanded(
             child: Text(
               titulo,
-
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-
               style: const TextStyle(
                 color: marrom,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-
-          _switchCustom(valor: valor, onChanged: onChanged),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================
-  // SWITCH PERSONALIZADO
-  // ==========================================================
-
-  Widget _switchCustom({
-    required bool valor,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        onChanged(!valor);
-      },
-
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-
-        width: 68,
-        height: 36,
-
-        padding: const EdgeInsets.all(4),
-
-        decoration: BoxDecoration(
-          color: const Color(0xFFE2A512),
-          borderRadius: BorderRadius.circular(25),
-        ),
-
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 180),
-
-          alignment: valor ? Alignment.centerRight : Alignment.centerLeft,
-
-          child: Container(
-            width: 28,
-            height: 28,
-
-            decoration: const BoxDecoration(
-              color: marrom,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==========================================================
-  // VELOCIDADE
-  // ==========================================================
-
-  Widget _linhaVelocidade() {
-    return SizedBox(
-      height: 35,
-
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Velocidade do ventilador',
-
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-
-              style: TextStyle(
-                color: marrom,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-
-          DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: velocidadeVentilador,
-
-              icon: const Icon(
-                Icons.keyboard_arrow_down,
-                color: marrom,
-                size: 19,
-              ),
-
-              style: const TextStyle(
-                color: marrom,
-                fontSize: 15,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w800,
               ),
-
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1')),
-                DropdownMenuItem(value: 2, child: Text('2')),
-                DropdownMenuItem(value: 3, child: Text('3')),
-                DropdownMenuItem(value: 4, child: Text('4')),
-              ],
-
-              onChanged: (valor) {
-                if (valor != null) {
-                  setState(() {
-                    velocidadeVentilador = valor;
-                  });
-                }
-              },
             ),
+          ),
+          Switch.adaptive(
+            value: valor,
+            onChanged: onChanged,
+            activeThumbColor: marrom,
+            activeTrackColor: amareloBotao,
+            inactiveThumbColor: marrom,
+            inactiveTrackColor: const Color(0xFF7E3C03),
           ),
         ],
       ),
     );
   }
 
-  // ==========================================================
-  // LINHA GRÁFICOS
-  // ==========================================================
-
-  Widget _linhaTexto(
-    String texto, {
-    IconData? iconeFinal,
-    VoidCallback? onTap,
+  Widget _linhaSlider({
+    required String titulo,
+    required double valor,
+    required double min,
+    required double max,
+    required String textoValor,
+    required IconData iconeFinal,
+    required ValueChanged<double> onChanged,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-
-      child: SizedBox(
-        height: 35,
-
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                texto,
-
-                style: const TextStyle(
-                  color: marrom,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-
-            if (iconeFinal != null) Icon(iconeFinal, color: marrom, size: 21),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ==========================================================
-  // PRÉ-CONFIGURAÇÕES
-  // ==========================================================
-
-  Widget _preConfiguracoes() {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _botaoPreConfig(
-          texto: 'Frio',
-
-          onTap: () {
-            setState(() {
-              temperatura = 18;
-            });
-
-            _mensagem('Temperatura configurada para 18°C');
-          },
-        ),
-
-        const SizedBox(width: 10),
-
-        _botaoPreConfig(
-          texto: 'Calor',
-
-          onTap: () {
-            setState(() {
-              temperatura = 25;
-            });
-
-            _mensagem('Temperatura configurada para 25°C');
-          },
-        ),
-
-        const SizedBox(width: 10),
-
-        GestureDetector(
-          onTap: () {
-            _mensagem('Nova pré-configuração');
-          },
-
-          child: Container(
-            width: 64,
-            height: 50,
-
-            decoration: BoxDecoration(
-              color: amareloBotao,
-              borderRadius: BorderRadius.circular(8),
+        Expanded(
+          flex: 3,
+          child: Text(
+            titulo,
+            style: const TextStyle(
+              color: marrom,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w800,
             ),
-
-            child: const Icon(Icons.add, color: marrom, size: 32),
           ),
         ),
+        Expanded(
+          flex: 4,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              activeTrackColor: marrom,
+              inactiveTrackColor: marrom.withValues(alpha: 0.18),
+              thumbColor: marrom,
+              overlayColor: marrom.withValues(alpha: 0.10),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+            ),
+            child: Slider(
+              min: min,
+              max: max,
+              value: valor.clamp(min, max).toDouble(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 48,
+          child: Text(
+            textoValor,
+            textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: marrom,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Icon(iconeFinal, color: marrom, size: 21),
       ],
     );
   }
 
-  // ==========================================================
-  // BOTÃO PRÉ-CONFIGURAÇÃO
-  // ==========================================================
-
-  Widget _botaoPreConfig({required String texto, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-
-      child: Container(
-        width: 72,
-        height: 50,
-
-        decoration: BoxDecoration(
-          color: amareloBotao,
-          borderRadius: BorderRadius.circular(8),
-        ),
-
-        alignment: Alignment.center,
-
-        child: Text(
-          texto,
-
-          style: const TextStyle(
-            color: marrom,
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+  Widget _botaoOpcao({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool ativo = false,
+  }) {
+    return Material(
+      color: ativo ? amareloBotao : amareloCard,
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: SizedBox(
+          height: 82,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: marrom, size: 37),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: marrom,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // ==========================================================
-  // MENU
-  // ==========================================================
-
-  void _abrirMenu() {
-    showModalBottomSheet(
-      context: context,
-
-      backgroundColor: Colors.transparent,
-
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(18),
-
-          decoration: const BoxDecoration(
-            color: amareloClaro,
-
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+  Widget _preset(
+    String texto,
+    bool ativo, {
+    IconData? icon,
+    double largura = 68,
+  }) {
+    return Material(
+      color: ativo ? amareloBotao : amareloCard,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () {
+          if (texto == 'Frio') setState(() => modoAr = 'Frio');
+          if (texto == 'Calor') setState(() => modoAr = 'Quente');
+          if (texto == 'Relaxar' || texto == 'Leitura' || texto == 'Filme') {
+            setState(() => cenaLampada = texto);
+          }
+          if (texto == '+') _mensagem('Adicionar nova pré-configuração.');
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: largura,
+          height: 68,
+          child: Center(
+            child: icon != null
+                ? Icon(icon, color: marrom, size: 36)
+                : Text(
+                    texto,
+                    style: const TextStyle(
+                      color: marrom,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
           ),
-
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-
-            children: [
-              ListTile(
-                leading: const Icon(Icons.refresh, color: marrom),
-
-                title: const Text(
-                  'Atualizar aparelho',
-
-                  style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-                ),
-
-                onTap: () {
-                  Navigator.pop(context);
-
-                  _mensagem('Aparelho atualizado.');
-                },
-              ),
-
-              ListTile(
-                leading: const Icon(Icons.info_outline, color: marrom),
-
-                title: const Text(
-                  'Informações',
-
-                  style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-                ),
-
-                onTap: () {
-                  Navigator.pop(context);
-
-                  _mostrarInformacoes();
-                },
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  // ==========================================================
-  // INFORMAÇÕES
-  // ==========================================================
+  Widget _linkTitulo(String texto, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        texto,
+        style: const TextStyle(
+          color: marrom,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+          decoration: TextDecoration.underline,
+          decorationThickness: 1.3,
+        ),
+      ),
+    );
+  }
 
-  void _mostrarInformacoes() {
-    showDialog(
-      context: context,
+  Widget _streamingGrid() {
+    final itens = <(String, Color, IconData)>[
+      ('Twitch', const Color(0xFF9146FF), Icons.chat_bubble_outline_rounded),
+      ('Disney+', const Color(0xFF071A5B), Icons.movie_creation_outlined),
+      ('Prime', const Color(0xFF20A6F5), Icons.play_arrow_rounded),
+      ('YouTube', const Color(0xFFFF1F19), Icons.play_arrow_rounded),
+      ('Netflix', Colors.black, Icons.movie_outlined),
+      ('+', amareloBotao, Icons.add),
+    ];
 
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Aparelho',
-
-            style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-          ),
-
-          content: Text('${widget.nome} conectado à sua casa inteligente.'),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-
-              child: const Text('Fechar', style: TextStyle(color: marrom)),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: itens.map((item) {
+        final ehAdicionar = item.$1 == '+';
+        return Material(
+          color: item.$2,
+          borderRadius: BorderRadius.circular(7),
+          child: InkWell(
+            onTap: () => _mensagem(
+              ehAdicionar ? 'Adicionar aplicativo.' : '${item.$1} selecionado.',
             ),
-          ],
+            borderRadius: BorderRadius.circular(7),
+            child: SizedBox(
+              width: 55,
+              height: 55,
+              child: Center(
+                child: Icon(
+                  item.$3,
+                  color: ehAdicionar ? marrom : Colors.white,
+                  size: ehAdicionar ? 31 : 27,
+                ),
+              ),
+            ),
+          ),
         );
-      },
+      }).toList(),
     );
   }
 
-  // ==========================================================
-  // MENSAGEM
-  // ==========================================================
-
-  void _mensagem(String texto) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(texto), duration: const Duration(seconds: 2)),
+  Widget _infoBanner(IconData icon, String texto) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: amareloCard,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: marrom, size: 26),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              texto,
+              style: const TextStyle(
+                color: marrom,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _indicador(String titulo, String valor, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: amareloCard,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: marrom, size: 22),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: TextStyle(
+                    color: marrom.withValues(alpha: 0.70),
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  valor,
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rodapeIdentificacao() {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
+      iconColor: marrom,
+      collapsedIconColor: marrom,
+      title: const Text(
+        'Informações do aparelho',
+        style: TextStyle(
+          color: marrom,
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      children: [
+        _linhaInfo('ID', widget.id),
+        _linhaInfo('Fabricante', widget.fabricante),
+        _linhaInfo('Modelo', widget.modelo),
+        _linhaInfo('Conexão', widget.conexao),
+        _linhaInfo('Local', widget.local),
+        _linhaInfo('Status', widget.status),
+      ],
+    );
+  }
+
+  Widget _linhaInfo(String titulo, String valor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            color: marrom,
+            fontSize: 11.5,
+            height: 1.25,
+          ),
+          children: [
+            TextSpan(
+              text: '$titulo: ',
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            TextSpan(text: valor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _mensagem(String mensagem) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensagem)));
+  }
+
+
 }

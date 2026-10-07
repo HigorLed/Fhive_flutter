@@ -197,21 +197,30 @@ class AppTheme {
         ),
       ),
 
-      dialogTheme: const DialogThemeData(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceLight,
-
-        titleTextStyle: TextStyle(
+        elevation: 10,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.10),
+            width: 1,
+          ),
+        ),
+        titleTextStyle: const TextStyle(
           color: AppColors.primary,
           fontFamily: 'Montserrat',
           fontSize: 20,
           fontWeight: FontWeight.w800,
         ),
-
-        contentTextStyle: TextStyle(
+        contentTextStyle: const TextStyle(
           color: AppColors.primary,
           fontFamily: 'Montserrat',
           fontSize: 14,
+          height: 1.4,
         ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       ),
 
       snackBarTheme: const SnackBarThemeData(

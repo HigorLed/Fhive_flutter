@@ -1,16 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
 
-class TelaAparelhos extends StatelessWidget {
+class TelaAparelhos extends StatefulWidget {
   const TelaAparelhos({super.key});
 
   static const Color marrom = AppColors.primary;
 
-  void _mensagem(BuildContext context, String texto) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  @override
+  State<TelaAparelhos> createState() => _TelaAparelhosState();
+}
+
+class _TelaAparelhosState extends State<TelaAparelhos> {
+  final Map<String, bool> _locaisAbertos = <String, bool>{};
+
+  void _abrirCriar(BuildContext context) {
+    mostrarCriarAparelho(context);
+  }
+
+  void _alternarLocal(String local) {
+    setState(() {
+      _locaisAbertos[local] = !(_locaisAbertos[local] ?? true);
+    });
   }
 
   @override
@@ -32,50 +46,47 @@ class TelaAparelhos extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // TÍTULO
                       Row(
                         children: [
-                          const Text(
-                            'Minha casa',
-                            style: AppTextStyles.pageTitle,
+                          const Expanded(
+                            child: Text(
+                              'Minha casa',
+                              style: AppTextStyles.pageTitle,
+                            ),
                           ),
-                          const Spacer(),
                           IconButton(
-                            onPressed: () {
-                              _mensagem(context, 'Adicionar aparelho');
-                            },
-                            tooltip: 'Adicionar',
+                            onPressed: () => _abrirCriar(context),
+                            tooltip: 'Criar aparelho',
                             icon: const Icon(
                               Icons.add,
-                              color: marrom,
+                              color: TelaAparelhos.marrom,
                               size: 30,
                             ),
                           ),
                           IconButton(
-                            onPressed: () {
-                              _mensagem(context, 'Menu de aparelhos');
-                            },
+                            onPressed: () {},
                             tooltip: 'Menu',
                             icon: const Icon(
                               Icons.more_vert,
-                              color: marrom,
+                              color: TelaAparelhos.marrom,
                               size: 26,
                             ),
                           ),
                         ],
                       ),
-
                       const SizedBox(height: AppSpacing.section),
-
-                      // PESQUISA + LOCAIS
                       Row(
                         children: [
-                          const Icon(Icons.search, color: marrom, size: 24),
+                          const Icon(
+                            Icons.search,
+                            color: TelaAparelhos.marrom,
+                            size: 24,
+                          ),
                           const SizedBox(width: 6),
                           const Text(
                             'Todos aparelhos',
                             style: TextStyle(
-                              color: marrom,
+                              color: TelaAparelhos.marrom,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -84,119 +95,70 @@ class TelaAparelhos extends StatelessWidget {
                           const Text(
                             'Locais',
                             style: TextStyle(
-                              color: marrom,
+                              color: TelaAparelhos.marrom,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const Icon(
                             Icons.keyboard_arrow_down,
-                            color: marrom,
+                            color: TelaAparelhos.marrom,
                             size: 22,
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 28),
+                      ValueListenableBuilder<List<AparelhoItem>>(
+                        valueListenable: AparelhosStore.aparelhos,
+                        builder: (context, aparelhos, _) {
+                          final locais = <String>[];
+                          for (final aparelho in aparelhos) {
+                            if (!locais.contains(aparelho.local)) {
+                              locais.add(aparelho.local);
+                            }
+                          }
 
-                      // SALA DE ESTAR
-                      Row(
-                        children: [
-                          const Text(
-                            'Sala de Estar',
-                            style: TextStyle(
-                              color: marrom,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          const Icon(
-                            Icons.keyboard_arrow_up,
-                            color: marrom,
-                            size: 22,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // CARDS
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _AparelhoCard(
-                              titulo: 'TV - Cristal',
-                              status: 'Online',
-                              icone: Icons.tv,
-                              wifi: true,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const TelaDetalhesAparelho(
-                                          nome: 'TV - Cristal',
-                                          icone: Icons.tv,
-                                        ),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final local in locais) ...[
+                                _cabecalhoLocal(
+                                  local,
+                                  aparelhos
+                                      .where((aparelho) => aparelho.local == local)
+                                      .length,
+                                ),
+                                if (_locaisAbertos[local] ?? true) ...[
+                                  const SizedBox(height: 18),
+                                  _gradeAparelhos(
+                                    context,
+                                    aparelhos
+                                        .where((aparelho) => aparelho.local == local)
+                                        .toList(),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(width: 10),
-
-                          Expanded(
-                            child: _AparelhoCard(
-                              titulo: 'Ar condicionado',
-                              status: 'Offline',
-                              icone: Icons.air,
-                              wifi: false,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const TelaDetalhesAparelho(
-                                          nome: 'Ar condicionado',
-                                          icone: Icons.air,
-                                        ),
+                                ],
+                                const SizedBox(height: 27),
+                              ],
+                              if (locais.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    'Nenhum aparelho cadastrado.',
+                                    style: TextStyle(
+                                      color: TelaAparelhos.marrom,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 27),
-
-                      // COZINHA
-                      Row(
-                        children: [
-                          const Text(
-                            'Cozinha',
-                            style: TextStyle(
-                              color: marrom,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          const Icon(
-                            Icons.keyboard_arrow_down,
-                            color: marrom,
-                            size: 22,
-                          ),
-                        ],
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // BARRA INFERIOR
               const BarraNavegacao(itemSelecionado: 1),
             ],
           ),
@@ -204,24 +166,91 @@ class TelaAparelhos extends StatelessWidget {
       ),
     );
   }
+
+  Widget _cabecalhoLocal(String local, int quantidade) {
+    final aberto = _locaisAbertos[local] ?? true;
+
+    return InkWell(
+      onTap: () => _alternarLocal(local),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                local,
+                style: const TextStyle(
+                  color: TelaAparelhos.marrom,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Text(
+              '$quantidade',
+              style: TextStyle(
+                color: TelaAparelhos.marrom.withValues(alpha: 0.72),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 3),
+            Icon(
+              aberto
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              color: TelaAparelhos.marrom,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _gradeAparelhos(BuildContext context, List<AparelhoItem> aparelhos) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: aparelhos
+          .map(
+            (aparelho) => SizedBox(
+              width: (MediaQuery.sizeOf(context).width - 50) / 2,
+              child: _AparelhoCard(
+                aparelho: aparelho,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TelaDetalhesAparelho(
+                        nome: aparelho.nome,
+                        id: aparelho.id,
+                        tipo: aparelho.tipo,
+                        fabricante: aparelho.fabricante,
+                        modelo: aparelho.modelo,
+                        local: aparelho.local,
+                        conexao: aparelho.conexao,
+                        status: aparelho.status,
+                        icone: aparelho.icone,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
 }
 
-// ==========================================================
-// CARD DO APARELHO
-// ==========================================================
-
 class _AparelhoCard extends StatelessWidget {
-  final String titulo;
-  final String status;
-  final IconData icone;
-  final bool wifi;
+  final AparelhoItem aparelho;
   final VoidCallback onTap;
 
   const _AparelhoCard({
-    required this.titulo,
-    required this.status,
-    required this.icone,
-    required this.wifi,
+    required this.aparelho,
     required this.onTap,
   });
 
@@ -230,8 +259,8 @@ class _AparelhoCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 94,
-        padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
+        height: 108,
+        padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
         decoration: BoxDecoration(
           color: const Color(0xFFFFF9C9),
           borderRadius: BorderRadius.circular(13),
@@ -241,21 +270,57 @@ class _AparelhoCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const SizedBox(width: 28),
-                Icon(icone, color: TelaAparelhos.marrom, size: 32),
+                Icon(
+                  aparelho.icone,
+                  color: TelaAparelhos.marrom,
+                  size: 31,
+                ),
                 const Spacer(),
                 Icon(
-                  wifi ? Icons.wifi : Icons.wifi_off,
+                  aparelho.conexao == 'Bluetooth'
+                      ? Icons.bluetooth
+                      : aparelho.conexao == 'Ethernet'
+                          ? Icons.lan_outlined
+                          : aparelho.wifi
+                              ? Icons.wifi
+                              : Icons.wifi_off,
                   color: TelaAparelhos.marrom,
                   size: 18,
                 ),
+                ValueListenableBuilder<Set<String>>(
+                  valueListenable: AparelhosStore.favoritos,
+                  builder: (context, favoritos, _) {
+                    final ativo = favoritos.contains(aparelho.nome);
+                    return IconButton(
+                      onPressed: () {
+                        AparelhosStore.alternarFavorito(aparelho.nome);
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              ativo
+                                  ? 'Removido dos favoritos.'
+                                  : 'Adicionado aos favoritos.',
+                            ),
+                          ),
+                        );
+                      },
+                      tooltip: ativo ? 'Remover dos favoritos' : 'Favoritar',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        ativo ? Icons.star : Icons.star_border,
+                        color: TelaAparelhos.marrom,
+                        size: 22,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
-
             const Spacer(),
-
             Text(
-              titulo,
+              aparelho.nome,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -264,9 +329,8 @@ class _AparelhoCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             Text(
-              status,
+              aparelho.status,
               style: const TextStyle(
                 color: TelaAparelhos.marrom,
                 fontSize: 12,

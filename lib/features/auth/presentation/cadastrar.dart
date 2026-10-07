@@ -235,9 +235,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                     curve: Curves.easeOut,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: preenchida
-                          ? cor
-                          : const Color(0xFFD9C9A8),
+                      color: preenchida ? cor : const Color(0xFFD9C9A8),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -514,7 +512,9 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     return 'A senha deve conter pelo menos um número';
                                   }
 
-                                  if (!RegExp(r'[^A-Za-z0-9\s]').hasMatch(valor)) {
+                                  if (!RegExp(
+                                    r'[^A-Za-z0-9\s]',
+                                  ).hasMatch(valor)) {
                                     return 'A senha deve conter pelo menos um caractere especial';
                                   }
 
@@ -600,8 +600,9 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                   onPressed: carregando ? null : cadastrar,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFFFF261),
-                                    disabledBackgroundColor:
-                                        const Color(0xFFE9D94A),
+                                    disabledBackgroundColor: const Color(
+                                      0xFFE9D94A,
+                                    ),
                                     foregroundColor: AppColors.primary,
                                     elevation: 4,
                                     shadowColor: Colors.black26,

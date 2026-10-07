@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
@@ -58,11 +59,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
                           IconButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Adicionar gráfico'),
-                                ),
-                              );
+                              mostrarCriarAparelho(context);
                             },
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -378,60 +375,68 @@ class _TelaGraficosState extends State<TelaGraficos> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.refresh, color: marrom),
-                title: const Text(
-                  'Atualizar gráficos',
-                  style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: const Icon(Icons.refresh, color: marrom),
+                  title: const Text(
+                    'Atualizar gráficos',
+                    style: TextStyle(
+                      color: marrom,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Gráficos atualizados!')),
+                    );
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gráficos atualizados!')),
-                  );
-                },
               ),
-
-              ListTile(
-                leading: const Icon(Icons.info_outline, color: marrom),
-                title: const Text(
-                  'Informações',
-                  style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text(
-                          'Gráficos',
-                          style: TextStyle(
-                            color: marrom,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        content: const Text(
-                          'Nesta tela você poderá acompanhar '
-                          'os dados dos aparelhos conectados.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              'Fechar',
-                              style: TextStyle(color: marrom),
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline, color: marrom),
+                  title: const Text(
+                    'Informações',
+                    style: TextStyle(
+                      color: marrom,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text(
+                            'Gráficos',
+                            style: TextStyle(
+                              color: marrom,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  );
-                },
+                          content: const Text(
+                            'Nesta tela você poderá acompanhar os dados dos aparelhos conectados.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Fechar',
+                                style: TextStyle(color: marrom),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -442,7 +447,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
 }
 
 // ================================================================
-// TELA DE DETALHES
+// DETALHES DOS GRÁFICOS DE UM APARELHO
 // ================================================================
 
 class TelaGraficosDetalhes extends StatefulWidget {
@@ -456,84 +461,60 @@ class TelaGraficosDetalhes extends StatefulWidget {
 
 class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   static const Color marrom = AppColors.primary;
-  static const Color laranja = Color(0xFFE56C1F);
+  static const Color laranja = Color(0xFFC46B00);
+  static const Color textoSecundario = Color(0xFF81500F);
+  static const Color amareloClaro = Color(0xFFFFF1A3);
   static const Color amareloCard = Color(0xFFFFE48A);
-  static const Color amareloClaro = Color(0xFFFFF4B2);
-  static const Color textoSecundario = Color(0xFF8C743B);
-
-  // ================================================================
-  // PERÍODO DO GRÁFICO
-  // ================================================================
 
   String periodoSelecionado = '7 dias';
 
   bool get isTv => widget.tipo == TipoAparelho.tv;
 
-  String get nomeAparelho {
-    return isTv ? 'TV - Cristal' : 'Ar condicionado';
-  }
+  String get nomeAparelho => isTv ? 'TV - Cristal' : 'Ar condicionado';
 
-  IconData get iconeAparelho {
-    return isTv ? Icons.tv_outlined : Icons.air;
-  }
+  IconData get iconeAparelho =>
+      isTv ? Icons.tv_outlined : Icons.air;
 
-  int get pontos {
-    return isTv ? 76 : 82;
-  }
+  int get pontos => isTv ? 76 : 82;
 
-  double get gastoEnergia {
-    return isTv ? 12.5 : 28.4;
-  }
+  String get avaliacao => isTv ? 'Muito bom' : 'Excelente';
 
-  int get horasUsadas {
-    return isTv ? 12 : 18;
-  }
+  double get gastoEnergia => isTv ? 12.5 : 28.4;
 
-  String get terceiraValor {
-    return isTv ? '72%' : '23°C';
-  }
+  int get horasUsadas => isTv ? 12 : 18;
 
-  String get avaliacao {
-    return pontos >= 80
-        ? 'Bom controle'
-        : pontos >= 60
-        ? 'Controle moderado'
-        : 'Precisa de atenção';
-  }
-
-  // ================================================================
-  // DADOS DO GRÁFICO
-  // ================================================================
+  String get terceiraValor => isTv ? '72%' : '23°C';
 
   List<double> get valoresGrafico {
-    if (periodoSelecionado == '7 dias') {
+    if (periodoSelecionado == '4 semanas') {
       return isTv
-          ? [0.64, 0.49, 0.57, 0.35, 0.61, 0.43, 0.22]
-          : [0.72, 0.61, 0.75, 0.51, 0.69, 0.43, 0.32];
+          ? <double>[0.38, 0.52, 0.44, 0.61, 0.55, 0.72, 0.66]
+          : <double>[0.48, 0.61, 0.58, 0.76, 0.69, 0.82, 0.73];
     }
 
-    if (periodoSelecionado == '4 semanas') {
-      return isTv ? [0.67, 0.48, 0.58, 0.36] : [0.80, 0.62, 0.73, 0.49];
+    if (periodoSelecionado == '6 meses') {
+      return isTv
+          ? <double>[0.44, 0.50, 0.47, 0.59, 0.53, 0.68]
+          : <double>[0.55, 0.63, 0.60, 0.74, 0.71, 0.82];
     }
 
     return isTv
-        ? [0.70, 0.58, 0.46, 0.61, 0.41, 0.32]
-        : [0.82, 0.72, 0.77, 0.63, 0.58, 0.47];
+        ? <double>[0.32, 0.46, 0.58, 0.42, 0.70, 0.61, 0.76]
+        : <double>[0.50, 0.64, 0.58, 0.78, 0.69, 0.84, 0.73];
   }
 
   List<String> get etiquetasGrafico {
-    if (periodoSelecionado == '7 dias') {
-      return ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    if (periodoSelecionado == '6 meses') {
+      return <String>['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
     }
 
     if (periodoSelecionado == '4 semanas') {
-      return ['Sem. 1', 'Sem. 2', 'Sem. 3', 'Sem. 4'];
+      return <String>['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7'];
     }
 
-    return ['Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'];
+    return <String>['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(

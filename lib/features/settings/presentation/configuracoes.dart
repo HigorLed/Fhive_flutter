@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 
@@ -172,18 +173,31 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                   crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(left: 2, bottom: 8),
-
-                      child: Text(
-                        'Configurações do Fhive',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontFamily: 'Montserrat',
-                          fontWeight: FontWeight.w800,
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Configurações do Fhive',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                      ),
+                        IconButton(
+                          onPressed: () {
+                            mostrarCriarAparelho(context);
+                          },
+                          tooltip: 'Criar aparelho',
+                          icon: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 29,
+                          ),
+                        ),
+                      ],
                     ),
 
                     // ENTRAR

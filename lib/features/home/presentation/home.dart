@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/features/onboarding/presentation/tela_tutorial.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
 
 class TelaHome extends StatefulWidget {
   const TelaHome({super.key});
@@ -12,9 +15,9 @@ class TelaHome extends StatefulWidget {
 }
 
 class _TelaHomeState extends State<TelaHome> {
-  final Color marrom = AppColors.primary;
-  final Color amarelo = AppColors.accent;
-  final Color amareloClaro = AppColors.surface;
+  static const Color marrom = AppColors.primary;
+  static const Color amarelo = AppColors.accent;
+  static const Color amareloClaro = AppColors.surface;
 
   void mostrarMensagem(String mensagem) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -40,56 +43,7 @@ class _TelaHomeState extends State<TelaHome> {
   }
 
   void abrirAdicionar() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surfaceLight,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(25),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Adicionar',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              _opcaoAdicionar(Icons.devices_other, 'Adicionar aparelho'),
-
-              _opcaoAdicionar(Icons.star_border, 'Adicionar aos favoritos'),
-
-              _opcaoAdicionar(Icons.person_add_alt_1, 'Adicionar pessoa'),
-
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _opcaoAdicionar(IconData icone, String texto) {
-    return ListTile(
-      leading: Icon(icone, color: marrom, size: 28),
-      title: Text(
-        texto,
-        style: TextStyle(color: marrom, fontWeight: FontWeight.w600),
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      onTap: () {
-        Navigator.pop(context);
-        mostrarMensagem('$texto selecionado');
-      },
-    );
+    mostrarCriarAparelho(context);
   }
 
   void abrirMenu() {
@@ -116,81 +70,97 @@ class _TelaHomeState extends State<TelaHome> {
 
               const SizedBox(height: 15),
 
-              ListTile(
-                leading: Icon(Icons.settings, color: marrom),
-                title: Text('Configurações', style: TextStyle(color: marrom)),
-                onTap: () {
-                  Navigator.pop(context);
-
-                  Navigator.pushReplacementNamed(context, '/configuracoes');
-                },
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: Icon(Icons.settings, color: marrom),
+                  title: Text(
+                    'Configurações',
+                    style: TextStyle(color: marrom),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacementNamed(context, '/configuracoes');
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: Icon(Icons.person, color: marrom),
-                title: Text('Minha conta', style: TextStyle(color: marrom)),
-                onTap: () {
-                  Navigator.pop(context);
-                  mostrarMensagem('Minha conta');
-                },
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: Icon(Icons.person, color: marrom),
+                  title: Text(
+                    'Minha conta',
+                    style: TextStyle(color: marrom),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    mostrarMensagem('Minha conta');
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: Icon(Icons.help_outline, color: marrom),
-                title: Text('Ajuda', style: TextStyle(color: marrom)),
-                onTap: () {
-                  Navigator.pop(context);
-                  mostrarMensagem('Ajuda');
-                },
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: Icon(Icons.help_outline, color: marrom),
+                  title: Text(
+                    'Ajuda',
+                    style: TextStyle(color: marrom),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    mostrarMensagem('Ajuda');
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: Icon(Icons.logout, color: marrom),
-                title: Text('Sair', style: TextStyle(color: marrom)),
-                onTap: () {
-                  Navigator.pop(context);
-
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Sair'),
-
-                        content: const Text('Deseja realmente sair da conta?'),
-
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text(
-                              'Cancelar',
-                              style: TextStyle(color: marrom),
+              Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: Icon(Icons.logout, color: marrom),
+                  title: Text(
+                    'Sair',
+                    style: TextStyle(color: marrom),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Sair'),
+                          content: const Text('Deseja realmente sair da conta?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(color: marrom),
+                              ),
                             ),
-                          ),
-
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-
-                              // `this.context` é o contexto da tela Home; o `context`
-                              // do builder acima é o do diálogo, que já foi fechado.
-                              Navigator.pushNamedAndRemoveUntil(
-                                this.context,
-                                '/entrar',
-                                (route) => false,
-                              );
-                            },
-                            child: Text(
-                              'Sair',
-                              style: TextStyle(color: marrom),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pushNamedAndRemoveUntil(
+                                  this.context,
+                                  '/entrar',
+                                  (route) => false,
+                                );
+                              },
+                              child: Text(
+                                'Sair',
+                                style: TextStyle(color: marrom),
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
 
               const SizedBox(height: 5),
@@ -352,7 +322,7 @@ class _TelaHomeState extends State<TelaHome> {
                       const SizedBox(height: 17),
 
                       // FAVORITOS
-                      Text(
+                      const Text(
                         'Favoritos',
                         style: TextStyle(
                           color: marrom,
@@ -364,42 +334,77 @@ class _TelaHomeState extends State<TelaHome> {
 
                       const SizedBox(height: 9),
 
-                      InkWell(
-                        borderRadius: BorderRadius.circular(16),
-
-                        onTap: () {
-                          mostrarMensagem('Você ainda não possui favoritos.');
-                        },
-
-                        child: Container(
-                          width: double.infinity,
-                          height: 98,
-
-                          decoration: BoxDecoration(
-                            color: amareloClaro,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-
-                            children: [
-                              Icon(Icons.close, color: marrom, size: 37),
-
-                              const SizedBox(height: 7),
-
-                              Text(
-                                'Não possui favoritos',
-                                style: TextStyle(
-                                  color: marrom,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  fontFamily: 'Arvo',
+                      ValueListenableBuilder<Set<String>>(
+                        valueListenable: AparelhosStore.favoritos,
+                        builder: (context, favoritos, _) {
+                          if (favoritos.isEmpty) {
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => mostrarMensagem(
+                                'Toque na estrela de um aparelho para favoritar.',
+                              ),
+                              child: Container(
+                                width: double.infinity,
+                                height: 98,
+                                decoration: BoxDecoration(
+                                  color: amareloClaro,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.star_border, color: marrom, size: 37),
+                                    const SizedBox(height: 7),
+                                    Text(
+                                      'Não possui favoritos',
+                                      style: TextStyle(
+                                        color: marrom,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'Arvo',
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
+                            );
+                          }
+
+                          final favoritosDados = AparelhosStore.aparelhos.value
+                              .where((aparelho) => favoritos.contains(aparelho.nome))
+                              .toList();
+
+                          return Column(
+                            children: favoritosDados
+                                .map(
+                                  (aparelho) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 9),
+                                    child: _AparelhoFavoritoCard(
+                                      aparelho: aparelho,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => TelaDetalhesAparelho(
+                                              nome: aparelho.nome,
+                                              id: aparelho.id,
+                                              tipo: aparelho.tipo,
+                                              fabricante: aparelho.fabricante,
+                                              modelo: aparelho.modelo,
+                                              local: aparelho.local,
+                                              conexao: aparelho.conexao,
+                                              status: aparelho.status,
+                                              icone: aparelho.icone,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -550,6 +555,64 @@ class _TelaHomeState extends State<TelaHome> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AparelhoFavoritoCard extends StatelessWidget {
+  final AparelhoItem aparelho;
+  final VoidCallback onTap;
+
+  const _AparelhoFavoritoCard({
+    required this.aparelho,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          children: [
+            Icon(aparelho.icone, color: AppColors.primary, size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    aparelho.nome,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    aparelho.status,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.star, color: AppColors.primary, size: 24),
           ],
         ),
       ),

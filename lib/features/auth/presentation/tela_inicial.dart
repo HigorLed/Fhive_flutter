@@ -9,9 +9,7 @@ class TelaInicial extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppGradients.main,
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.main),
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -27,8 +25,7 @@ class TelaInicial extends StatelessWidget {
                       texto: 'Entrar',
                       fundo: AppColors.primary,
                       textoCor: Colors.white,
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/entrar'),
+                      onPressed: () => Navigator.pushNamed(context, '/entrar'),
                     ),
                     const SizedBox(height: 14),
                     _BotaoPrincipal(
