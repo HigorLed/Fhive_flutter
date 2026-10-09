@@ -10,7 +10,7 @@ class BarraNavegacao extends StatelessWidget {
   static const Color marrom = AppColors.primary;
 
   /// Rotas na mesma ordem dos ícones da barra.
-  static const List<String> _rotas = [
+  static const List<String> rotasPrincipais = [
     '/home',
     '/aparelhos',
     '/graficos',
@@ -19,7 +19,7 @@ class BarraNavegacao extends StatelessWidget {
   ];
 
   void _navegar(BuildContext context, int index) {
-    final String rota = _rotas[index];
+    final String rota = rotasPrincipais[index];
 
     // Evita recriar a tela quando o usuário toca na aba em que já está.
     if (ModalRoute.of(context)?.settings.name == rota) {
@@ -91,14 +91,30 @@ class BarraNavegacao extends StatelessWidget {
           _navegar(context, index);
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: selecionado ? Colors.white : Colors.transparent,
-            shape: BoxShape.circle,
+            // O preenchimento marrom e o ícone branco deixam a aba ativa
+            // claramente distinguível do fundo creme da barra.
+            color: selecionado ? marrom : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: selecionado
+                ? [
+                    BoxShadow(
+                      color: marrom.withValues(alpha: 0.22),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : const [],
           ),
-          child: Icon(icone, color: marrom, size: selecionado ? 31 : 28),
+          child: Icon(
+            icone,
+            color: selecionado ? Colors.white : marrom,
+            size: selecionado ? 29 : 27,
+          ),
         ),
       ),
     );

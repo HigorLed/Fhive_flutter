@@ -178,8 +178,12 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
-            (valor) => setState(() => ligado = valor)),
+        _linhaSwitch(
+          'Ligar/Desligar',
+          ligado,
+          Icons.power_settings_new,
+          (valor) => setState(() => ligado = valor),
+        ),
         _linhaSlider(
           titulo: 'Volume',
           valor: volume,
@@ -189,11 +193,22 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           iconeFinal: Icons.volume_up_rounded,
           onChanged: (valor) => setState(() => volume = valor),
         ),
-        _linhaSwitch('Desligamento Automático', temporizador, Icons.timer_outlined,
-            (valor) => setState(() => temporizador = valor)),
-        _linhaSwitch('Controle Remoto', controleRemoto, Icons.settings_remote_outlined,
-            (valor) => setState(() => controleRemoto = valor)),
-        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos de ${widget.nome}.')),
+        _linhaSwitch(
+          'Desligamento Automático',
+          temporizador,
+          Icons.timer_outlined,
+          (valor) => setState(() => temporizador = valor),
+        ),
+        _linhaSwitch(
+          'Controle Remoto',
+          controleRemoto,
+          Icons.settings_remote_outlined,
+          (valor) => setState(() => controleRemoto = valor),
+        ),
+        _linkTitulo(
+          'Gráficos',
+          () => _mensagem('Abrindo gráficos de ${widget.nome}.'),
+        ),
         const SizedBox(height: 24),
         const Text(
           'Streamings',
@@ -213,8 +228,12 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
-            (valor) => setState(() => ligado = valor)),
+        _linhaSwitch(
+          'Ligar/Desligar',
+          ligado,
+          Icons.power_settings_new,
+          (valor) => setState(() => ligado = valor),
+        ),
         _linhaSlider(
           titulo: 'Temperatura',
           valor: temperatura,
@@ -272,7 +291,10 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           ],
         ),
         const SizedBox(height: 18),
-        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos de ${widget.nome}.')),
+        _linkTitulo(
+          'Gráficos',
+          () => _mensagem('Abrindo gráficos de ${widget.nome}.'),
+        ),
         const SizedBox(height: 13),
         const Text(
           'Pré-configurações',
@@ -300,8 +322,12 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
-            (valor) => setState(() => ligado = valor)),
+        _linhaSwitch(
+          'Ligar/Desligar',
+          ligado,
+          Icons.power_settings_new,
+          (valor) => setState(() => ligado = valor),
+        ),
         _linhaSlider(
           titulo: 'Brilho',
           valor: brilhoLampada,
@@ -319,8 +345,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           textoValor: temperaturaCor < 45
               ? 'Quente'
               : temperaturaCor > 65
-                  ? 'Fria'
-                  : 'Neutra',
+              ? 'Fria'
+              : 'Neutra',
           iconeFinal: Icons.palette_outlined,
           onChanged: (valor) => setState(() => temperaturaCor = valor),
         ),
@@ -342,16 +368,29 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _infoBanner(Icons.videocam_outlined,
-            'Visualização disponível quando a integração de vídeo estiver ativa.'),
+        _infoBanner(
+          Icons.videocam_outlined,
+          'Visualização disponível quando a integração de vídeo estiver ativa.',
+        ),
         const SizedBox(height: 14),
-        _linhaSwitch('Privacidade', privacidade, Icons.visibility_off_outlined,
-            (valor) => setState(() => privacidade = valor)),
-        _linhaSwitch('Detecção de movimento', deteccaoMovimento,
-            Icons.directions_run_rounded,
-            (valor) => setState(() => deteccaoMovimento = valor)),
-        _linhaSwitch('Gravação', gravacao, Icons.fiber_manual_record_outlined,
-            (valor) => setState(() => gravacao = valor)),
+        _linhaSwitch(
+          'Privacidade',
+          privacidade,
+          Icons.visibility_off_outlined,
+          (valor) => setState(() => privacidade = valor),
+        ),
+        _linhaSwitch(
+          'Detecção de movimento',
+          deteccaoMovimento,
+          Icons.directions_run_rounded,
+          (valor) => setState(() => deteccaoMovimento = valor),
+        ),
+        _linhaSwitch(
+          'Gravação',
+          gravacao,
+          Icons.fiber_manual_record_outlined,
+          (valor) => setState(() => gravacao = valor),
+        ),
         _linkTitulo('Gráficos', () => _mensagem('Abrindo dados da câmera.')),
       ],
     );
@@ -361,21 +400,37 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
-            (valor) => setState(() => ligado = valor)),
+        _linhaSwitch(
+          'Ligar/Desligar',
+          ligado,
+          Icons.power_settings_new,
+          (valor) => setState(() => ligado = valor),
+        ),
         const SizedBox(height: 6),
         Row(
           children: [
-            Expanded(child: _indicador('Potência', '184 W', Icons.bolt_outlined)),
+            Expanded(
+              child: _indicador('Potência', '184 W', Icons.bolt_outlined),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _indicador('Hoje', '1,8 kWh', Icons.bar_chart_outlined)),
+            Expanded(
+              child: _indicador('Hoje', '1,8 kWh', Icons.bar_chart_outlined),
+            ),
           ],
         ),
         const SizedBox(height: 10),
-        _linhaSwitch('Temporizador', temporizador, Icons.timer_outlined,
-            (valor) => setState(() => temporizador = valor)),
-        _linhaSwitch('Economia de energia', modoEconomico, Icons.eco_outlined,
-            (valor) => setState(() => modoEconomico = valor)),
+        _linhaSwitch(
+          'Temporizador',
+          temporizador,
+          Icons.timer_outlined,
+          (valor) => setState(() => temporizador = valor),
+        ),
+        _linhaSwitch(
+          'Economia de energia',
+          modoEconomico,
+          Icons.eco_outlined,
+          (valor) => setState(() => modoEconomico = valor),
+        ),
       ],
     );
   }
@@ -386,19 +441,38 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       children: [
         Row(
           children: [
-            Expanded(child: _indicador('Temperatura', '23°C', Icons.thermostat_outlined)),
+            Expanded(
+              child: _indicador(
+                'Temperatura',
+                '23°C',
+                Icons.thermostat_outlined,
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: _indicador('Umidade', '58%', Icons.water_drop_outlined)),
+            Expanded(
+              child: _indicador('Umidade', '58%', Icons.water_drop_outlined),
+            ),
           ],
         ),
         const SizedBox(height: 12),
-        _linhaSwitch('Monitoramento ativo', monitoramento, Icons.sensors_outlined,
-            (valor) => setState(() => monitoramento = valor)),
-        _linhaSwitch('Notificar alterações', notificacoes,
-            Icons.notifications_none_outlined,
-            (valor) => setState(() => notificacoes = valor)),
-        _linhaSwitch('Alertas de limite', alerta, Icons.warning_amber_outlined,
-            (valor) => setState(() => alerta = valor)),
+        _linhaSwitch(
+          'Monitoramento ativo',
+          monitoramento,
+          Icons.sensors_outlined,
+          (valor) => setState(() => monitoramento = valor),
+        ),
+        _linhaSwitch(
+          'Notificar alterações',
+          notificacoes,
+          Icons.notifications_none_outlined,
+          (valor) => setState(() => notificacoes = valor),
+        ),
+        _linhaSwitch(
+          'Alertas de limite',
+          alerta,
+          Icons.warning_amber_outlined,
+          (valor) => setState(() => alerta = valor),
+        ),
       ],
     );
   }
@@ -407,12 +481,22 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _linhaSwitch('Ligar/Desligar', ligado, Icons.power_settings_new,
-            (valor) => setState(() => ligado = valor)),
-        _linhaSwitch('Notificações', notificacoes,
-            Icons.notifications_none_outlined,
-            (valor) => setState(() => notificacoes = valor)),
-        _linkTitulo('Gráficos', () => _mensagem('Abrindo gráficos do aparelho.')),
+        _linhaSwitch(
+          'Ligar/Desligar',
+          ligado,
+          Icons.power_settings_new,
+          (valor) => setState(() => ligado = valor),
+        ),
+        _linhaSwitch(
+          'Notificações',
+          notificacoes,
+          Icons.notifications_none_outlined,
+          (valor) => setState(() => notificacoes = valor),
+        ),
+        _linkTitulo(
+          'Gráficos',
+          () => _mensagem('Abrindo gráficos do aparelho.'),
+        ),
       ],
     );
   }
@@ -741,11 +825,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       padding: const EdgeInsets.only(bottom: 5),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(
-            color: marrom,
-            fontSize: 11.5,
-            height: 1.25,
-          ),
+          style: const TextStyle(color: marrom, fontSize: 11.5, height: 1.25),
           children: [
             TextSpan(
               text: '$titulo: ',
@@ -763,6 +843,4 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(mensagem)));
   }
-
-
 }

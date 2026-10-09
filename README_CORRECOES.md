@@ -361,3 +361,147 @@ A validação local apontou que `lib/features/analytics/presentation/graficos.da
 
 - `lib/features/analytics/presentation/graficos.dart`
 
+
+
+## Revisão dos ZIPs e ajustes de navegação e locais — 09/10/2026
+
+Foram analisados os dois arquivos enviados nesta etapa:
+
+- `lib(1).zip`: contém o código da pasta `lib`, organizado por funcionalidades (`features`), tema (`core/theme`), estado compartilhado (`shared/state`) e componentes compartilhados (`shared/widgets`), além dos exports legados em `lib/widget/`.
+- `README_CORRECOES.zip`: contém o histórico de alterações anterior. O conteúdo existente foi preservado e esta seção foi acrescentada ao final para documentar as novas modificações.
+
+### Destaque da barra de navegação
+
+Arquivo modificado: `lib/shared/widgets/barra_navegacao.dart`.
+
+- O item selecionado agora usa fundo marrom sólido, ícone branco e cantos arredondados.
+- Foi adicionado um sombreado suave no item selecionado para separá-lo melhor do fundo creme.
+- A animação de mudança de seleção foi suavizada e levemente ampliada.
+- Os demais itens mantêm ícones marrons sobre fundo transparente.
+- A altura, a ordem das rotas e o comportamento de navegação foram preservados; a mudança é localizada no indicador visual da aba ativa.
+
+### Tela inicial: logotipo e botões
+
+Arquivo modificado: `lib/features/auth/presentation/tela_inicial.dart`.
+
+- O grupo composto pelo ícone e pela palavra **Fhive** foi centralizado explicitamente.
+- O espaço horizontal entre o ícone e o texto foi reduzido de 10 para 4 pixels, aproximando a marca.
+- A largura dos botões **Entrar** e **Criar Conta** foi aumentada de 190 para 225 pixels.
+- Cores, formato dos botões, textos, navegação e gradiente foram mantidos.
+
+### Lista centralizada de locais
+
+Arquivo modificado: `lib/shared/state/aparelhos_store.dart`.
+
+- Foi criado o `ValueNotifier` compartilhado `AparelhosStore.locais`.
+- As sugestões iniciais foram centralizadas em `AparelhosStore.locaisSugeridos` para evitar listas fixas diferentes em cada tela.
+- `locaisDisponiveis` fornece uma lista sem duplicatas, incluindo sugestões, locais personalizados e os locais usados pelos aparelhos cadastrados.
+- `adicionarLocal` registra um local personalizado e impede nomes vazios ou duplicados, ignorando diferenças entre maiúsculas e minúsculas.
+- `localExiste` permite validar nomes já registrados.
+- Ao adicionar um aparelho, seu local também é registrado na lista compartilhada quando necessário.
+- O método `reset()` restaura a lista inicial de sugestões, mantendo os testes independentes.
+
+### Seletor de locais na tela de aparelhos
+
+Arquivo modificado: `lib/features/devices/presentation/aparelhos.dart`.
+
+- O rótulo **Locais** passou a ser clicável e abre/fecha um painel de locais disponíveis.
+- O painel lista as sugestões e os locais personalizados já registrados.
+- A opção **Todos** limpa o filtro; tocar em outro local filtra a lista para mostrar apenas aquele local.
+- Um local selecionado sem aparelhos continua visível com contagem zero e a mensagem **Nenhum aparelho neste local ainda**.
+- Foi adicionado o botão **Criar local**, que abre um diálogo para cadastrar um local personalizado.
+- O diálogo valida nomes vazios e duplicados e informa o resultado ao usuário.
+- Após criar um local pela tela de aparelhos, ele fica disponível no painel e no cadastro de aparelhos.
+- A organização existente da tela, os cartões pequenos, o gradiente, as cores e a barra inferior foram mantidos.
+
+### Locais personalizados no cadastro de aparelhos
+
+Arquivo modificado: `lib/features/devices/presentation/criar_aparelho.dart`.
+
+- O campo **Local do aparelho** passou a usar `AparelhosStore.locaisDisponiveis`, em vez de manter uma segunda lista independente dentro do formulário.
+- As sugestões padrão continuam disponíveis.
+- Foi adicionada a opção **Criar local personalizado** diretamente no seletor de locais.
+- O diálogo de criação reutiliza a mesma validação compartilhada e impede locais vazios ou duplicados.
+- Depois de criado, o novo local é selecionado no cadastro atual e também aparece no painel de locais da tela de aparelhos.
+- Foi adicionada uma chave de atualização para restaurar o valor correto do seletor caso o usuário cancele ou não consiga criar um local.
+
+### Arquivos alterados nesta atualização
+
+- `lib/shared/widgets/barra_navegacao.dart`
+- `lib/features/auth/presentation/tela_inicial.dart`
+- `lib/shared/state/aparelhos_store.dart`
+- `lib/features/devices/presentation/aparelhos.dart`
+- `lib/features/devices/presentation/criar_aparelho.dart`
+- `README_CORRECOES.md`
+
+### Limite de persistência dos locais
+
+Os locais personalizados usam o mesmo estado em memória do restante do protótipo, centralizado no `AparelhosStore`. Assim, ficam sincronizados entre a tela de aparelhos e o cadastro enquanto o aplicativo está em execução. Esta atualização não adiciona banco de dados nem armazenamento local permanente; manter locais após encerrar completamente o aplicativo depende de integrar persistência local ou backend.
+
+### Validação
+
+O ambiente desta edição não disponibiliza o SDK Flutter/Dart e os ZIPs de entrada não incluem `pubspec.yaml` nem a pasta `test`. Por isso, não foi possível executar `flutter analyze` ou `flutter test` nesta sessão. Recomenda-se validar no projeto completo com:
+
+```bash
+ dart format lib test
+ flutter analyze
+ flutter test
+```
+
+
+## Navegação por gestos e ícone do aplicativo — 09/10/2026
+
+Os arquivos desta rodada foram `lib(2).zip` e `README_CORRECOES(1).zip`. Como eles não incluem `pubspec.yaml` nem diretórios nativos de Android/iOS/desktop, para aplicar o ícone de lançamento no projeto completo foi aproveitada a estrutura de plataforma do ZIP completo do Fhive já disponível nesta conversa; a pasta `lib` e o README foram substituídos pelos arquivos enviados nesta rodada.
+
+### Navegação horizontal entre abas
+
+Arquivo novo: `lib/shared/widgets/navegacao_por_deslize.dart`.
+
+- Adicionado gesto horizontal às cinco telas principais, seguindo exatamente a ordem da barra inferior: **Início → Aparelhos → Gráficos → Rotinas → Configurações**.
+- Arrastar para a esquerda avança para a próxima tela da barra; arrastar para a direita volta para a tela anterior.
+- A navegação usa as mesmas rotas nomeadas já usadas pelos botões da barra, evitando fluxos divergentes.
+- Nas extremidades da lista, o gesto não faz ciclo automático: Início não volta de Configurações e Configurações não avança para Início.
+- O reconhecedor trata apenas gestos horizontais; os gestos verticais continuam disponíveis para rolagem dos conteúdos.
+- A tela de detalhes de aparelhos e a tela de detalhes de gráficos ficaram fora do gesto de troca de abas para evitar que um arrasto sobre controles de aparelho/gráficos troque de seção inesperadamente.
+- `BarraNavegacao.rotasPrincipais` é agora a lista compartilhada de rotas e serve como fonte única para a barra e para os gestos.
+
+### Ícone do app
+
+- Criado `assets/images/fhive_app_icon.png` em 1024×1024, usando a mesma marca SVG da tela inicial (`assets/images/logo.svg`).
+- A marca é marrom (`#964800`) e está sobre um fundo em gradiente amarelo com as cores já usadas no tema (`#FFE832`, `#FFCD1B`, `#F4A91A`).
+- A imagem foi adicionada à lista de assets do `pubspec.yaml`.
+- Atualizados os ícones de lançamento Android em `android/app/src/main/res/mipmap-*`, além do ícone adaptativo em `mipmap-anydpi-v26/ic_launcher.xml` e da camada foreground.
+- Atualizados os PNGs de ícone do catálogo iOS em `ios/Runner/Assets.xcassets/AppIcon.appiconset/`.
+- Atualizados os tamanhos de ícone do macOS em `macos/Runner/Assets.xcassets/AppIcon.appiconset/`.
+- Atualizado o ícone multi-resolução do Windows em `windows/runner/resources/app_icon.ico`.
+- O desenho das telas e o SVG usado dentro da tela inicial não foram modificados; a mudança de aparência é somente o ícone de lançamento e o novo gesto de navegação.
+
+### Teste acrescentado
+
+- Criado `test/navegacao_por_deslize_test.dart`, verificando que arrastar para a esquerda sai de Início para Aparelhos e arrastar para a direita retorna para Início.
+
+### Arquivos modificados nesta atualização
+
+- `lib/shared/widgets/barra_navegacao.dart`
+- `lib/shared/widgets/navegacao_por_deslize.dart` (novo)
+- `lib/features/home/presentation/home.dart`
+- `lib/features/devices/presentation/aparelhos.dart`
+- `lib/features/analytics/presentation/graficos.dart` (apenas a tela principal)
+- `lib/features/routines/presentation/rotinas.dart`
+- `lib/features/settings/presentation/configuracoes.dart`
+- `assets/images/fhive_app_icon.png` (novo)
+- `pubspec.yaml`
+- `android/app/src/main/AndroidManifest.xml` (inclui a referência ao ícone redondo)
+- `android/app/src/main/res/mipmap-*/*ic_launcher*`
+- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml` (novos)
+- `android/app/src/main/res/drawable-nodpi/ic_launcher_foreground.png` (novo)
+- `android/app/src/main/res/values/ic_launcher_colors.xml` (novo)
+- `ios/Runner/Assets.xcassets/AppIcon.appiconset/*`
+- `macos/Runner/Assets.xcassets/AppIcon.appiconset/*`
+- `windows/runner/resources/app_icon.ico`
+- `test/navegacao_por_deslize_test.dart` (novo)
+- `README_CORRECOES.md`
+
+### Validação
+
+Os arquivos PNG foram gerados a partir do SVG de marca existente e instalados nos catálogos e diretórios das plataformas incluídas no projeto base. A consistência do ZIP e dos catálogos JSON/XML foi verificada. Esta sessão não possui o SDK Flutter para executar `flutter analyze` ou `flutter test`; execute esses comandos localmente após extrair o pacote.

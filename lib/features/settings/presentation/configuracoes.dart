@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
@@ -159,7 +160,9 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return NavegacaoPorDeslize(
+      itemSelecionado: 4,
+      child: Scaffold(
       backgroundColor: marrom,
 
       body: SafeArea(
@@ -498,6 +501,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
           ],
         ),
       ),
+    ),
     );
   }
 }

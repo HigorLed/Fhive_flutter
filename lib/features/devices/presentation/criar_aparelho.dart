@@ -32,6 +32,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
   String _tipoSelecionado = 'TV';
   String _localSelecionado = 'Sala de Estar';
   String _conexaoSelecionada = 'Wi-Fi';
+
+  static const String _opcaoCriarLocal = '__criar_local_personalizado__';
+  int _revisaoDropdownLocal = 0;
   bool _mostrarSenha = false;
   bool _conexaoTestada = false;
 
@@ -43,16 +46,6 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
     'Tomada inteligente',
     'Sensor',
     'Outro',
-  ];
-
-  static const _locais = [
-    'Sala de Estar',
-    'Cozinha',
-    'Quarto',
-    'Banheiro',
-    'Escritório',
-    'Área externa',
-    'Outro local',
   ];
 
   static const _conexoes = ['Wi-Fi', 'Bluetooth', 'Ethernet'];
@@ -69,28 +62,29 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
   }
 
   IconData get _iconeSelecionado => switch (_tipoSelecionado) {
-        'TV' => Icons.tv,
-        'Ar condicionado' => Icons.air,
-        'Lâmpada' => Icons.lightbulb_outline,
-        'Câmera' => Icons.videocam_outlined,
-        'Tomada inteligente' => Icons.power,
-        'Sensor' => Icons.sensors_outlined,
-        _ => Icons.devices_other,
-      };
+    'TV' => Icons.tv,
+    'Ar condicionado' => Icons.air,
+    'Lâmpada' => Icons.lightbulb_outline,
+    'Câmera' => Icons.videocam_outlined,
+    'Tomada inteligente' => Icons.power,
+    'Sensor' => Icons.sensors_outlined,
+    _ => Icons.devices_other,
+  };
 
   String get _tituloEtapa => switch (_etapa) {
-        0 => 'Identifique o aparelho',
-        1 => 'Conte mais sobre ele',
-        2 => 'Configure a conexão',
-        _ => 'Revise o cadastro',
-      };
+    0 => 'Identifique o aparelho',
+    1 => 'Conte mais sobre ele',
+    2 => 'Configure a conexão',
+    _ => 'Revise o cadastro',
+  };
 
   String get _descricaoEtapa => switch (_etapa) {
-        0 => 'Dê um nome para encontrar o dispositivo depois e informe o ID único dele.',
-        1 => 'Esses dados ajudam a organizar sua casa inteligente.',
-        2 => 'Escolha como o dispositivo será conectado à sua rede.',
-        _ => 'Confira as informações antes de adicionar o aparelho à sua casa.',
-      };
+    0 =>
+      'Dê um nome para encontrar o dispositivo depois e informe o ID único dele.',
+    1 => 'Esses dados ajudam a organizar sua casa inteligente.',
+    2 => 'Escolha como o dispositivo será conectado à sua rede.',
+    _ => 'Confira as informações antes de adicionar o aparelho à sua casa.',
+  };
 
   bool _validarEtapaAtual() {
     if (_etapa == 0) {
@@ -114,7 +108,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         return false;
       }
       if (!RegExp(r'^[A-Za-z0-9_-]{4,32}$').hasMatch(id)) {
-        _mostrarErro('O ID deve ter de 4 a 32 caracteres: letras, números, _ ou -.');
+        _mostrarErro(
+          'O ID deve ter de 4 a 32 caracteres: letras, números, _ ou -.',
+        );
         return false;
       }
       if (AparelhosStore.idJaCadastrado(id)) {
@@ -230,9 +226,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
 
   void _mostrarErro(String mensagem) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensagem)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   InputDecoration _decoracaoCampo({
@@ -263,10 +259,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: AppColors.surfaceSoft,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
@@ -342,9 +335,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   height: 5,
                   margin: EdgeInsets.only(right: index == 3 ? 0 : 6),
                   decoration: BoxDecoration(
-                    color: index <= _etapa
-                        ? AppColors.accent
-                        : Colors.white24,
+                    color: index <= _etapa ? AppColors.accent : Colors.white24,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -466,7 +457,11 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 19),
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppColors.primary,
+                size: 19,
+              ),
               SizedBox(width: 9),
               Expanded(
                 child: Text(
@@ -548,6 +543,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<String>(
+          key: ValueKey<String>('$_localSelecionado-$_revisaoDropdownLocal'),
           initialValue: _localSelecionado,
           dropdownColor: AppColors.surfaceLight,
           style: const TextStyle(
@@ -558,17 +554,78 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
             label: 'Local do aparelho',
             icone: Icons.location_on_outlined,
           ),
-          items: _locais
-              .map((local) => DropdownMenuItem(value: local, child: Text(local)))
-              .toList(),
+          items: [
+            ...AparelhosStore.locaisDisponiveis.map(
+              (local) => DropdownMenuItem(value: local, child: Text(local)),
+            ),
+            const DropdownMenuItem<String>(
+              value: _opcaoCriarLocal,
+              child: Row(
+                children: [
+                  Icon(Icons.add_location_alt_outlined, size: 18),
+                  SizedBox(width: 7),
+                  Text('Criar local personalizado'),
+                ],
+              ),
+            ),
+          ],
           onChanged: (valor) {
-            if (valor != null) {
+            if (valor == null) return;
+            if (valor == _opcaoCriarLocal) {
+              setState(() => _revisaoDropdownLocal++);
+              _criarLocalPersonalizado();
+            } else {
               setState(() => _localSelecionado = valor);
             }
           },
         ),
       ],
     );
+  }
+
+  Future<void> _criarLocalPersonalizado() async {
+    final controller = TextEditingController();
+    final nome = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Criar local'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            labelText: 'Nome do local',
+            hintText: 'Ex.: Quarto de jogos',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
+          onSubmitted: (valor) => Navigator.of(dialogContext).pop(valor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: const Text('Criar local'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    if (!mounted || nome == null) return;
+    final nomeLimpo = nome.trim();
+    if (nomeLimpo.isEmpty) {
+      _mostrarErro('Digite um nome para o local.');
+      return;
+    }
+    if (!AparelhosStore.adicionarLocal(nomeLimpo)) {
+      _mostrarErro('Esse local já existe. Escolha outro nome.');
+      return;
+    }
+
+    setState(() => _localSelecionado = nomeLimpo);
   }
 
   Widget _cartaoConexao({required String tipo, required IconData icone}) {
@@ -773,7 +830,11 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       ),
       child: Row(
         children: [
-          Icon(icone ?? Icons.check_circle_outline, color: AppColors.primary, size: 20),
+          Icon(
+            icone ?? Icons.check_circle_outline,
+            color: AppColors.primary,
+            size: 20,
+          ),
           const SizedBox(width: 9),
           Expanded(
             child: Text(
@@ -824,7 +885,11 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(_iconeSelecionado, color: AppColors.primary, size: 28),
+                child: Icon(
+                  _iconeSelecionado,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -874,7 +939,11 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
               : _modeloController.text.trim(),
           icone: Icons.inventory_2_outlined,
         ),
-        _linhaResumo('Local', _localSelecionado, icone: Icons.location_on_outlined),
+        _linhaResumo(
+          'Local',
+          _localSelecionado,
+          icone: Icons.location_on_outlined,
+        ),
         _linhaResumo('Conexão', _conexaoSelecionada, icone: Icons.wifi_rounded),
         _linhaResumo(
           'Status inicial',

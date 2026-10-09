@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 
 import 'package:tcc_mobile/core/theme/theme.dart';
@@ -26,7 +27,9 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return NavegacaoPorDeslize(
+      itemSelecionado: 2,
+      child: Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -308,6 +311,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -472,8 +476,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
   String get nomeAparelho => isTv ? 'TV - Cristal' : 'Ar condicionado';
 
-  IconData get iconeAparelho =>
-      isTv ? Icons.tv_outlined : Icons.air;
+  IconData get iconeAparelho => isTv ? Icons.tv_outlined : Icons.air;
 
   int get pontos => isTv ? 76 : 82;
 
@@ -481,7 +484,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
   double get gastoEnergia => isTv ? 12.5 : 28.4;
 
-  int get horasUsadas => isTv ? 12 : 18;
+  int get horasUsadas => isTv ? 5 : 18;
 
   String get terceiraValor => isTv ? '72%' : '23°C';
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 
@@ -74,10 +75,7 @@ class _TelaHomeState extends State<TelaHome> {
                 color: Colors.transparent,
                 child: ListTile(
                   leading: Icon(Icons.settings, color: marrom),
-                  title: Text(
-                    'Configurações',
-                    style: TextStyle(color: marrom),
-                  ),
+                  title: Text('Configurações', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, '/configuracoes');
@@ -89,10 +87,7 @@ class _TelaHomeState extends State<TelaHome> {
                 color: Colors.transparent,
                 child: ListTile(
                   leading: Icon(Icons.person, color: marrom),
-                  title: Text(
-                    'Minha conta',
-                    style: TextStyle(color: marrom),
-                  ),
+                  title: Text('Minha conta', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
                     mostrarMensagem('Minha conta');
@@ -104,10 +99,7 @@ class _TelaHomeState extends State<TelaHome> {
                 color: Colors.transparent,
                 child: ListTile(
                   leading: Icon(Icons.help_outline, color: marrom),
-                  title: Text(
-                    'Ajuda',
-                    style: TextStyle(color: marrom),
-                  ),
+                  title: Text('Ajuda', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
                     mostrarMensagem('Ajuda');
@@ -119,10 +111,7 @@ class _TelaHomeState extends State<TelaHome> {
                 color: Colors.transparent,
                 child: ListTile(
                   leading: Icon(Icons.logout, color: marrom),
-                  title: Text(
-                    'Sair',
-                    style: TextStyle(color: marrom),
-                  ),
+                  title: Text('Sair', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
                     showDialog(
@@ -130,7 +119,9 @@ class _TelaHomeState extends State<TelaHome> {
                       builder: (context) {
                         return AlertDialog(
                           title: const Text('Sair'),
-                          content: const Text('Deseja realmente sair da conta?'),
+                          content: const Text(
+                            'Deseja realmente sair da conta?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () {
@@ -173,7 +164,9 @@ class _TelaHomeState extends State<TelaHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return NavegacaoPorDeslize(
+      itemSelecionado: 0,
+      child: Scaffold(
       backgroundColor: amarelo,
 
       body: SafeArea(
@@ -353,7 +346,11 @@ class _TelaHomeState extends State<TelaHome> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.star_border, color: marrom, size: 37),
+                                    Icon(
+                                      Icons.star_border,
+                                      color: marrom,
+                                      size: 37,
+                                    ),
                                     const SizedBox(height: 7),
                                     Text(
                                       'Não possui favoritos',
@@ -371,7 +368,9 @@ class _TelaHomeState extends State<TelaHome> {
                           }
 
                           final favoritosDados = AparelhosStore.aparelhos.value
-                              .where((aparelho) => favoritos.contains(aparelho.nome))
+                              .where(
+                                (aparelho) => favoritos.contains(aparelho.nome),
+                              )
                               .toList();
 
                           return Column(
@@ -385,17 +384,19 @@ class _TelaHomeState extends State<TelaHome> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => TelaDetalhesAparelho(
-                                              nome: aparelho.nome,
-                                              id: aparelho.id,
-                                              tipo: aparelho.tipo,
-                                              fabricante: aparelho.fabricante,
-                                              modelo: aparelho.modelo,
-                                              local: aparelho.local,
-                                              conexao: aparelho.conexao,
-                                              status: aparelho.status,
-                                              icone: aparelho.icone,
-                                            ),
+                                            builder: (_) =>
+                                                TelaDetalhesAparelho(
+                                                  nome: aparelho.nome,
+                                                  id: aparelho.id,
+                                                  tipo: aparelho.tipo,
+                                                  fabricante:
+                                                      aparelho.fabricante,
+                                                  modelo: aparelho.modelo,
+                                                  local: aparelho.local,
+                                                  conexao: aparelho.conexao,
+                                                  status: aparelho.status,
+                                                  icone: aparelho.icone,
+                                                ),
                                           ),
                                         );
                                       },
@@ -417,6 +418,7 @@ class _TelaHomeState extends State<TelaHome> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -566,10 +568,7 @@ class _AparelhoFavoritoCard extends StatelessWidget {
   final AparelhoItem aparelho;
   final VoidCallback onTap;
 
-  const _AparelhoFavoritoCard({
-    required this.aparelho,
-    required this.onTap,
-  });
+  const _AparelhoFavoritoCard({required this.aparelho, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

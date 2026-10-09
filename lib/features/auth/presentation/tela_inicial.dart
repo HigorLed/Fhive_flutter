@@ -19,7 +19,7 @@ class TelaInicial extends StatelessWidget {
                 child: Column(
                   children: [
                     const Spacer(flex: 4),
-                    const _LogoFhive(),
+                    const Center(child: _LogoFhive()),
                     const Spacer(flex: 5),
                     _BotaoPrincipal(
                       texto: 'Entrar',
@@ -65,7 +65,7 @@ class _LogoFhive extends StatelessWidget {
             BlendMode.srcIn,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 4),
         const Text(
           'Fhive',
           style: TextStyle(
@@ -97,7 +97,7 @@ class _BotaoPrincipal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 190,
+      width: 225,
       height: 52,
       child: ElevatedButton(
         onPressed: onPressed,

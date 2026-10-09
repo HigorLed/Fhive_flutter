@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
@@ -26,7 +27,9 @@ class _TelaRotinasState extends State<TelaRotinas> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return NavegacaoPorDeslize(
+      itemSelecionado: 3,
+      child: Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -72,6 +75,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           ),
         ),
       ),
+    ),
     );
   }
 
