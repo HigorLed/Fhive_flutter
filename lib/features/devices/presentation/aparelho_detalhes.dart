@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 
 class TelaDetalhesAparelho extends StatefulWidget {
   final String nome;
@@ -57,6 +59,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   int velocidadeVentilador = 2;
   String modoAr = 'Frio';
   String cenaLampada = 'Relaxar';
+  final List<String> _presetsArPersonalizados = <String>[];
+  final List<String> _cenasPersonalizadas = <String>[];
+  final List<String> _servicosPersonalizados = <String>[];
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +156,62 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           ),
           child: Icon(widget.icone, color: marrom, size: 25),
         ),
+        const SizedBox(width: 2),
+        ValueListenableBuilder<Set<String>>(
+          valueListenable: AparelhosStore.favoritos,
+          builder: (context, favoritos, _) {
+            final cadastrado = AparelhosStore.porId(widget.id) != null;
+            final favorito = favoritos.contains(widget.id);
+            return IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
+              tooltip: favorito
+                  ? 'Remover dos favoritos'
+                  : 'Adicionar aos favoritos',
+              onPressed: () {
+                if (!cadastrado) {
+                  _mensagem(
+                    'Cadastre este aparelho para adicioná-lo aos favoritos.',
+                  );
+                  return;
+                }
+                AparelhosStore.alternarFavorito(widget.id);
+                _mensagem(
+                  favorito
+                      ? 'Removido dos favoritos.'
+                      : 'Adicionado aos favoritos.',
+                );
+              },
+              icon: Icon(
+                favorito ? Icons.star_rounded : Icons.star_border_rounded,
+                color: marrom,
+                size: 23,
+              ),
+            );
+          },
+        ),
+        PopupMenuButton<String>(
+          tooltip: 'Mais opções',
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.more_vert_rounded, color: marrom, size: 23),
+          onSelected: (acao) {
+            if (acao == 'informacoes') _mostrarInformacoes();
+            if (acao == 'remover') _confirmarRemocao();
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem<String>(
+              key: ValueKey<String>('menu-informacoes-aparelho'),
+              value: 'informacoes',
+              child: Text('Informações do aparelho'),
+            ),
+            if (AparelhosStore.porId(widget.id) != null)
+              const PopupMenuItem<String>(
+                value: 'remover',
+                child: Text('Remover aparelho'),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -205,10 +266,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           Icons.settings_remote_outlined,
           (valor) => setState(() => controleRemoto = valor),
         ),
-        _linkTitulo(
-          'Gráficos',
-          () => _mensagem('Abrindo gráficos de ${widget.nome}.'),
-        ),
+        _linkTitulo('Gráficos', _abrirGraficos),
         const SizedBox(height: 24),
         const Text(
           'Streamings',
@@ -291,10 +349,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           ],
         ),
         const SizedBox(height: 18),
-        _linkTitulo(
-          'Gráficos',
-          () => _mensagem('Abrindo gráficos de ${widget.nome}.'),
-        ),
+        _linkTitulo('Gráficos', _abrirGraficos),
         const SizedBox(height: 13),
         const Text(
           'Pré-configurações',
@@ -310,7 +365,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           runSpacing: 10,
           children: [
             _preset('Frio', modoAr == 'Frio'),
-            _preset('Calor', modoAr == 'Quente'),
+            _preset('Calor', modoAr == 'Calor'),
+            for (final preset in _presetsArPersonalizados)
+              _preset(preset, modoAr == preset),
             _preset('+', false, icon: Icons.add, largura: 68),
           ],
         ),
@@ -350,14 +407,20 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           iconeFinal: Icons.palette_outlined,
           onChanged: (valor) => setState(() => temperaturaCor = valor),
         ),
-        _linkTitulo('Cenas', () => _mensagem('Cenas da iluminação abertas.')),
+        _linkTitulo('Cenas', _abrirCenas),
         const SizedBox(height: 10),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final cena in ['Relaxar', 'Leitura', 'Filme'])
+            for (final cena in <String>[
+              'Relaxar',
+              'Leitura',
+              'Filme',
+              ..._cenasPersonalizadas,
+            ])
               _preset(cena, cena == cenaLampada),
+            _preset('+', false, icon: Icons.add, largura: 68),
           ],
         ),
       ],
@@ -391,7 +454,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           Icons.fiber_manual_record_outlined,
           (valor) => setState(() => gravacao = valor),
         ),
-        _linkTitulo('Gráficos', () => _mensagem('Abrindo dados da câmera.')),
+        _linkTitulo('Gráficos', _abrirGraficos),
       ],
     );
   }
@@ -493,10 +556,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           Icons.notifications_none_outlined,
           (valor) => setState(() => notificacoes = valor),
         ),
-        _linkTitulo(
-          'Gráficos',
-          () => _mensagem('Abrindo gráficos do aparelho.'),
-        ),
+        _linkTitulo('Gráficos', _abrirGraficos),
       ],
     );
   }
@@ -643,12 +703,15 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: () {
-          if (texto == 'Frio') setState(() => modoAr = 'Frio');
-          if (texto == 'Calor') setState(() => modoAr = 'Quente');
-          if (texto == 'Relaxar' || texto == 'Leitura' || texto == 'Filme') {
+          if (texto == '+') {
+            _adicionarPreConfiguracao();
+            return;
+          }
+          if (widget.tipo == 'Ar condicionado') {
+            setState(() => modoAr = texto);
+          } else if (widget.tipo == 'Lâmpada') {
             setState(() => cenaLampada = texto);
           }
-          if (texto == '+') _mensagem('Adicionar nova pré-configuração.');
         },
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
@@ -694,6 +757,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       ('Prime', const Color(0xFF20A6F5), Icons.play_arrow_rounded),
       ('YouTube', const Color(0xFFFF1F19), Icons.play_arrow_rounded),
       ('Netflix', Colors.black, Icons.movie_outlined),
+      for (final nome in _servicosPersonalizados)
+        (nome, marrom, Icons.apps_outlined),
       ('+', amareloBotao, Icons.add),
     ];
 
@@ -706,9 +771,15 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           color: item.$2,
           borderRadius: BorderRadius.circular(7),
           child: InkWell(
-            onTap: () => _mensagem(
-              ehAdicionar ? 'Adicionar aplicativo.' : '${item.$1} selecionado.',
-            ),
+            onTap: () {
+              if (ehAdicionar) {
+                _adicionarServicoStreaming();
+              } else {
+                _mensagem(
+                  'O serviço ${item.$1} foi selecionado. Para abrir o streaming, é necessário configurar o aplicativo ou link externo correspondente.',
+                );
+              }
+            },
             borderRadius: BorderRadius.circular(7),
             child: SizedBox(
               width: 55,
@@ -836,6 +907,234 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         ),
       ),
     );
+  }
+
+  Future<void> _adicionarPreConfiguracao() async {
+    final controller = TextEditingController();
+    final nome = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nova pré-configuração'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Nome'),
+          onSubmitted: (valor) => Navigator.pop(dialogContext, valor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || nome == null) return;
+    final limpo = nome.trim();
+    if (limpo.isEmpty) {
+      _mensagem('Informe um nome para a pré-configuração.');
+      return;
+    }
+    final listaExistente = widget.tipo == 'Ar condicionado'
+        ? _presetsArPersonalizados
+        : _cenasPersonalizadas;
+    final nomeDuplicado = listaExistente.any(
+      (item) => item.toLowerCase() == limpo.toLowerCase(),
+    );
+    if (nomeDuplicado) {
+      _mensagem('Essa pré-configuração já existe.');
+      return;
+    }
+
+    setState(() {
+      if (widget.tipo == 'Ar condicionado') {
+        _presetsArPersonalizados.add(limpo);
+        modoAr = limpo;
+      } else if (widget.tipo == 'Lâmpada') {
+        _cenasPersonalizadas.add(limpo);
+        cenaLampada = limpo;
+      }
+    });
+  }
+
+  Future<void> _adicionarServicoStreaming() async {
+    final controller = TextEditingController();
+    final nome = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Adicionar streaming'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Nome do serviço'),
+          onSubmitted: (valor) => Navigator.pop(dialogContext, valor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || nome == null) return;
+    final limpo = nome.trim();
+    if (limpo.isEmpty) {
+      _mensagem('Digite o nome do serviço.');
+      return;
+    }
+    if (<String>[
+      'Twitch',
+      'Disney+',
+      'Prime',
+      'YouTube',
+      'Netflix',
+      ..._servicosPersonalizados,
+    ].any((item) => item.toLowerCase() == limpo.toLowerCase())) {
+      _mensagem('Esse serviço já está na lista.');
+      return;
+    }
+    setState(() => _servicosPersonalizados.add(limpo));
+  }
+
+  void _abrirCenas() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: amareloCard,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Cenas da iluminação',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              for (final cena in <String>[
+                'Relaxar',
+                'Leitura',
+                'Filme',
+                ..._cenasPersonalizadas,
+              ])
+                ListTile(
+                  title: Text(cena, style: const TextStyle(color: marrom)),
+                  trailing: cenaLampada == cena
+                      ? const Icon(Icons.check, color: marrom)
+                      : null,
+                  onTap: () {
+                    setState(() => cenaLampada = cena);
+                    Navigator.pop(sheetContext);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.add, color: marrom),
+                title: const Text(
+                  'Criar cena',
+                  style: TextStyle(color: marrom),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _adicionarPreConfiguracao();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _abrirGraficos() {
+    if (widget.tipo != 'TV' && widget.tipo != 'Ar condicionado') {
+      Navigator.pushNamed(context, '/graficos');
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaGraficosDetalhes(
+          tipo: widget.tipo == 'TV'
+              ? TipoAparelho.tv
+              : TipoAparelho.arCondicionado,
+          nomePersonalizado: widget.nome,
+        ),
+      ),
+    );
+  }
+
+  void _mostrarInformacoes() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Informações do aparelho'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _linhaInfo('Nome', widget.nome),
+              _linhaInfo('Tipo', widget.tipo),
+              _linhaInfo('ID', widget.id),
+              _linhaInfo('Fabricante', widget.fabricante),
+              _linhaInfo('Modelo', widget.modelo),
+              _linhaInfo('Conexão', widget.conexao),
+              _linhaInfo('Local', widget.local),
+              _linhaInfo('Status', widget.status),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmarRemocao() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remover aparelho'),
+        content: Text('Deseja remover "${widget.nome}" da lista da casa?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remover'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmar != true) return;
+    if (AparelhosStore.removerPorId(widget.id)) {
+      Navigator.pop(context);
+      return;
+    }
+    _mensagem('Este aparelho não está cadastrado na lista.');
   }
 
   void _mensagem(String mensagem) {

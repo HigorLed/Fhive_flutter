@@ -180,8 +180,6 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       return;
     }
 
-    final conectado = _conexaoTestada;
-
     AparelhosStore.adicionar(
       AparelhoItem(
         nome: nome,
@@ -193,9 +191,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         modelo: _modeloController.text.trim().isEmpty
             ? 'Não informado'
             : _modeloController.text.trim(),
-        status: conectado ? 'Online' : 'Aguardando conexão',
+        status: 'Aguardando conexão',
         icone: _iconeSelecionado,
-        wifi: conectado && _conexaoSelecionada == 'Wi-Fi',
+        wifi: _conexaoSelecionada == 'Wi-Fi',
         local: _localSelecionado,
         conexao: _conexaoSelecionada,
       ),
@@ -217,8 +215,8 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Conexão $_conexaoSelecionada configurada para o cadastro. '
-          'O pareamento real depende do hardware e da integração IoT.',
+          'Configuração de $_conexaoSelecionada validada para o cadastro. '
+          'O pareamento físico ainda depende do hardware e da integração IoT.',
         ),
       ),
     );
@@ -947,7 +945,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         _linhaResumo('Conexão', _conexaoSelecionada, icone: Icons.wifi_rounded),
         _linhaResumo(
           'Status inicial',
-          _conexaoTestada ? 'Online' : 'Aguardando conexão',
+          _conexaoTestada
+              ? 'Configuração validada (simulação)'
+              : 'Aguardando conexão',
           icone: _conexaoTestada ? Icons.cloud_done : Icons.cloud_off_outlined,
         ),
         const SizedBox(height: 4),

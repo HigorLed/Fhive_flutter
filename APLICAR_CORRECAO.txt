@@ -1,0 +1,13 @@
+CORREÇÃO DO CMAKE DO FHIVE
+
+1. Extraia este ZIP diretamente dentro da pasta existente Fhive_flutter.
+2. Autorize a substituição de windows/CMakeLists.txt.
+3. Confirme que o caminho resultante é:
+   Fhive_flutter\windows\CMakeLists.txt
+   (não crie uma segunda pasta Fhive_flutter dentro do projeto).
+4. Abra PowerShell na raiz Fhive_flutter e execute:
+   flutter clean
+   flutter pub get
+   flutter run -d windows
+
+Este pacote substitui somente o CMakeLists.txt raiz e atualiza o README. Ele não substitui windows/flutter/CMakeLists.txt nem windows/runner/CMakeLists.txt.

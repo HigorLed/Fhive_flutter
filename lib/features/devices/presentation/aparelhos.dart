@@ -91,289 +91,336 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
     return NavegacaoPorDeslize(
       itemSelecionado: 1,
       child: Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.main),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageTop,
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageBottom,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Minha casa',
-                              style: AppTextStyles.pageTitle,
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppGradients.main),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageTop,
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageBottom,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Minha casa',
+                                style: AppTextStyles.pageTitle,
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => _abrirCriar(context),
-                            tooltip: 'Criar aparelho',
-                            icon: const Icon(
-                              Icons.add,
-                              color: TelaAparelhos.marrom,
-                              size: 30,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            tooltip: 'Menu',
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: TelaAparelhos.marrom,
-                              size: 26,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.section),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.search,
-                            color: TelaAparelhos.marrom,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 6),
-                          const Expanded(
-                            child: Text(
-                              'Todos aparelhos',
-                              style: TextStyle(
+                            IconButton(
+                              onPressed: () => _abrirCriar(context),
+                              tooltip: 'Criar aparelho',
+                              icon: const Icon(
+                                Icons.add,
                                 color: TelaAparelhos.marrom,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                size: 30,
                               ),
                             ),
-                          ),
-                          InkWell(
-                            onTap: () => setState(() {
-                              _mostrarLocaisDisponiveis =
-                                  !_mostrarLocaisDisponiveis;
-                            }),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 6,
+                            PopupMenuButton<String>(
+                              tooltip: 'Menu',
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: TelaAparelhos.marrom,
+                                size: 26,
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    'Locais',
-                                    style: TextStyle(
-                                      color: TelaAparelhos.marrom,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Icon(
-                                    _mostrarLocaisDisponiveis
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    color: TelaAparelhos.marrom,
-                                    size: 22,
-                                  ),
-                                ],
-                              ),
+                              onSelected: (acao) {
+                                switch (acao) {
+                                  case 'atualizar':
+                                    setState(() {});
+                                    _mensagemLocal(
+                                      'Lista de aparelhos atualizada.',
+                                    );
+                                    break;
+                                  case 'local':
+                                    _criarLocal();
+                                    break;
+                                  case 'ajuda':
+                                    showDialog<void>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Aparelhos'),
+                                        content: const Text(
+                                          'Toque em um cartão para abrir os controles. Use a estrela para favoritar, os filtros de local para organizar os aparelhos e o botão + para cadastrar um novo dispositivo.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(dialogContext),
+                                            child: const Text('Fechar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    break;
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'atualizar',
+                                  child: Text('Atualizar lista'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'local',
+                                  child: Text('Criar local'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'ajuda',
+                                  child: Text('Ajuda'),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      if (_mostrarLocaisDisponiveis) ...[
-                        const SizedBox(height: 12),
-                        ValueListenableBuilder<List<String>>(
-                          valueListenable: AparelhosStore.locais,
-                          builder: (context, locaisRegistrados, _) {
-                            final locaisDisponiveis = locaisRegistrados;
-                            return Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(13),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface.withValues(alpha: 0.88),
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: TelaAparelhos.marrom.withValues(
-                                    alpha: 0.12,
-                                  ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.section),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.search,
+                              color: TelaAparelhos.marrom,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 6),
+                            const Expanded(
+                              child: Text(
+                                'Todos aparelhos',
+                                style: TextStyle(
+                                  color: TelaAparelhos.marrom,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Locais disponíveis',
-                                    style: TextStyle(
+                            ),
+                            InkWell(
+                              onTap: () => setState(() {
+                                _mostrarLocaisDisponiveis =
+                                    !_mostrarLocaisDisponiveis;
+                              }),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 6,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                      'Locais',
+                                      style: TextStyle(
+                                        color: TelaAparelhos.marrom,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Icon(
+                                      _mostrarLocaisDisponiveis
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
                                       color: TelaAparelhos.marrom,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      size: 22,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_mostrarLocaisDisponiveis) ...[
+                          const SizedBox(height: 12),
+                          ValueListenableBuilder<List<String>>(
+                            valueListenable: AparelhosStore.locais,
+                            builder: (context, locaisRegistrados, _) {
+                              final locaisDisponiveis = locaisRegistrados;
+                              return Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(13),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.88,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: TelaAparelhos.marrom.withValues(
+                                      alpha: 0.12,
                                     ),
                                   ),
-                                  const SizedBox(height: 9),
-                                  Wrap(
-                                    spacing: 7,
-                                    runSpacing: 7,
-                                    children: [
-                                      ChoiceChip(
-                                        label: const Text('Todos'),
-                                        selected: _localFiltro == null,
-                                        onSelected: (_) => setState(
-                                          () => _localFiltro = null,
-                                        ),
-                                        selectedColor: AppColors.accent,
-                                        backgroundColor: AppColors.surfaceLight,
-                                        labelStyle: const TextStyle(
-                                          color: TelaAparelhos.marrom,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 12,
-                                        ),
-                                        side: BorderSide(
-                                          color: TelaAparelhos.marrom.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                        ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Locais disponíveis',
+                                      style: TextStyle(
+                                        color: TelaAparelhos.marrom,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
                                       ),
-                                      for (final local in locaisDisponiveis)
+                                    ),
+                                    const SizedBox(height: 9),
+                                    Wrap(
+                                      spacing: 7,
+                                      runSpacing: 7,
+                                      children: [
                                         ChoiceChip(
-                                          label: Text(local),
-                                          selected: _localFiltro == local,
-                                          onSelected: (_) => setState(() {
-                                            _localFiltro = local;
-                                            _locaisAbertos[local] = true;
-                                          }),
+                                          label: const Text('Todos'),
+                                          selected: _localFiltro == null,
+                                          onSelected: (_) => setState(
+                                            () => _localFiltro = null,
+                                          ),
                                           selectedColor: AppColors.accent,
-                                          backgroundColor: AppColors.surfaceLight,
+                                          backgroundColor:
+                                              AppColors.surfaceLight,
                                           labelStyle: const TextStyle(
                                             color: TelaAparelhos.marrom,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 12,
                                           ),
                                           side: BorderSide(
-                                            color: TelaAparelhos.marrom.withValues(
-                                              alpha: 0.16,
-                                            ),
+                                            color: TelaAparelhos.marrom
+                                                .withValues(alpha: 0.16),
                                           ),
                                         ),
-                                      ActionChip(
-                                        avatar: const Icon(
-                                          Icons.add_location_alt_outlined,
-                                          size: 17,
-                                          color: TelaAparelhos.marrom,
+                                        for (final local in locaisDisponiveis)
+                                          ChoiceChip(
+                                            label: Text(local),
+                                            selected: _localFiltro == local,
+                                            onSelected: (_) => setState(() {
+                                              _localFiltro = local;
+                                              _locaisAbertos[local] = true;
+                                            }),
+                                            selectedColor: AppColors.accent,
+                                            backgroundColor:
+                                                AppColors.surfaceLight,
+                                            labelStyle: const TextStyle(
+                                              color: TelaAparelhos.marrom,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 12,
+                                            ),
+                                            side: BorderSide(
+                                              color: TelaAparelhos.marrom
+                                                  .withValues(alpha: 0.16),
+                                            ),
+                                          ),
+                                        ActionChip(
+                                          avatar: const Icon(
+                                            Icons.add_location_alt_outlined,
+                                            size: 17,
+                                            color: TelaAparelhos.marrom,
+                                          ),
+                                          label: const Text('Criar local'),
+                                          onPressed: _criarLocal,
+                                          backgroundColor:
+                                              AppColors.surfaceStrong,
+                                          labelStyle: const TextStyle(
+                                            color: TelaAparelhos.marrom,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 12,
+                                          ),
+                                          side: BorderSide(
+                                            color: TelaAparelhos.marrom
+                                                .withValues(alpha: 0.2),
+                                          ),
                                         ),
-                                        label: const Text('Criar local'),
-                                        onPressed: _criarLocal,
-                                        backgroundColor: AppColors.surfaceStrong,
-                                        labelStyle: const TextStyle(
-                                          color: TelaAparelhos.marrom,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 12,
-                                        ),
-                                        side: BorderSide(
-                                          color: TelaAparelhos.marrom.withValues(
-                                            alpha: 0.2,
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                        ValueListenableBuilder<List<AparelhoItem>>(
+                          valueListenable: AparelhosStore.aparelhos,
+                          builder: (context, aparelhos, _) {
+                            final locais = <String>[];
+                            for (final aparelho in aparelhos) {
+                              if (!locais.contains(aparelho.local)) {
+                                locais.add(aparelho.local);
+                              }
+                            }
+
+                            final locaisExibidos = _localFiltro == null
+                                ? locais
+                                : <String>[_localFiltro!];
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final local in locaisExibidos) ...[
+                                  _cabecalhoLocal(
+                                    local,
+                                    aparelhos
+                                        .where(
+                                          (aparelho) => aparelho.local == local,
+                                        )
+                                        .length,
+                                  ),
+                                  if (_locaisAbertos[local] ?? true) ...[
+                                    const SizedBox(height: 18),
+                                    if (aparelhos.any(
+                                      (aparelho) => aparelho.local == local,
+                                    ))
+                                      _gradeAparelhos(
+                                        context,
+                                        aparelhos
+                                            .where(
+                                              (aparelho) =>
+                                                  aparelho.local == local,
+                                            )
+                                            .toList(),
+                                      )
+                                    else
+                                      const Padding(
+                                        padding: EdgeInsets.only(bottom: 3),
+                                        child: Text(
+                                          'Nenhum aparelho neste local ainda.',
+                                          style: TextStyle(
+                                            color: TelaAparelhos.marrom,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                  ],
+                                  const SizedBox(height: 27),
                                 ],
-                              ),
+                                if (locaisExibidos.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      _localFiltro == null
+                                          ? 'Nenhum aparelho cadastrado.'
+                                          : 'Nenhum aparelho cadastrado neste local.',
+                                      style: const TextStyle(
+                                        color: TelaAparelhos.marrom,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             );
                           },
                         ),
                       ],
-                      const SizedBox(height: 28),
-                      ValueListenableBuilder<List<AparelhoItem>>(
-                        valueListenable: AparelhosStore.aparelhos,
-                        builder: (context, aparelhos, _) {
-                          final locais = <String>[];
-                          for (final aparelho in aparelhos) {
-                            if (!locais.contains(aparelho.local)) {
-                              locais.add(aparelho.local);
-                            }
-                          }
-
-                          final locaisExibidos = _localFiltro == null
-                              ? locais
-                              : <String>[_localFiltro!];
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (final local in locaisExibidos) ...[
-                                _cabecalhoLocal(
-                                  local,
-                                  aparelhos
-                                      .where(
-                                        (aparelho) => aparelho.local == local,
-                                      )
-                                      .length,
-                                ),
-                                if (_locaisAbertos[local] ?? true) ...[
-                                  const SizedBox(height: 18),
-                                  if (aparelhos.any(
-                                    (aparelho) => aparelho.local == local,
-                                  ))
-                                    _gradeAparelhos(
-                                      context,
-                                      aparelhos
-                                          .where(
-                                            (aparelho) => aparelho.local == local,
-                                          )
-                                          .toList(),
-                                    )
-                                  else
-                                    const Padding(
-                                      padding: EdgeInsets.only(bottom: 3),
-                                      child: Text(
-                                        'Nenhum aparelho neste local ainda.',
-                                        style: TextStyle(
-                                          color: TelaAparelhos.marrom,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                                const SizedBox(height: 27),
-                              ],
-                              if (locaisExibidos.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    _localFiltro == null
-                                        ? 'Nenhum aparelho cadastrado.'
-                                        : 'Nenhum aparelho cadastrado neste local.',
-                                    style: const TextStyle(
-                                      color: TelaAparelhos.marrom,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const BarraNavegacao(itemSelecionado: 1),
-            ],
+                const BarraNavegacao(itemSelecionado: 1),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -491,7 +538,7 @@ class _AparelhoCard extends StatelessWidget {
                 ValueListenableBuilder<Set<String>>(
                   valueListenable: AparelhosStore.favoritos,
                   builder: (context, favoritos, _) {
-                    final ativo = favoritos.contains(aparelho.nome);
+                    final ativo = favoritos.contains(aparelho.id);
                     return IconButton(
                       onPressed: () {
                         AparelhosStore.alternarFavorito(aparelho.nome);
@@ -506,7 +553,9 @@ class _AparelhoCard extends StatelessWidget {
                           ),
                         );
                       },
-                      tooltip: ativo ? 'Remover dos favoritos' : 'Favoritar',
+                      tooltip: ativo
+                          ? 'Remover dos favoritos'
+                          : 'Adicionar aos favoritos',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: Icon(

@@ -4,12 +4,13 @@ import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 
 void main() {
   Widget pagina(int indice, String titulo) => NavegacaoPorDeslize(
-        itemSelecionado: indice,
-        child: Scaffold(body: Center(child: Text(titulo))),
-      );
+    itemSelecionado: indice,
+    child: Scaffold(body: Center(child: Text(titulo))),
+  );
 
-  testWidgets('deslizar para a esquerda avança e para a direita retorna',
-      (tester) async {
+  testWidgets('deslizar para a esquerda avança e para a direita retorna', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         initialRoute: '/home',

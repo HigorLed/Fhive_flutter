@@ -25,8 +25,8 @@ class _NavegacaoPorDeslizeState extends State<NavegacaoPorDeslize> {
     const double distanciaMinima = 72;
     if (_deslocamentoHorizontal.abs() < distanciaMinima) return;
 
-    final int proximoIndice = widget.itemSelecionado +
-        (_deslocamentoHorizontal < 0 ? 1 : -1);
+    final int proximoIndice =
+        widget.itemSelecionado + (_deslocamentoHorizontal < 0 ? 1 : -1);
     final rotas = BarraNavegacao.rotasPrincipais;
 
     // Não faz wrap do último para o primeiro; a navegação respeita a ordem

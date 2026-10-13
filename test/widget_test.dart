@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
+import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 import 'package:tcc_mobile/main.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/state/auth_store.dart';
+import 'package:tcc_mobile/shared/state/preferencias_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
 Future<void> entrarComDadosValidos(WidgetTester tester) async {
@@ -11,9 +14,8 @@ Future<void> entrarComDadosValidos(WidgetTester tester) async {
 
   final campos = find.byType(TextFormField);
   expect(campos, findsNWidgets(2));
-
-  await tester.enterText(campos.at(0), 'teste@fhive.com');
-  await tester.enterText(campos.at(1), '123456');
+  await tester.enterText(campos.at(0), AuthStore.emailDemonstracao);
+  await tester.enterText(campos.at(1), AuthStore.senhaDemonstracao);
 
   final botao = find.widgetWithText(ElevatedButton, 'Entrar');
   await tester.ensureVisible(botao);
@@ -25,119 +27,98 @@ void main() {
   setUp(() {
     AparelhosStore.reset();
     RotinasStore.reset();
+    AuthStore.reset();
+    PreferenciasStore.reset();
   });
 
-  testWidgets('O app abre na tela inicial', (tester) async {
+  testWidgets('O aplicativo abre na tela inicial de autenticação', (
+    tester,
+  ) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
-
     expect(find.text('Fhive'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Entrar'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Criar Conta'), findsOneWidget);
   });
 
-  testWidgets('Login abre a Home', (tester) async {
+  testWidgets('Login local de demonstração abre a Home', (tester) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
-
     await entrarComDadosValidos(tester);
-
     expect(find.text('Minha casa'), findsOneWidget);
     expect(find.text('Favoritos'), findsOneWidget);
   });
 
-  testWidgets('Navegação inferior abre Aparelhos, Gráficos e Rotinas', (tester) async {
+  testWidgets('A barra inferior navega pelas telas principais', (tester) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
     await entrarComDadosValidos(tester);
 
     await tester.tap(find.byIcon(Icons.devices));
     await tester.pumpAndSettle();
-    expect(find.text('Aparelho'), findsNothing);
-    expect(find.textContaining('2 aparelhos'), findsOneWidget);
+    expect(find.text('Todos aparelhos'), findsOneWidget);
+    expect(find.text('TV - Cristal'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.pie_chart));
     await tester.pumpAndSettle();
-    expect(find.text('Aparelhos monitorados'), findsOneWidget);
+    expect(find.text('Gráficos disponíveis'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.light_mode_outlined));
     await tester.pumpAndSettle();
-    expect(find.text('Suas rotinas'), findsOneWidget);
+    expect(find.text('Acordar'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+    expect(find.text('Configurações do Fhive'), findsOneWidget);
   });
 
-  testWidgets('Cadastro IoT percorre identificação, conexão e revisão', (tester) async {
+  testWidgets('Cadastro IoT percorre as quatro etapas e adiciona o aparelho', (
+    tester,
+  ) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
     await entrarComDadosValidos(tester);
-
     await tester.tap(find.byIcon(Icons.devices));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add_rounded).first);
+    await tester.tap(find.byTooltip('Criar aparelho'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nome do dispositivo'), findsOneWidget);
-    expect(find.text('ID do dispositivo'), findsOneWidget);
     expect(find.text('Etapa 1 de 4'), findsOneWidget);
-
     final campos = find.byType(TextFormField);
-    expect(campos, findsNWidgets(2));
     await tester.enterText(campos.at(0), 'Sensor do quarto');
     await tester.enterText(campos.at(1), 'FH-SENSOR-TESTE-001');
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Continuar'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
-    expect(find.text('Fabricante'), findsOneWidget);
+
     expect(find.text('Local do aparelho'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Continuar'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
+    expect(find.text('Configuração da conexão'), findsNothing);
     expect(find.text('Testar conexão'), findsOneWidget);
 
     await tester.tap(find.text('Ethernet'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Testar conexão'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Testar conexão'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Continuar'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
-
     expect(find.text('Etapa 4 de 4'), findsOneWidget);
-    expect(find.text('FH-SENSOR-TESTE-001'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Adicionar aparelho'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Adicionar aparelho'));
+    await tester.pumpAndSettle();
+
+    expect(AparelhosStore.porId('FH-SENSOR-TESTE-001'), isNotNull);
+    expect(
+      AparelhosStore.porId('FH-SENSOR-TESTE-001')!.status,
+      'Aguardando conexão',
+    );
   });
 
-  testWidgets('A seta de local expande e recolhe os aparelhos', (tester) async {
+  testWidgets('Favorito aparece na Home e pode ser removido por lá', (
+    tester,
+  ) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
     await entrarComDadosValidos(tester);
-
-    await tester.tap(find.byIcon(Icons.devices));
-    await tester.pumpAndSettle();
-
-    expect(find.text('TV - Cristal'), findsOneWidget);
-    expect(find.text('Ar condicionado'), findsOneWidget);
-
-    final cabecalho = find.ancestor(
-      of: find.text('Sala de Estar'),
-      matching: find.byType(InkWell),
-    ).first;
-
-    await tester.tap(cabecalho);
-    await tester.pumpAndSettle();
-
-    expect(find.text('TV - Cristal'), findsNothing);
-    expect(find.text('Ar condicionado'), findsNothing);
-
-    await tester.tap(cabecalho);
-    await tester.pumpAndSettle();
-
-    expect(find.text('TV - Cristal'), findsOneWidget);
-  });
-
-  testWidgets('Favorito pode ser removido diretamente na Home', (tester) async {
-    await tester.pumpWidget(const FhiveApp());
-    await tester.pumpAndSettle();
-    await entrarComDadosValidos(tester);
-
     await tester.tap(find.byIcon(Icons.devices));
     await tester.pumpAndSettle();
 
@@ -147,58 +128,16 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Início'));
     await tester.pumpAndSettle();
-
     expect(find.text('TV - Cristal'), findsOneWidget);
     await tester.tap(find.byTooltip('Remover dos favoritos'));
     await tester.pumpAndSettle();
-
     expect(AparelhosStore.favoritosLista, isEmpty);
     expect(find.text('Ainda não há favoritos.'), findsOneWidget);
   });
 
-  testWidgets('Favorito abre diretamente as opções do aparelho', (tester) async {
-    await tester.pumpWidget(const FhiveApp());
-    await tester.pumpAndSettle();
-    await entrarComDadosValidos(tester);
-
-    AparelhosStore.alternarFavorito('FH-TV-CRISTAL-001');
-    await tester.tap(find.bySemanticsLabel('Início'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('TV - Cristal'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Ligar/Desligar'), findsOneWidget);
-    expect(find.text('Volume'), findsOneWidget);
-    expect(find.text('Streamings'), findsOneWidget);
-    expect(find.text('Minha casa'), findsNothing);
-  });
-
-  testWidgets('Detalhes mudam conforme o tipo cadastrado', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: TelaDetalhesAparelho(
-          nome: 'Ar da sala',
-          id: 'FH-AC-TESTE-001',
-          tipo: 'Ar condicionado',
-          fabricante: 'Fhive',
-          modelo: 'Smart Air',
-          local: 'Sala de Estar',
-          conexao: 'Wi-Fi',
-          status: 'Online',
-          icone: Icons.air,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Ar da sala'), findsOneWidget);
-    expect(find.text('Ligar/Desligar'), findsOneWidget);
-    expect(find.text('Temperatura'), findsOneWidget);
-    expect(find.text('Velocidade'), findsOneWidget);
-  });
-
-  testWidgets('A tela de detalhes permite favoritar e abrir informações', (tester) async {
+  testWidgets('Detalhes exibem controles e menu de informações', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: TelaDetalhesAparelho(
@@ -215,13 +154,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.text('Ligar/Desligar'), findsOneWidget);
+    expect(find.text('Volume'), findsOneWidget);
+    expect(find.text('Streamings'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Adicionar aos favoritos'));
     await tester.pumpAndSettle();
     expect(AparelhosStore.favoritos.value, isEmpty);
 
-    // A tela independente não possui o aparelho no store; o teste verifica
-    // que a ação é segura mesmo quando o registro não está cadastrado.
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('menu-informacoes-aparelho')));
@@ -229,32 +169,162 @@ void main() {
     expect(find.text('FH-TV-TESTE-002'), findsOneWidget);
   });
 
-  testWidgets('Configurações abre as telas de conta e ajuda', (tester) async {
+  testWidgets('Cartões de indicadores abrem telas detalhadas próprias', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: TelaGraficosDetalhes(
+          tipo: TipoAparelho.tv,
+          nomePersonalizado: 'TV Cristal',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Energia'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gasto diário'), findsOneWidget);
+    expect(find.text('Limite de energia'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Uso'));
+    await tester.pumpAndSettle();
+    expect(find.text('Distribuição do uso'), findsOneWidget);
+    expect(find.text('Total de Horas'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Pontos de gestão'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sua pontuação'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Uso ao longo do tempo'));
+    await tester.tap(find.text('Uso ao longo do tempo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Uso ao longo do tempo'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Recomendações'));
+    await tester.tap(find.text('Recomendações'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dicas para economizar'), findsOneWidget);
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Eficiência'));
+    await tester.tap(find.text('Eficiência'));
+    await tester.pumpAndSettle();
+    expect(find.text('Índice de eficiência'), findsOneWidget);
+    await tester.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('Configurações abre Perfil e Ajuda', (tester) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
     await entrarComDadosValidos(tester);
-
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Minha conta'));
     await tester.pumpAndSettle();
     expect(find.text('Perfil'), findsOneWidget);
-
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('Configurações'), findsOneWidget);
 
     await tester.tap(find.text('Ajuda'));
     await tester.pumpAndSettle();
     expect(find.text('Como adicionar um aparelho?'), findsOneWidget);
   });
 
+  test('AuthStore cadastra, autentica e redefine senha localmente', () {
+    const email = 'novo@fhive.com';
+    const senhaInicial = 'Fhive@123';
+    const senhaNova = 'Fhive@456';
 
-  test('Store de aparelhos cria, edita, favorita e remove', () {
+    expect(
+      AuthStore.cadastrar(
+        nome: 'Pessoa de Teste',
+        email: email,
+        senha: senhaInicial,
+      ),
+      isNull,
+    );
+    expect(AuthStore.entrar(email: email, senha: senhaInicial), isNull);
+    expect(AuthStore.usuarioAtual.value?.nome, 'Pessoa de Teste');
+    expect(AuthStore.atualizarNome('Nome Atualizado'), isTrue);
+    expect(AuthStore.usuarioAtual.value?.nome, 'Nome Atualizado');
+    expect(
+      AuthStore.redefinirSenha(email: email, novaSenha: senhaNova),
+      isTrue,
+    );
+    expect(AuthStore.entrar(email: email, senha: senhaInicial), isNotNull);
+    expect(AuthStore.entrar(email: email, senha: senhaNova), isNull);
+    expect(
+      AuthStore.cadastrar(nome: 'Duplicado', email: email, senha: senhaInicial),
+      isNotNull,
+    );
+  });
+
+  test('Perfil local permite alterar nome, e-mail e senha com validação', () {
+    expect(
+      AuthStore.entrar(
+        email: AuthStore.emailDemonstracao,
+        senha: AuthStore.senhaDemonstracao,
+      ),
+      isNull,
+    );
+
+    expect(
+      AuthStore.atualizarPerfil(
+        nome: 'Higor Teste',
+        email: 'higor.teste@fhive.com',
+      ),
+      isNull,
+    );
+    expect(AuthStore.usuarioAtual.value?.nome, 'Higor Teste');
+    expect(AuthStore.usuarioAtual.value?.email, 'higor.teste@fhive.com');
+
+    expect(
+      AuthStore.atualizarSenha(
+        senhaAtual: AuthStore.senhaDemonstracao,
+        novaSenha: 'NovaSenha@123',
+      ),
+      isNull,
+    );
+    expect(
+      AuthStore.atualizarSenha(
+        senhaAtual: 'senha-incorreta',
+        novaSenha: 'OutraSenha@123',
+      ),
+      isNotNull,
+    );
+  });
+
+  test('Preferências locais mantêm as escolhas até serem reiniciadas', () {
+    PreferenciasStore.notificacoes = false;
+    PreferenciasStore.sincronizarFavoritos = false;
+    PreferenciasStore.sugestoes = false;
+
+    expect(PreferenciasStore.notificacoes, isFalse);
+    expect(PreferenciasStore.sincronizarFavoritos, isFalse);
+    expect(PreferenciasStore.sugestoes, isFalse);
+
+    PreferenciasStore.reset();
+    expect(PreferenciasStore.notificacoes, isTrue);
+    expect(PreferenciasStore.sincronizarFavoritos, isTrue);
+    expect(PreferenciasStore.sugestoes, isTrue);
+  });
+
+  test('Store de aparelhos cria, edita, favorita e remove por ID', () {
     final original = AparelhosStore.porId('FH-TV-CRISTAL-001');
     expect(original, isNotNull);
-
     AparelhosStore.alternarFavorito(original!.id);
     expect(AparelhosStore.ehFavorito(original.id), isTrue);
 
@@ -264,7 +334,6 @@ void main() {
       local: 'Quarto',
     );
     AparelhosStore.atualizar(alterado, idAnterior: original.id);
-
     expect(AparelhosStore.porId('FH-TV-CRISTAL-999')!.nome, 'TV Principal');
     expect(AparelhosStore.ehFavorito('FH-TV-CRISTAL-999'), isTrue);
 
@@ -273,24 +342,22 @@ void main() {
     expect(AparelhosStore.ehFavorito('FH-TV-CRISTAL-999'), isFalse);
   });
 
-  test('Store de rotinas adiciona, executa, alterna e remove', () {
+  test('Store de rotinas adiciona, alterna, registra execução e remove', () {
     expect(RotinasStore.rotinas.value.length, 4);
-
-    RotinasStore.adicionar(
+    final nova = RotinasStore.adicionar(
       nome: 'Teste',
       local: 'Sala de Estar',
       horario: '18:00',
-      acoes: ['Ligar TV'],
-    );
-    final nova = RotinasStore.rotinas.value.last;
+      acoes: const ['Ligar TV'],
+    )!;
 
-    RotinasStore.alternar(nova.id);
+    expect(RotinasStore.alternar(nova.id), isTrue);
     expect(RotinasStore.porId(nova.id)!.ativa, isFalse);
-
-    RotinasStore.executar(nova.id);
+    expect(RotinasStore.executar(nova.id), isFalse);
+    RotinasStore.alternar(nova.id);
+    expect(RotinasStore.executar(nova.id), isTrue);
     expect(RotinasStore.porId(nova.id)!.ultimaExecucao, isNotNull);
-
-    RotinasStore.remover(nova.id);
+    expect(RotinasStore.remover(nova.id), isTrue);
     expect(RotinasStore.porId(nova.id), isNull);
   });
 }

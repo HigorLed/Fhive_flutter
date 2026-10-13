@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/shared/state/auth_store.dart';
 
 class TelaDeLogin extends StatefulWidget {
   const TelaDeLogin({super.key});
@@ -54,9 +55,114 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
       return;
     }
 
-    // Conecte aqui a autenticação real (Firebase / Supabase / API).
+    final erro = AuthStore.entrar(
+      email: emailController.text,
+      senha: senhaController.text,
+    );
+    if (erro != null) {
+      _mensagem(erro);
+      return;
+    }
 
     Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+  }
+
+  Future<void> _recuperarSenha() async {
+    final email = TextEditingController(text: emailController.text.trim());
+    final novaSenha = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final dados = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Recuperar senha'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'E-mail da conta'),
+                validator: (valor) =>
+                    (valor == null || !_regexEmail.hasMatch(valor.trim()))
+                    ? 'Digite um e-mail válido.'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: novaSenha,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nova senha',
+                  helperText:
+                      'Use 6+ caracteres, maiúscula, minúscula, número e símbolo.',
+                ),
+                validator: (valor) {
+                  final senha = valor ?? '';
+                  if (senha.length < 6 ||
+                      !RegExp(r'[a-z]').hasMatch(senha) ||
+                      !RegExp(r'[A-Z]').hasMatch(senha) ||
+                      !RegExp(r'\d').hasMatch(senha) ||
+                      !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
+                    return 'A senha não atende aos requisitos.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.pop(dialogContext, <String, String>{
+                'email': email.text.trim(),
+                'senha': novaSenha.text,
+              });
+            },
+            child: const Text('Redefinir'),
+          ),
+        ],
+      ),
+    );
+    email.dispose();
+    novaSenha.dispose();
+    if (!mounted || dados == null) return;
+
+    final redefinida = AuthStore.redefinirSenha(
+      email: dados['email'] ?? '',
+      novaSenha: dados['senha'] ?? '',
+    );
+    _mensagem(
+      redefinida
+          ? 'Senha redefinida nesta demonstração local.'
+          : 'Não encontramos uma conta local com esse e-mail. A recuperação por e-mail exige integração com um servidor.',
+    );
+  }
+
+  void _informarLoginSocial() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Login social'),
+        content: const Text(
+          'O login com Google/Facebook precisa ser configurado com as credenciais do provedor e um serviço de autenticação. Nenhum login externo foi realizado.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
   }
 
   // =========================================================
@@ -288,11 +394,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                 alignment: Alignment.centerRight,
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(8),
-                                  onTap: () {
-                                    _mensagem(
-                                      'Recuperação de senha selecionada.',
-                                    );
-                                  },
+                                  onTap: _recuperarSenha,
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 4,
@@ -380,11 +482,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                   Expanded(
                                     child: _botaoSocial(
                                       texto: 'Google',
-                                      aoTocar: () {
-                                        _mensagem(
-                                          'Login com Google selecionado.',
-                                        );
-                                      },
+                                      aoTocar: _informarLoginSocial,
                                       icone: Container(
                                         width: 23,
                                         height: 23,
@@ -414,11 +512,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                   Expanded(
                                     child: _botaoSocial(
                                       texto: 'Facebook',
-                                      aoTocar: () {
-                                        _mensagem(
-                                          'Login com Facebook selecionado.',
-                                        );
-                                      },
+                                      aoTocar: _informarLoginSocial,
                                       icone: Container(
                                         width: 23,
                                         height: 23,

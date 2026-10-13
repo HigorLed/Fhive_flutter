@@ -6,6 +6,7 @@ import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/features/onboarding/presentation/tela_tutorial.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/state/auth_store.dart';
 import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
 
 class TelaHome extends StatefulWidget {
@@ -78,7 +79,10 @@ class _TelaHomeState extends State<TelaHome> {
                   title: Text('Configurações', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushReplacementNamed(context, '/configuracoes');
+                    Navigator.pushReplacementNamed(
+                      this.context,
+                      '/configuracoes',
+                    );
                   },
                 ),
               ),
@@ -90,7 +94,7 @@ class _TelaHomeState extends State<TelaHome> {
                   title: Text('Minha conta', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
-                    mostrarMensagem('Minha conta');
+                    Navigator.pushNamed(this.context, '/conta');
                   },
                 ),
               ),
@@ -102,7 +106,7 @@ class _TelaHomeState extends State<TelaHome> {
                   title: Text('Ajuda', style: TextStyle(color: marrom)),
                   onTap: () {
                     Navigator.pop(context);
-                    mostrarMensagem('Ajuda');
+                    Navigator.pushNamed(this.context, '/ajuda');
                   },
                 ),
               ),
@@ -115,8 +119,8 @@ class _TelaHomeState extends State<TelaHome> {
                   onTap: () {
                     Navigator.pop(context);
                     showDialog(
-                      context: context,
-                      builder: (context) {
+                      context: this.context,
+                      builder: (dialogContext) {
                         return AlertDialog(
                           title: const Text('Sair'),
                           content: const Text(
@@ -125,7 +129,7 @@ class _TelaHomeState extends State<TelaHome> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(dialogContext);
                               },
                               child: Text(
                                 'Cancelar',
@@ -134,7 +138,8 @@ class _TelaHomeState extends State<TelaHome> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(dialogContext);
+                                AuthStore.sair();
                                 Navigator.pushNamedAndRemoveUntil(
                                   this.context,
                                   '/entrar',
@@ -162,263 +167,313 @@ class _TelaHomeState extends State<TelaHome> {
     );
   }
 
+  void _abrirControleDeSom() {
+    final tv = AparelhosStore.aparelhos.value.where(
+      (aparelho) => aparelho.tipo.toLowerCase() == 'tv',
+    );
+    final aparelhosTv = tv.toList();
+    if (aparelhosTv.isEmpty) {
+      mostrarMensagem('Cadastre uma TV para configurar o controle de som.');
+      return;
+    }
+    final aparelho = aparelhosTv.first;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaDetalhesAparelho(
+          nome: aparelho.nome,
+          id: aparelho.id,
+          tipo: aparelho.tipo,
+          fabricante: aparelho.fabricante,
+          modelo: aparelho.modelo,
+          local: aparelho.local,
+          conexao: aparelho.conexao,
+          status: aparelho.status,
+          icone: aparelho.icone,
+        ),
+      ),
+    );
+  }
+
+  void _abrirVidaMais() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Vida+'),
+        content: const Text(
+          'O Vida+ poderá reunir dicas de conforto e economia de energia. As recomendações personalizadas ainda dependem da integração com os serviços de dados do Fhive.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return NavegacaoPorDeslize(
       itemSelecionado: 0,
       child: Scaffold(
-      backgroundColor: amarelo,
+        backgroundColor: amarelo,
 
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
+        body: SafeArea(
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
 
-          decoration: const BoxDecoration(gradient: AppGradients.main),
+            decoration: const BoxDecoration(gradient: AppGradients.main),
 
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageTop,
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageBottom,
-                  ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageTop,
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageBottom,
+                    ),
 
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
 
-                    children: [
-                      // CABEÇALHO
-                      Row(
-                        children: [
-                          Text('Minha casa', style: AppTextStyles.pageTitle),
-
-                          const Spacer(),
-
-                          IconButton(
-                            onPressed: abrirAdicionar,
-                            icon: Icon(Icons.add, color: marrom, size: 30),
-                            tooltip: 'Adicionar',
-                          ),
-
-                          IconButton(
-                            onPressed: abrirMenu,
-                            icon: Icon(
-                              Icons.more_vert,
-                              color: marrom,
-                              size: 26,
-                            ),
-                            tooltip: 'Menu',
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 19),
-
-                      // PAINEL
-                      Text(
-                        'Painel',
-                        style: TextStyle(
-                          color: marrom,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'Arvo',
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceStrong,
-                          borderRadius: BorderRadius.circular(21),
-                        ),
-
-                        child: Column(
+                      children: [
+                        // CABEÇALHO
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _cartaoPainel(
-                                    icone: Icons.cloud_outlined,
-                                    titulo: 'Conexões',
-                                    subtitulo: '0 aparelhos',
-                                    onTap: () {
-                                      mostrarMensagem(
-                                        'Nenhum aparelho conectado.',
-                                      );
-                                    },
-                                  ),
-                                ),
+                            Text('Minha casa', style: AppTextStyles.pageTitle),
 
-                                const SizedBox(width: 14),
+                            const Spacer(),
 
-                                Expanded(
-                                  child: _cartaoPainel(
-                                    icone: Icons.bolt_outlined,
-                                    titulo: 'Energia',
-                                    subtitulo: 'Gastos',
-                                    onTap: () {
-                                      mostrarMensagem(
-                                        'Abrindo informações de energia.',
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                            IconButton(
+                              onPressed: abrirAdicionar,
+                              icon: Icon(Icons.add, color: marrom, size: 30),
+                              tooltip: 'Adicionar',
                             ),
 
-                            const SizedBox(height: 14),
-
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _cartaoPainel(
-                                    icone: Icons.volume_up_outlined,
-                                    titulo: 'Saída de som',
-                                    subtitulo: 'Configurar',
-                                    onTap: () {
-                                      mostrarMensagem(
-                                        'Configurando saída de som.',
-                                      );
-                                    },
-                                  ),
-                                ),
-
-                                const SizedBox(width: 14),
-
-                                Expanded(
-                                  child: _cartaoPainel(
-                                    icone: Icons.favorite_border,
-                                    titulo: 'Vida+',
-                                    subtitulo: 'Saiba mais',
-                                    onTap: () {
-                                      mostrarMensagem('Abrindo Vida+.');
-                                    },
-                                  ),
-                                ),
-                              ],
+                            IconButton(
+                              onPressed: abrirMenu,
+                              icon: Icon(
+                                Icons.more_vert,
+                                color: marrom,
+                                size: 26,
+                              ),
+                              tooltip: 'Menu',
                             ),
                           ],
                         ),
-                      ),
 
-                      const SizedBox(height: 22),
+                        const SizedBox(height: 19),
 
-                      _cartaoTutorial(),
-
-                      const SizedBox(height: 17),
-
-                      // FAVORITOS
-                      const Text(
-                        'Favoritos',
-                        style: TextStyle(
-                          color: marrom,
-                          fontSize: 21,
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'Arvo',
+                        // PAINEL
+                        Text(
+                          'Painel',
+                          style: TextStyle(
+                            color: marrom,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Arvo',
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 9),
+                        const SizedBox(height: 8),
 
-                      ValueListenableBuilder<Set<String>>(
-                        valueListenable: AparelhosStore.favoritos,
-                        builder: (context, favoritos, _) {
-                          if (favoritos.isEmpty) {
-                            return InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: () => mostrarMensagem(
-                                'Toque na estrela de um aparelho para favoritar.',
-                              ),
-                              child: Container(
-                                width: double.infinity,
-                                height: 98,
-                                decoration: BoxDecoration(
-                                  color: amareloClaro,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.star_border,
-                                      color: marrom,
-                                      size: 37,
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Text(
-                                      'Não possui favoritos',
-                                      style: TextStyle(
-                                        color: marrom,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'Arvo',
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceStrong,
+                            borderRadius: BorderRadius.circular(21),
+                          ),
+
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child:
+                                        ValueListenableBuilder<
+                                          List<AparelhoItem>
+                                        >(
+                                          valueListenable:
+                                              AparelhosStore.aparelhos,
+                                          builder: (context, aparelhos, _) =>
+                                              _cartaoPainel(
+                                                icone: Icons.cloud_outlined,
+                                                titulo: 'Conexões',
+                                                subtitulo:
+                                                    '${aparelhos.length} aparelhos',
+                                                onTap: () =>
+                                                    Navigator.pushNamed(
+                                                      context,
+                                                      '/aparelhos',
+                                                    ),
+                                              ),
+                                        ),
+                                  ),
+
+                                  const SizedBox(width: 14),
+
+                                  Expanded(
+                                    child: _cartaoPainel(
+                                      icone: Icons.bolt_outlined,
+                                      titulo: 'Energia',
+                                      subtitulo: 'Gastos',
+                                      onTap: () => Navigator.pushNamed(
+                                        context,
+                                        '/graficos',
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            );
-                          }
 
-                          final favoritosDados = AparelhosStore.aparelhos.value
-                              .where(
-                                (aparelho) => favoritos.contains(aparelho.nome),
-                              )
-                              .toList();
+                              const SizedBox(height: 14),
 
-                          return Column(
-                            children: favoritosDados
-                                .map(
-                                  (aparelho) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 9),
-                                    child: _AparelhoFavoritoCard(
-                                      aparelho: aparelho,
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                TelaDetalhesAparelho(
-                                                  nome: aparelho.nome,
-                                                  id: aparelho.id,
-                                                  tipo: aparelho.tipo,
-                                                  fabricante:
-                                                      aparelho.fabricante,
-                                                  modelo: aparelho.modelo,
-                                                  local: aparelho.local,
-                                                  conexao: aparelho.conexao,
-                                                  status: aparelho.status,
-                                                  icone: aparelho.icone,
-                                                ),
-                                          ),
-                                        );
-                                      },
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _cartaoPainel(
+                                      icone: Icons.volume_up_outlined,
+                                      titulo: 'Saída de som',
+                                      subtitulo: 'Configurar',
+                                      onTap: _abrirControleDeSom,
                                     ),
                                   ),
+
+                                  const SizedBox(width: 14),
+
+                                  Expanded(
+                                    child: _cartaoPainel(
+                                      icone: Icons.favorite_border,
+                                      titulo: 'Vida+',
+                                      subtitulo: 'Saiba mais',
+                                      onTap: _abrirVidaMais,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        _cartaoTutorial(),
+
+                        const SizedBox(height: 17),
+
+                        // FAVORITOS
+                        const Text(
+                          'Favoritos',
+                          style: TextStyle(
+                            color: marrom,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Arvo',
+                          ),
+                        ),
+
+                        const SizedBox(height: 9),
+
+                        ValueListenableBuilder<Set<String>>(
+                          valueListenable: AparelhosStore.favoritos,
+                          builder: (context, favoritos, _) {
+                            if (favoritos.isEmpty) {
+                              return InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () => mostrarMensagem(
+                                  'Toque na estrela de um aparelho para favoritar.',
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 98,
+                                  decoration: BoxDecoration(
+                                    color: amareloClaro,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.star_border,
+                                        color: marrom,
+                                        size: 37,
+                                      ),
+                                      const SizedBox(height: 7),
+                                      Text(
+                                        'Ainda não há favoritos.',
+                                        style: TextStyle(
+                                          color: marrom,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'Arvo',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final favoritosDados = AparelhosStore
+                                .aparelhos
+                                .value
+                                .where(
+                                  (aparelho) => favoritos.contains(aparelho.id),
                                 )
-                                .toList(),
-                          );
-                        },
-                      ),
-                    ],
+                                .toList();
+
+                            return Column(
+                              children: favoritosDados
+                                  .map(
+                                    (aparelho) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 9),
+                                      child: _AparelhoFavoritoCard(
+                                        aparelho: aparelho,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  TelaDetalhesAparelho(
+                                                    nome: aparelho.nome,
+                                                    id: aparelho.id,
+                                                    tipo: aparelho.tipo,
+                                                    fabricante:
+                                                        aparelho.fabricante,
+                                                    modelo: aparelho.modelo,
+                                                    local: aparelho.local,
+                                                    conexao: aparelho.conexao,
+                                                    status: aparelho.status,
+                                                    icone: aparelho.icone,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // BARRA NOVA
-              const BarraNavegacao(itemSelecionado: 0),
-            ],
+                // BARRA NOVA
+                const BarraNavegacao(itemSelecionado: 0),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -611,7 +666,14 @@ class _AparelhoFavoritoCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.star, color: AppColors.primary, size: 24),
+            IconButton(
+              tooltip: 'Remover dos favoritos',
+              onPressed: () => AparelhosStore.alternarFavorito(aparelho.id),
+              icon: const Icon(Icons.star, color: AppColors.primary, size: 24),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
           ],
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
+import 'package:tcc_mobile/features/analytics/presentation/indicador_grafico_detalhe.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
@@ -24,294 +26,408 @@ class _TelaGraficosState extends State<TelaGraficos> {
   static const Color fundoCardExterno = AppColors.surfaceStrong;
 
   bool locaisAbertos = true;
+  String localSelecionado = 'Sala de Estar';
 
   @override
   Widget build(BuildContext context) {
     return NavegacaoPorDeslize(
       itemSelecionado: 2,
       child: Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(gradient: AppGradients.main),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageTop,
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.pageBottom,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ==================================================
-                      // CABEÇALHO
-                      // ==================================================
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Minha casa',
-                              style: AppTextStyles.pageTitle,
-                            ),
-                          ),
-
-                          IconButton(
-                            onPressed: () {
-                              mostrarCriarAparelho(context);
-                            },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.add,
-                              color: marrom,
-                              size: 30,
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          IconButton(
-                            onPressed: _abrirMenu,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: marrom,
-                              size: 26,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: AppSpacing.section),
-
-                      // ==================================================
-                      // GRÁFICOS DISPONÍVEIS
-                      // ==================================================
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Gráficos disponíveis',
-                              style: TextStyle(
-                                color: marrom,
-                                fontSize: 19,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'Arvo',
-                              ),
-                            ),
-                          ),
-
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                locaisAbertos = !locaisAbertos;
-                              });
-                            },
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Locais',
-                                  style: TextStyle(
-                                    color: marrom,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(width: 3),
-                                Icon(
-                                  locaisAbertos
-                                      ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
-                                  color: marrom,
-                                  size: 22,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      if (locaisAbertos) ...[
-                        const Text(
-                          'Sala de Estar',
-                          style: TextStyle(
-                            color: marrom,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(gradient: AppGradients.main),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageTop,
+                      AppSpacing.pageHorizontal,
+                      AppSpacing.pageBottom,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         // ==================================================
-                        // APARELHOS
-                        // ==================================================
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: fundoCardExterno,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const TelaGraficosDetalhes(
-                                              tipo: TipoAparelho.tv,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  child: _cardAparelho(
-                                    nome: 'TV - Cristal',
-                                    subtitulo: 'Disponível',
-                                    icone: Icons.tv_outlined,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 10),
-
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const TelaGraficosDetalhes(
-                                              tipo: TipoAparelho.arCondicionado,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  child: _cardAparelho(
-                                    nome: 'Ar condicionado',
-                                    subtitulo: 'Disponível',
-                                    icone: Icons.air,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // ==================================================
-                        // GRÁFICOS INDISPONÍVEIS
+                        // CABEÇALHO
                         // ==================================================
                         Row(
                           children: [
                             const Expanded(
                               child: Text(
-                                'Gráficos indisponíveis',
-                                style: TextStyle(
-                                  color: marrom,
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                'Minha casa',
+                                style: AppTextStyles.pageTitle,
                               ),
                             ),
 
-                            Row(
-                              children: const [
-                                Text(
-                                  'Locais',
-                                  style: TextStyle(
-                                    color: marrom,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                SizedBox(width: 3),
-                                Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: marrom,
-                                  size: 22,
-                                ),
-                              ],
+                            IconButton(
+                              onPressed: () {
+                                mostrarCriarAparelho(context);
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(
+                                Icons.add,
+                                color: marrom,
+                                size: 30,
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            IconButton(
+                              onPressed: _abrirMenu,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: marrom,
+                                size: 26,
+                              ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 30),
+                        const SizedBox(height: AppSpacing.section),
 
-                        GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'O gráfico deste aparelho está indisponível.',
+                        // ==================================================
+                        // GRÁFICOS DISPONÍVEIS
+                        // ==================================================
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Gráficos disponíveis',
+                                style: TextStyle(
+                                  color: marrom,
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'Arvo',
                                 ),
                               ),
-                            );
-                          },
-                          child: Container(
-                            width: 166,
-                            height: 110,
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFFFF4B2,
-                              ).withValues(alpha: 0.60),
-                              borderRadius: BorderRadius.circular(21),
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(
-                                  Icons.devices_other,
-                                  color: marrom,
-                                  size: 34,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Outro aparelho',
-                                  textAlign: TextAlign.center,
+
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  locaisAbertos = !locaisAbertos;
+                                });
+                              },
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    'Locais',
+                                    style: TextStyle(
+                                      color: marrom,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Icon(
+                                    locaisAbertos
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    color: marrom,
+                                    size: 22,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        if (locaisAbertos) ...[
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: _selecionarLocal,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    localSelecionado,
+                                    style: const TextStyle(
+                                      color: marrom,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: marrom,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _cartoesGraficosDisponiveis(context),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Gráficos indisponíveis',
                                   style: TextStyle(
                                     color: marrom,
-                                    fontSize: 15,
+                                    fontSize: 19,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                Text(
-                                  'Indisponível',
-                                  style: TextStyle(
-                                    color: marrom,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                              ),
+                              GestureDetector(
+                                onTap: _selecionarLocal,
+                                child: Row(
+                                  children: const [
+                                    Text(
+                                      'Locais',
+                                      style: TextStyle(
+                                        color: marrom,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    SizedBox(width: 3),
+                                    Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: marrom,
+                                      size: 22,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          _cartoesGraficosIndisponiveis(context),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
 
-              const BarraNavegacao(itemSelecionado: 2),
+                const BarraNavegacao(itemSelecionado: 2),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _temGraficoDisponivel(AparelhoItem aparelho) {
+    final tipo = aparelho.tipo.trim().toLowerCase();
+    return tipo == 'tv' || tipo == 'ar condicionado';
+  }
+
+  Widget _cartoesGraficosDisponiveis(BuildContext context) {
+    return ValueListenableBuilder<List<AparelhoItem>>(
+      valueListenable: AparelhosStore.aparelhos,
+      builder: (context, aparelhos, _) {
+        final disponiveis = aparelhos
+            .where(
+              (aparelho) =>
+                  aparelho.local.toLowerCase() ==
+                      localSelecionado.toLowerCase() &&
+                  _temGraficoDisponivel(aparelho),
+            )
+            .toList();
+
+        if (disponiveis.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: fundoCardExterno,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Nenhum aparelho com gráficos disponíveis neste local.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: marrom, fontWeight: FontWeight.w700),
+            ),
+          );
+        }
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: fundoCardExterno,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final largura = (constraints.maxWidth - 10) / 2;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: disponiveis.map((aparelho) {
+                  return SizedBox(
+                    width: largura,
+                    child: GestureDetector(
+                      onTap: () => _abrirGraficosDoAparelho(aparelho),
+                      child: _cardAparelho(
+                        nome: aparelho.nome,
+                        subtitulo: 'Disponível',
+                        icone: aparelho.icone,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _cartoesGraficosIndisponiveis(BuildContext context) {
+    return ValueListenableBuilder<List<AparelhoItem>>(
+      valueListenable: AparelhosStore.aparelhos,
+      builder: (context, aparelhos, _) {
+        final indisponiveis = aparelhos
+            .where(
+              (aparelho) =>
+                  aparelho.local.toLowerCase() ==
+                      localSelecionado.toLowerCase() &&
+                  !_temGraficoDisponivel(aparelho),
+            )
+            .toList();
+
+        if (indisponiveis.isEmpty) {
+          return GestureDetector(
+            onTap: () => _mensagemGraficoIndisponivel(
+              'Ainda não há outros aparelhos compatíveis com gráficos neste local.',
+            ),
+            child: Container(
+              width: 166,
+              height: 110,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF4B2).withValues(alpha: 0.60),
+                borderRadius: BorderRadius.circular(21),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.devices_other, color: marrom, size: 34),
+                  SizedBox(height: 8),
+                  Text(
+                    'Outro aparelho',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: marrom,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    'Indisponível',
+                    style: TextStyle(
+                      color: marrom,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: indisponiveis.map((aparelho) {
+            return SizedBox(
+              width: (MediaQuery.sizeOf(context).width - 64) / 2,
+              child: GestureDetector(
+                onTap: () => _mensagemGraficoIndisponivel(
+                  'Os gráficos de "${aparelho.nome}" serão liberados quando houver telemetria e suporte para esse tipo de aparelho.',
+                ),
+                child: _cardAparelho(
+                  nome: aparelho.nome,
+                  subtitulo: 'Aguardando dados',
+                  icone: aparelho.icone,
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  void _mensagemGraficoIndisponivel(String mensagem) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensagem)));
+  }
+
+  void _abrirGraficosDoAparelho(AparelhoItem aparelho) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaGraficosDetalhes(
+          tipo: aparelho.tipo.trim().toLowerCase() == 'tv'
+              ? TipoAparelho.tv
+              : TipoAparelho.arCondicionado,
+          nomePersonalizado: aparelho.nome,
+        ),
+      ),
+    );
+  }
+
+  void _selecionarLocal() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFF4B2),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Selecionar local',
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              for (final local in AparelhosStore.locaisDisponiveis)
+                ListTile(
+                  dense: true,
+                  title: Text(local, style: const TextStyle(color: marrom)),
+                  trailing: local == localSelecionado
+                      ? const Icon(Icons.check, color: marrom)
+                      : null,
+                  onTap: () {
+                    setState(() => localSelecionado = local);
+                    Navigator.pop(sheetContext);
+                  },
+                ),
             ],
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -341,6 +457,8 @@ class _TelaGraficosState extends State<TelaGraficos> {
           Text(
             nome,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: marrom,
               fontSize: 16,
@@ -369,7 +487,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (sheetContext) {
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           decoration: const BoxDecoration(
@@ -391,9 +509,13 @@ class _TelaGraficosState extends State<TelaGraficos> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Gráficos atualizados!')),
+                    Navigator.pop(sheetContext);
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Os gráficos usam dados demonstrativos. A atualização em tempo real depende da integração IoT.',
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -410,10 +532,10 @@ class _TelaGraficosState extends State<TelaGraficos> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     showDialog(
-                      context: context,
-                      builder: (context) {
+                      context: this.context,
+                      builder: (dialogContext) {
                         return AlertDialog(
                           title: const Text(
                             'Gráficos',
@@ -428,7 +550,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(dialogContext);
                               },
                               child: const Text(
                                 'Fechar',
@@ -456,8 +578,13 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
 class TelaGraficosDetalhes extends StatefulWidget {
   final TipoAparelho tipo;
+  final String? nomePersonalizado;
 
-  const TelaGraficosDetalhes({super.key, required this.tipo});
+  const TelaGraficosDetalhes({
+    super.key,
+    required this.tipo,
+    this.nomePersonalizado,
+  });
 
   @override
   State<TelaGraficosDetalhes> createState() => _TelaGraficosDetalhesState();
@@ -474,7 +601,8 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
   bool get isTv => widget.tipo == TipoAparelho.tv;
 
-  String get nomeAparelho => isTv ? 'TV - Cristal' : 'Ar condicionado';
+  String get nomeAparelho =>
+      widget.nomePersonalizado ?? (isTv ? 'TV - Cristal' : 'Ar condicionado');
 
   IconData get iconeAparelho => isTv ? Icons.tv_outlined : Icons.air;
 
@@ -484,7 +612,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
   double get gastoEnergia => isTv ? 12.5 : 28.4;
 
-  int get horasUsadas => isTv ? 5 : 18;
+  int get horasUsadas => isTv ? 12 : 18;
 
   String get terceiraValor => isTv ? '72%' : '23°C';
 
@@ -645,7 +773,12 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       // ==================================================
                       // RESUMO PRINCIPAL
                       // ==================================================
-                      _cardResumo(),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () =>
+                            _abrirIndicador(TipoIndicadorGrafico.pontuacao),
+                        child: _cardResumo(),
+                      ),
 
                       const SizedBox(height: 22),
 
@@ -679,7 +812,12 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       // ==================================================
                       // GRÁFICO
                       // ==================================================
-                      _cardGrafico(),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () =>
+                            _abrirIndicador(TipoIndicadorGrafico.historico),
+                        child: _cardGrafico(),
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -819,6 +957,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   Widget _cardConsumo() {
     return _cardBase(
       height: 155,
+      onTap: () => _abrirIndicador(TipoIndicadorGrafico.energia),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -896,6 +1035,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   Widget _cardHorasUso() {
     return _cardBase(
       height: 155,
+      onTap: () => _abrirIndicador(TipoIndicadorGrafico.horas),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1146,6 +1286,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   Widget _cardInfoEspecifica() {
     return _cardBase(
       height: 240,
+      onTap: () => _abrirIndicador(TipoIndicadorGrafico.recomendacoes),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1268,6 +1409,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
     return _cardBase(
       height: 240,
+      onTap: () => _abrirIndicador(TipoIndicadorGrafico.eficiencia),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1361,22 +1503,46 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   // CARD BASE
   // ================================================================
 
-  Widget _cardBase({required double height, required Widget child}) {
-    return Container(
-      height: height,
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: amareloCard,
+  Widget _cardBase({
+    required double height,
+    required Widget child,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(19),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(19),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            offset: Offset(0, 3),
-            blurRadius: 4,
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: amareloCard,
+            borderRadius: BorderRadius.circular(19),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                offset: Offset(0, 3),
+                blurRadius: 4,
+              ),
+            ],
           ),
-        ],
+          child: child,
+        ),
       ),
-      child: child,
+    );
+  }
+
+  void _abrirIndicador(TipoIndicadorGrafico indicador) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TelaIndicadorGraficoDetalhe(
+          isTv: isTv,
+          nomeAparelho: nomeAparelho,
+          indicador: indicador,
+        ),
+      ),
     );
   }
 }

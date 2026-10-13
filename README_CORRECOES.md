@@ -505,3 +505,320 @@ Arquivo novo: `lib/shared/widgets/navegacao_por_deslize.dart`.
 ### Validação
 
 Os arquivos PNG foram gerados a partir do SVG de marca existente e instalados nos catálogos e diretórios das plataformas incluídas no projeto base. A consistência do ZIP e dos catálogos JSON/XML foi verificada. Esta sessão não possui o SDK Flutter para executar `flutter analyze` ou `flutter test`; execute esses comandos localmente após extrair o pacote.
+
+
+---
+
+## Atualização de funções locais — 13/10/2026
+
+Esta seção consolida neste README o histórico das alterações funcionais realizadas em 13/10/2026. O conteúdo antes mantido separadamente em `UPDATE_CORRECOES.md` foi incorporado aqui para que este arquivo seja a referência principal das mudanças do projeto.
+
+### 1. Autenticação local
+
+- Criado `lib/shared/state/auth_store.dart` para centralizar as contas e a sessão de demonstração.
+- O login valida e-mail e senha contra uma conta cadastrada, em vez de aceitar somente o preenchimento do formulário.
+- Conta local de demonstração: `teste@fhive.com` / `123456`.
+- O cadastro valida nome, e-mail já existente e requisitos de senha; depois de concluído, retorna à tela de login.
+- A recuperação permite redefinir a senha de uma conta local existente e informa claramente quando a conta não é encontrada.
+- Os botões Google/Facebook informam que são necessárias credenciais e integração com um serviço de autenticação; não afirmam que ocorreu uma autenticação externa.
+- **Limite:** a autenticação é um protótipo em memória. Não há envio de e-mail, sessão segura ou backend, e a conta de demonstração não deve ser usada em produção.
+
+### 2. Estado dos aparelhos, locais e favoritos
+
+- `lib/shared/state/aparelhos_store.dart` centraliza o estado de locais, aparelhos e favoritos.
+- Foram reunidas operações de cadastro, consulta por ID/nome, atualização, alteração de status, remoção, verificação de duplicidade e reinicialização.
+- O modelo `AparelhoItem` inclui `copyWith` para permitir atualizações controladas.
+- Os favoritos são associados ao ID do aparelho; a atualização de dados preserva essa referência quando o ID é mantido.
+- Remover um aparelho também remove seu favorito, evitando referências órfãs.
+- O cadastro verifica nomes e IDs duplicados. Os locais personalizados são compartilhados entre as telas enquanto o aplicativo está em execução.
+- O menu superior da tela Aparelhos inclui ações para atualizar a lista, criar local e acessar a ajuda.
+- A seção Favoritos da Home reflete o estado centralizado e permite remover um favorito diretamente.
+- Os cartões e o contador da Home utilizam o estado centralizado dos aparelhos.
+
+### 3. Cadastro e detalhes de aparelho
+
+- Mantido o cadastro em quatro etapas dentro de um pop-up, com validação dos campos e seleção de local e método de conexão.
+- O teste de conexão verifica os dados preenchidos na interface; não comprova pareamento ou conectividade física.
+- O status inicial do aparelho é `Aguardando conexão` para não indicar falsamente que o hardware está online.
+- A estrela dos detalhes utiliza o estado central de favoritos.
+- O menu de detalhes permite consultar as informações cadastradas e remover um aparelho após confirmação.
+- A ação Gráficos encaminha TVs e aparelhos de ar-condicionado para a visualização correspondente; outros tipos utilizam a rota geral.
+- Pré-configurações de ar-condicionado, cenas de iluminação e serviços de streaming personalizados podem ser mantidos localmente, com validações para nomes vazios ou repetidos.
+- Selecionar um streaming informa que a abertura requer o aplicativo ou link externo correspondente.
+- **Limite:** interruptores e controles de aparelhos são demonstrativos locais. Comandos físicos dependem de hardware compatível e de um serviço/backend IoT.
+
+### 4. Gráficos
+
+- A lista de gráficos disponíveis é carregada do `AparelhosStore`; TVs e aparelhos de ar-condicionado cadastrados são exibidos para o local selecionado.
+- O seletor de local permite escolher entre os locais disponíveis no aplicativo.
+- Aparelhos sem visualização de gráficos disponível aparecem em uma seção separada e informam o motivo quando selecionados.
+- A ação “Atualizar gráficos” esclarece que os dados atuais são demonstrativos e dependem de integração IoT para atualização em tempo real.
+- Séries, pontuações e indicadores de energia/uso não são telemetria real.
+
+### 5. Rotinas
+
+- Criado `lib/shared/state/rotinas_store.dart` para centralizar o estado das rotinas.
+- O estado reúne consulta, criação, atualização, ativação/desativação, registro de execução, remoção e reinicialização.
+- A tela Rotinas consome esse estado e atualiza a interface após as mudanças.
+- A criação valida o nome; o menu permite ativar/desativar ou remover com confirmação; tentar executar uma rotina inativa apresenta uma orientação.
+- A execução local registra data/hora da última execução, mas não envia comandos a aparelhos físicos sem backend IoT.
+
+### 6. Conta, ajuda e configurações
+
+- Criadas `lib/features/settings/presentation/conta.dart` e `lib/features/settings/presentation/ajuda.dart`.
+- Adicionadas as rotas `/conta` e `/ajuda` em `lib/main.dart`, ligadas à Home e a Configurações.
+- Preferências de notificações, sincronização de favoritos e sugestões usam `lib/shared/state/preferencias_store.dart`.
+- As mensagens das preferências explicam que o efeito é local e informam quando uma integração ainda não existe.
+- Recursos avançados exibem um resumo de aparelhos, favoritos e rotinas, sem alegar que testam a conexão física.
+- Os avisos de serviços vinculados, privacidade, consentimento e permissões não prometem integrações com terceiros ou permissões nativas não implementadas.
+- “Sair” encerra a sessão local; “Sair do Fhive” solicita confirmação, limpa os dados demonstrativos e restaura o estado inicial, incluindo a conta de demonstração.
+
+### 7. Testes e documentação
+
+- `test/widget_test.dart` foi atualizado para cobrir a abertura inicial, login de demonstração, navegação, cadastro de aparelhos, favoritos, detalhes, Perfil/Ajuda, autenticação e redefinição de senha local, preferências e operações de aparelhos/rotinas.
+- Mantido `test/navegacao_por_deslize_test.dart` para os gestos horizontais entre abas.
+- Este README passa a reunir o histórico funcional e as limitações técnicas; o resultado da validação local mais recente está registrado na seção ao final do documento.
+
+### 8. Arquivos criados nesta atualização
+
+- `lib/shared/state/auth_store.dart`
+- `lib/shared/state/preferencias_store.dart`
+- `lib/shared/state/rotinas_store.dart`
+- `lib/features/settings/presentation/conta.dart`
+- `lib/features/settings/presentation/ajuda.dart`
+
+### 9. Arquivos modificados nesta atualização
+
+- `lib/main.dart`
+- `lib/shared/state/aparelhos_store.dart`
+- `lib/features/auth/presentation/entrar.dart`
+- `lib/features/auth/presentation/cadastrar.dart`
+- `lib/features/home/presentation/home.dart`
+- `lib/features/devices/presentation/aparelhos.dart`
+- `lib/features/devices/presentation/aparelho_detalhes.dart`
+- `lib/features/devices/presentation/criar_aparelho.dart`
+- `lib/features/analytics/presentation/graficos.dart`
+- `lib/features/routines/presentation/rotinas.dart`
+- `lib/features/settings/presentation/configuracoes.dart`
+- `test/widget_test.dart`
+- `test/navegacao_por_deslize_test.dart`
+- `README.md` e `README_CORRECOES.md`
+
+### 10. Integrações ainda necessárias para produção
+
+Para transformar o protótipo local em uma aplicação pronta para produção, ainda será necessário implementar e configurar:
+
+- backend e banco persistente para contas, sessões, aparelhos, rotinas, favoritos e preferências;
+- autenticação segura e recuperação de senha por e-mail;
+- OAuth/SDKs de Google e Facebook;
+- hardware e protocolo IoT para pareamento, comandos, estados e execução real de rotinas;
+- telemetria real para gráficos e consumo de energia;
+- integrações com aplicativos/streaming, notificações e permissões nativas do sistema.
+
+### 11. Comandos de validação
+
+Use estes comandos a partir da pasta que contém `pubspec.yaml`:
+
+```bash
+flutter pub get
+dart format lib test
+flutter analyze
+flutter test
+```
+
+O resultado da execução local enviada em 13/10/2026 não foi totalmente aprovado; as falhas específicas e os próximos passos estão descritos na seção **Resultado da validação local — 13/10/2026** ao final deste documento.
+
+## Detalhamento dos indicadores, ícone e edição de perfil — 13/10/2026
+
+### Navegação para as telas detalhadas de gráficos
+
+Os cartões da visão geral de cada aparelho agora abrem uma tela detalhada própria, mantendo a paleta amarela/marrom, as superfícies arredondadas e a tipografia já usadas no Fhive:
+
+- **Energia:** o cartão `Energia` abre a página `Gasto diário`, com medidor semicircular, consumo em kWh, limite de referência, barra de utilização, legenda, dicas para economizar e histórico com períodos **Semanal / Mensal / Geral**.
+- **Horas usadas:** o cartão `Uso` abre a distribuição de tempo por **Manhã / Tarde / Noite**, com barras coloridas, duração de cada período, total de horas e comparação demonstrativa com o dia anterior.
+- **Pontuação:** o cartão `Pontos de gestão` abre a pontuação de 0 a 100, o status geral e a composição por consumo, tempo de uso e eficiência.
+- **Histórico:** o cartão de gráfico abre uma página ampliada com linha histórica e seletor de períodos.
+- **Informações específicas:** o cartão `Recomendações` (TV) ou `Temperatura` (ar-condicionado) abre uma tela com informação atual e sugestões contextualizadas.
+- **Eficiência:** o cartão `Eficiência` abre uma tela com indicador circular, avaliação do aproveitamento e orientações para melhorar o resultado.
+
+As telas detalhadas usam o nome personalizado do aparelho no cabeçalho e possuem retorno explícito por seta. Os cartões mantêm a aparência anterior, mas agora indicam uma ação ao toque.
+
+### Ajuste de consistência das horas
+
+- O exemplo da TV passa a usar **12 horas** no resumo, compatível com a distribuição demonstrativa `5h + 3h + 4h` da página detalhada.
+- O ar-condicionado usa a distribuição demonstrativa `7h + 5h + 6h`, totalizando 18 horas.
+- Os valores de energia, tempo e eficiência continuam sendo dados demonstrativos, não telemetria real. Para receber medidas de verdade, ainda é necessária a integração com o backend/dispositivo IoT.
+
+### Ícone do aplicativo com traços reforçados
+
+- O desenho de células hexagonais foi preservado; somente a espessura dos traços da marca foi aumentada.
+- `assets/images/logo.svg` agora reforça o contorno com preenchimento e traço da mesma cor, mantendo a marca e as proporções que já apareciam na tela inicial.
+- `assets/images/fhive_app_icon.png` foi atualizado e os ícones nativos do Android, iOS, macOS, Windows e Web (favicon/ícones PWA) foram regenerados a partir da mesma arte, para evitar aparências diferentes entre plataformas.
+- A cor marrom da marca (`#964800`) e o fundo amarelo em gradiente foram mantidos.
+
+### Tela de perfil revisada
+
+- A tela de perfil foi organizada em cartões para **Dados pessoais** e **Segurança**, com mais hierarquia visual, espaçamento e áreas de toque confortáveis, seguindo padrões comuns em aplicativos de conta.
+- O avatar apresenta as iniciais do nome atual e atualiza visualmente após alterar o perfil.
+- O usuário pode editar **nome e e-mail**. A validação exige nome com pelo menos dois caracteres, e-mail válido e impede o uso de e-mail que já pertença a outra conta local.
+- A seção expansível **Segurança** permite informar a senha atual, a nova senha e a confirmação; valida a senha atual, bloqueia senhas iguais e exige pelo menos seis caracteres, maiúscula, minúscula, número e caractere especial.
+- Os formulários mostram/ocultam a senha, exibem mensagens claras e confirmam o resultado das operações.
+- A tela mantém o aviso de que os dados ficam na memória na versão atual. Ainda não há sincronização com backend nem armazenamento permanente.
+
+### Testes e arquivos alterados
+
+- Acrescentados testes widget para a navegação entre os seis detalhes de indicadores e testes do `AuthStore` para atualização de nome, e-mail e senha.
+- Atualizado o teste de perfil para continuar verificando o título `Perfil`.
+- Arquivos alterados/adicionados:
+  - `lib/features/analytics/presentation/graficos.dart`
+  - `lib/features/analytics/presentation/indicador_grafico_detalhe.dart` (novo)
+  - `lib/features/settings/presentation/conta.dart`
+  - `lib/shared/state/auth_store.dart`
+  - `assets/images/logo.svg`
+  - `assets/images/fhive_app_icon.png`
+  - Ícones de lançamento nativos das plataformas Android, iOS, macOS, Windows e Web (favicon/PWA)
+  - `test/widget_test.dart`
+  - `README_CORRECOES.md`, `UPDATE_CORRECOES.md` e `update_correções.md`
+
+### Validação
+
+- Foram verificados os caminhos dos assets e a integridade estrutural dos arquivos alterados.
+- O SDK Flutter/Dart não está disponível neste ambiente; por isso, os testes novos ainda precisam ser executados localmente com `dart format lib test`, `flutter analyze` e `flutter test`.
+- As telas têm conteúdo responsivo e rolável, mas a validação visual em emulador/dispositivo continua recomendada antes da publicação.
+
+---
+
+## Resultado da validação local — 13/10/2026
+
+Esta seção registra o log local enviado junto com o projeto. Ela complementa as validações anteriores: descreve o resultado observado naquela execução e **não significa que as falhas já foram corrigidas**.
+
+### `dart format lib test`
+
+- O comando terminou e formatou 36 arquivos; 17 foram alterados pelo formatador.
+- Entre os arquivos formatados estão telas de gráficos, autenticação, aparelhos, Home, rotinas, configurações, os stores compartilhados e os testes.
+- A formatação bem-sucedida não garante que o aplicativo compile ou que os testes passem.
+
+### `flutter analyze`
+
+- A análise não terminou normalmente. O servidor de análise Dart encerrou com código `255`.
+- O log registra `FormatException: Unexpected end of input` ao interpretar uma mensagem JSON/LSP em `LspByteStreamServerChannel._readMessage`.
+- Como o servidor caiu antes de concluir a análise, o log **não comprova ausência de problemas de lint ou compilação**.
+- Próxima tentativa recomendada: fechar e reabrir o terminal/IDE e executar `flutter pub get` e `flutter analyze` separadamente. Se o erro persistir, reiniciar o Dart Analysis Server no editor e repetir a análise.
+
+### `flutter test`
+
+O resumo do log foi `+9 -5`: nove testes passaram e cinco falharam. As falhas observadas foram:
+
+1. **`Cadastro IoT percorre as quatro etapas e adiciona o aparelho`**
+   - Foi reportado overflow horizontal de 37 pixels durante o layout.
+   - O teste procurou o texto exato `Testar conexão`, mas não encontrou nenhum widget com esse texto.
+   - Ajuste necessário: tornar o layout responsivo na largura usada pelo teste e alinhar o texto procurado pelo teste ao rótulo acessível/visível realmente usado pelo botão de teste de conexão.
+
+2. **`Favorito aparece na Home e pode ser removido por lá`**
+   - O toque no controle associado à dica `Remover dos favoritos` foi realizado em uma posição que não atingia o widget na área interativa.
+   - Ao final, o favorito `FH-TV-CRISTAL-001` continuava na coleção.
+   - Ajuste necessário: garantir que o controle esteja visível antes do toque, localizar a estrela/ação interativa correta no teste e confirmar que o callback de remoção atualiza o estado central.
+
+3. **`Detalhes exibem controles e menu de informações`**
+   - O teste procurou `FH-TV-TESTE-002`, mas o texto não foi encontrado na árvore visível.
+   - Também apareceu o aviso do Flutter sobre `ListTile` dentro de `DecoratedBox` com cor de fundo; isso pode ocultar o feedback visual de toque.
+   - Ajuste necessário: confirmar que o teste abre/expande a seção que mostra os dados de identificação e envolver `ListTile` decorados em `Material` próprio, quando aplicável.
+
+4. **`Cartões de indicadores abrem telas detalhadas próprias`**
+   - Foram registrados vários `RenderFlex overflow` na tela `lib/features/analytics/presentation/graficos.dart`, incluindo linhas próximas de 898, 961, 1003, 1083, 1413 e 1416. Os excessos atingiram áreas verticais e horizontais.
+   - O teste esperava encontrar apenas um texto `Limite de energia`, mas a busca encontrou dois widgets com o mesmo texto.
+   - Ajuste necessário: rever a composição responsiva dos cartões/detalhes em larguras menores e restringir a busca do teste à área ou widget correto, em vez de usar uma busca global ambígua.
+
+5. **`Configurações abre Perfil e Ajuda`**
+   - O teste terminou com falha e o log também registrou o aviso de `ListTile` colocado dentro de `DecoratedBox` com fundo.
+   - O trecho de log fornecido não expõe a asserção exata que provocou essa falha; é necessário executar este teste isoladamente para identificar o ponto preciso.
+
+Os avisos de renderização devem ser tratados mesmo quando não são a única causa de uma falha. Uma verificação útil depois dos ajustes é executar cada cenário com `flutter test --plain-name "nome do teste"` e, em seguida, repetir toda a suíte.
+
+### `flutter run` para Windows — log inicial
+
+A inicialização do aplicativo Windows falhou durante a geração dos arquivos de build do CMake. O log apontou a ausência da declaração `project()`, o comando `apply_standard_settings` desconhecido e a falha `Unable to generate build files`.
+
+A inspeção dos arquivos identificou a causa direta: `windows/CMakeLists.txt` continha o conteúdo de configuração que pertence a `windows/flutter/CMakeLists.txt`. Esse erro fazia a configuração raiz procurar `windows/ephemeral/generated_config.cmake`, embora os arquivos gerados pelo Flutter pertençam a `windows/flutter/ephemeral/`.
+
+**Correção aplicada no pacote atualizado:** o `windows/CMakeLists.txt` raiz foi restaurado com a configuração principal do projeto, a declaração `project(tcc_mobile LANGUAGES CXX)`, a função `APPLY_STANDARD_SETTINGS`, a inclusão de `flutter`, `runner` e dos plugins, e as regras de instalação. A configuração própria de `windows/flutter/CMakeLists.txt` foi mantida separada.
+
+Para regenerar os arquivos de build no ambiente Windows, execute os comandos descritos na seção de correção adicionada ao final deste README. Não altere manualmente arquivos em `windows/flutter/ephemeral/`, pois são gerados pelas ferramentas Flutter.
+
+### Dependências
+
+O `flutter pub get` foi concluído, mas informou que oito dependências possuem versões mais recentes incompatíveis com as restrições atuais. Esse aviso, por si só, não foi apresentado como causa das falhas acima. Para revisar versões antes de qualquer atualização:
+
+```bash
+flutter pub outdated
+```
+
+Não se recomenda atualizar todas as dependências indiscriminadamente sem revisar a compatibilidade com o SDK, os plugins e os testes.
+
+### Situação registrada no log
+
+- **Formatação:** concluída.
+- **Análise estática:** não concluída; servidor de análise encerrou com erro.
+- **Testes automatizados:** parcialmente aprovados; nove passaram e cinco falharam.
+- **Build Windows:** falhou durante a configuração CMake.
+- **Correção do código após este log:** ainda pendente; esta seção documenta os achados e os próximos passos, sem alegar que eles foram resolvidos.
+
+
+
+## Correção da configuração CMake do Windows — 13/10/2026
+
+### Diagnóstico confirmado
+
+O arquivo `windows/CMakeLists.txt` estava duplicando a configuração interna de `windows/flutter/CMakeLists.txt`. Por isso, a raiz do projeto não declarava corretamente o projeto CMake, não definia `APPLY_STANDARD_SETTINGS` e construía o caminho de arquivos gerados a partir da pasta errada. Isso corresponde ao erro mais recente:
+
+```text
+CMake Error at CMakeLists.txt:21 (apply_standard_settings):
+  Unknown CMake command "apply_standard_settings".
+```
+
+### Alterações feitas
+
+- Restaurado `windows/CMakeLists.txt` como arquivo raiz de configuração CMake para o aplicativo `tcc_mobile`.
+- Incluídas a declaração do projeto CMake, a configuração dos modos `Debug`, `Profile` e `Release`, a função `APPLY_STANDARD_SETTINGS`, as regras de `runner`/plugins e as regras de instalação de assets.
+- Mantido `windows/flutter/CMakeLists.txt` como a configuração específica da integração Flutter para Windows.
+- Removidos do ZIP os diretórios de saída/cache `build/`, `.dart_tool/` e `windows/flutter/ephemeral/`, além de outros arquivos gerados de build que podem reter caminhos da máquina onde o projeto foi compilado. O diretório `.git/` foi preservado. Esses arquivos e diretórios temporários são regenerados pelas ferramentas de desenvolvimento.
+
+### Como testar no Windows
+
+Na pasta do projeto, execute em um PowerShell:
+
+```powershell
+flutter clean
+flutter pub get
+flutter run -d windows
+```
+
+**Atenção:** `flutter clean` remove arquivos gerados, mas não corrige o conteúdo de `windows/CMakeLists.txt`. Se o erro `Unknown CMake command "apply_standard_settings"` continuar, confira primeiro se o arquivo raiz `windows/CMakeLists.txt` foi realmente substituído pela versão corrigida do pacote. Remover apenas `build/`, `.dart_tool/` ou `windows/flutter/ephemeral/` não resolve um `CMakeLists.txt` raiz incorreto. Não substitua `windows/flutter/CMakeLists.txt` nem `windows/runner/CMakeLists.txt`.
+
+### Estado da validação
+
+A correção estrutural do arquivo CMake foi aplicada ao pacote e o ZIP não contém os caches anteriores. A compilação real para Windows ainda precisa ser confirmada no computador com Flutter e ferramentas C++ para Windows instaladas; portanto, não se afirma aqui que `flutter run -d windows` já foi executado com sucesso. As falhas anteriores de `flutter test` e do servidor `flutter analyze` continuam registradas nas seções acima e não são corrigidas por esta alteração de CMake.
+
+
+### Retorno após a nova tentativa — 13/10/2026
+
+O usuário executou `flutter clean`, `flutter pub get` e `flutter run -d windows` na pasta local existente. As dependências foram resolvidas, mas o build parou novamente com:
+
+```text
+CMake Error at CMakeLists.txt:21 (apply_standard_settings):
+  Unknown CMake command "apply_standard_settings".
+```
+
+Este resultado confirma que limpar o cache não foi suficiente. O comando `apply_standard_settings` está sendo chamado durante a configuração de um subdiretório (o ponto indicado na linha 21 normalmente corresponde a `windows/runner/CMakeLists.txt`), mas a configuração raiz carregada não disponibilizou essa função. A causa mais provável é que o arquivo corrigido `windows/CMakeLists.txt` ainda não foi copiado para a pasta do projeto que está sendo executada.
+
+**Aplicação correta da correção:** extraia o arquivo `CMakeLists_windows_corrigido.txt` do pacote de correção e copie-o para a pasta do projeto com o nome exato `windows/CMakeLists.txt`, substituindo o arquivo existente. Alternativamente, extraia `Correcao_CMake_Fhive.zip` diretamente dentro da pasta `Fhive_flutter` existente e confirme que o destino final é `Fhive_flutter\windows\CMakeLists.txt` — não `Fhive_flutter\Fhive_flutter\windows\CMakeLists.txt`.
+
+Depois, confira no início do arquivo `windows/CMakeLists.txt` se há uma declaração `project(tcc_mobile LANGUAGES CXX)` e procure a definição `function(APPLY_STANDARD_SETTINGS TARGET)` antes de `add_subdirectory(...)`. Só então execute:
+
+```powershell
+flutter clean
+flutter pub get
+flutter run -d windows
+```
+
+Se o erro mudar, registre a nova mensagem completa: ela poderá apontar um próximo problema diferente. A compilação não é considerada confirmada até que o comando termine sem erro.

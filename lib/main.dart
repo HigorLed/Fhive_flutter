@@ -8,6 +8,8 @@ import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 import 'package:tcc_mobile/features/home/presentation/home.dart';
 import 'package:tcc_mobile/features/devices/presentation/aparelhos.dart';
 import 'package:tcc_mobile/features/settings/presentation/configuracoes.dart';
+import 'package:tcc_mobile/features/settings/presentation/conta.dart';
+import 'package:tcc_mobile/features/settings/presentation/ajuda.dart';
 
 void main() {
   runApp(const FhiveApp());
@@ -31,6 +33,8 @@ class FhiveApp extends StatelessWidget {
         '/aparelhos': (context) => const TelaAparelhos(),
         '/graficos': (context) => const TelaGraficos(),
         '/configuracoes': (context) => const TelaConfiguracoes(),
+        '/conta': (context) => const TelaConta(),
+        '/ajuda': (context) => const TelaAjuda(),
         '/rotinas': (context) => const TelaRotinas(),
         '/entrar': (context) => const TelaDeLogin(),
         '/cadastrar': (context) => const TelaDeCadastro(),

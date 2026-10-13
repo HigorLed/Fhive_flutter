@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/shared/state/auth_store.dart';
 
 class TelaDeCadastro extends StatefulWidget {
   const TelaDeCadastro({super.key});
@@ -61,19 +62,27 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
       carregando = true;
     });
 
-    // Conecte aqui a autenticação real (Firebase / Supabase / API).
-    await Future.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 250));
 
     if (!mounted) return;
 
-    setState(() {
-      carregando = false;
-    });
+    final erro = AuthStore.cadastrar(
+      nome: nomeController.text,
+      email: emailController.text,
+      senha: senhaController.text,
+    );
+    setState(() => carregando = false);
+
+    if (erro != null) {
+      _mensagem(erro);
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cadastro realizado com sucesso!')),
+      const SnackBar(
+        content: Text('Conta criada. Entre com seu e-mail e senha.'),
+      ),
     );
-
     Navigator.pushReplacementNamed(context, '/entrar');
   }
 
@@ -81,12 +90,26 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
-  Future<void> cadastrarComGoogle() async {
-    _mensagem('Cadastro com Google selecionado.');
-  }
+  Future<void> cadastrarComGoogle() async => _informarIntegracaoSocial();
 
-  Future<void> cadastrarComFacebook() async {
-    _mensagem('Cadastro com Facebook selecionado.');
+  Future<void> cadastrarComFacebook() async => _informarIntegracaoSocial();
+
+  void _informarIntegracaoSocial() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cadastro social'),
+        content: const Text(
+          'O cadastro com Google/Facebook depende das credenciais dos provedores e de um serviço de autenticação. Nenhuma conta externa foi criada.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _circulo(double tamanho, Color cor) {
