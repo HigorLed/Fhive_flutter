@@ -17,12 +17,14 @@ enum TipoIndicadorGrafico {
 class TelaIndicadorGraficoDetalhe extends StatefulWidget {
   final bool isTv;
   final String nomeAparelho;
+  final String local;
   final TipoIndicadorGrafico indicador;
 
   const TelaIndicadorGraficoDetalhe({
     super.key,
     required this.isTv,
     required this.nomeAparelho,
+    this.local = 'Sala de Estar',
     required this.indicador,
   });
 
@@ -112,7 +114,7 @@ class _TelaIndicadorGraficoDetalheState
               ],
             ),
             child: Text(
-              '${widget.nomeAparelho} | $nomeIndicador',
+              '${widget.local} • ${widget.nomeAparelho} | $nomeIndicador',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

@@ -1,0 +1,1 @@
+ C:\\Users\\25162411\\Desktop\\TCC\\Fhive_flutter\\.dart_tool\\flutter_build\\da243e3944ab8eefc4d4b7aa85eeaeee\\native_assets.json: 

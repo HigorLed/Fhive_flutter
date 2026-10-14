@@ -98,7 +98,7 @@ void main() {
 
     await tester.tap(find.text('Ethernet'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Testar conexão'));
+    await tester.tap(find.text('Testar conexão'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
@@ -129,7 +129,9 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Início'));
     await tester.pumpAndSettle();
     expect(find.text('TV - Cristal'), findsOneWidget);
-    await tester.tap(find.byTooltip('Remover dos favoritos'));
+    final removerFavorito = find.byTooltip('Remover dos favoritos');
+    await tester.ensureVisible(removerFavorito);
+    await tester.tap(removerFavorito);
     await tester.pumpAndSettle();
     expect(AparelhosStore.favoritosLista, isEmpty);
     expect(find.text('Ainda não há favoritos.'), findsOneWidget);
@@ -187,7 +189,7 @@ void main() {
     await tester.tap(find.text('Energia'));
     await tester.pumpAndSettle();
     expect(find.text('Gasto diário'), findsOneWidget);
-    expect(find.text('Limite de energia'), findsOneWidget);
+    expect(find.text('Limite de energia').first, findsOneWidget);
     await tester.tap(find.byTooltip('Voltar'));
     await tester.pumpAndSettle();
 

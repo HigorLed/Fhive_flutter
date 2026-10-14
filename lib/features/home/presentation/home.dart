@@ -543,80 +543,78 @@ class _TelaHomeState extends State<TelaHome> {
   }
 
   Widget _cartaoTutorial() {
-    return InkWell(
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(15),
-
-      onTap: () {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          barrierColor: Colors.black.withValues(alpha: 0.55),
-          builder: (context) {
-            return const TelaTutorial();
-          },
-        );
-      },
-
-      child: Container(
-        width: double.infinity,
-        height: 98,
-        padding: const EdgeInsets.all(12),
-
-        decoration: BoxDecoration(
-          color: amareloClaro,
-          borderRadius: BorderRadius.circular(15),
-        ),
-
-        child: Row(
-          children: [
-            Container(
-              width: 80,
-              height: 75,
-
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFDE8),
-                borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            barrierColor: Colors.black.withValues(alpha: 0.55),
+            builder: (context) => const TelaTutorial(),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 98),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: amareloClaro,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFDE8),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.play_circle_outline_rounded,
+                  color: marrom,
+                  size: 44,
+                ),
               ),
-
-              child: Icon(Icons.play_circle_outline, color: marrom, size: 47),
-            ),
-
-            const SizedBox(width: 13),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Tutorial',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Arvo',
+              const SizedBox(width: 13),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Tutorial',
+                      style: TextStyle(
+                        color: marrom,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Arvo',
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 3),
-
-                  Text(
-                    'Aprenda rapidamente como utilizar o Fhive.',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      height: 1.1,
+                    SizedBox(height: 3),
+                    Text(
+                      'Aprenda rapidamente como utilizar o Fhive.',
+                      style: TextStyle(
+                        color: marrom,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              const Icon(Icons.chevron_right_rounded, color: marrom, size: 22),
+            ],
+          ),
         ),
       ),
     );
   }
+
 }
 
 class _AparelhoFavoritoCard extends StatelessWidget {
@@ -627,54 +625,57 @@ class _AparelhoFavoritoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
+    return Material(
+      color: AppColors.surfaceLight,
       borderRadius: BorderRadius.circular(15),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Row(
-          children: [
-            Icon(aparelho.icone, color: AppColors.primary, size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    aparelho.nome,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          child: Row(
+            children: [
+              Icon(aparelho.icone, color: AppColors.primary, size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      aparelho.nome,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    aparelho.status,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    Text(
+                      aparelho.status,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              tooltip: 'Remover dos favoritos',
-              onPressed: () => AparelhosStore.alternarFavorito(aparelho.id),
-              icon: const Icon(Icons.star, color: AppColors.primary, size: 24),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            ),
-          ],
+              IconButton(
+                tooltip: 'Remover dos favoritos',
+                onPressed: () => AparelhosStore.alternarFavorito(aparelho.id),
+                icon: const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+                visualDensity: VisualDensity.standard,
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              ),
+            ],
+          ),
         ),
       ),
     );

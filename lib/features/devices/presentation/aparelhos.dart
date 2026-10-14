@@ -238,7 +238,8 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                           ValueListenableBuilder<List<String>>(
                             valueListenable: AparelhosStore.locais,
                             builder: (context, locaisRegistrados, _) {
-                              final locaisDisponiveis = locaisRegistrados;
+                              final locaisDisponiveis =
+                                  AparelhosStore.locaisDisponiveis;
                               return Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(13),
@@ -341,13 +342,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                         ValueListenableBuilder<List<AparelhoItem>>(
                           valueListenable: AparelhosStore.aparelhos,
                           builder: (context, aparelhos, _) {
-                            final locais = <String>[];
-                            for (final aparelho in aparelhos) {
-                              if (!locais.contains(aparelho.local)) {
-                                locais.add(aparelho.local);
-                              }
-                            }
-
+                            final locais = AparelhosStore.locaisDisponiveis;
                             final locaisExibidos = _localFiltro == null
                                 ? locais
                                 : <String>[_localFiltro!];
@@ -360,21 +355,22 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                     local,
                                     aparelhos
                                         .where(
-                                          (aparelho) => aparelho.local == local,
+                                          (aparelho) => aparelho.local.trim().toLowerCase() == local.trim().toLowerCase(),
                                         )
                                         .length,
                                   ),
                                   if (_locaisAbertos[local] ?? true) ...[
                                     const SizedBox(height: 18),
                                     if (aparelhos.any(
-                                      (aparelho) => aparelho.local == local,
+                                      (aparelho) => aparelho.local.trim().toLowerCase() == local.trim().toLowerCase(),
                                     ))
                                       _gradeAparelhos(
                                         context,
                                         aparelhos
                                             .where(
                                               (aparelho) =>
-                                                  aparelho.local == local,
+                                                  aparelho.local.trim().toLowerCase() ==
+                                                  local.trim().toLowerCase(),
                                             )
                                             .toList(),
                                       )
@@ -382,7 +378,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                       const Padding(
                                         padding: EdgeInsets.only(bottom: 3),
                                         child: Text(
-                                          'Nenhum aparelho neste local ainda.',
+                                          'Nenhum aparelho neste local ainda. Use + para adicionar um dispositivo.',
                                           style: TextStyle(
                                             color: TelaAparelhos.marrom,
                                             fontSize: 12,

@@ -638,7 +638,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 11),
           decoration: BoxDecoration(
             color: selecionado ? AppColors.accent : AppColors.surfaceSoft,
             borderRadius: BorderRadius.circular(16),
@@ -792,7 +792,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
               TextButton(
                 onPressed: _testarConexao,
                 child: Text(
-                  _conexaoTestada ? 'Testado' : 'Testar',
+                  _conexaoTestada ? 'Testado' : 'Testar conexão',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontFamily: 'Montserrat',

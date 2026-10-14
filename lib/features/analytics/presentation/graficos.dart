@@ -22,7 +22,7 @@ class TelaGraficos extends StatefulWidget {
 
 class _TelaGraficosState extends State<TelaGraficos> {
   static const Color marrom = AppColors.primary;
-  static const Color fundoCard = AppColors.input;
+  static const Color fundoCard = AppColors.surface;
   static const Color fundoCardExterno = AppColors.surfaceStrong;
 
   bool locaisAbertos = true;
@@ -64,28 +64,21 @@ class _TelaGraficosState extends State<TelaGraficos> {
                             ),
 
                             IconButton(
-                              onPressed: () {
-                                mostrarCriarAparelho(context);
-                              },
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              tooltip: 'Adicionar aparelho',
+                              onPressed: () => mostrarCriarAparelho(context),
                               icon: const Icon(
-                                Icons.add,
+                                Icons.add_rounded,
                                 color: marrom,
-                                size: 30,
+                                size: 28,
                               ),
                             ),
-
-                            const SizedBox(width: 12),
-
                             IconButton(
+                              tooltip: 'Mais opções',
                               onPressed: _abrirMenu,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
                               icon: const Icon(
-                                Icons.more_vert,
+                                Icons.more_vert_rounded,
                                 color: marrom,
-                                size: 26,
+                                size: 25,
                               ),
                             ),
                           ],
@@ -169,9 +162,24 @@ class _TelaGraficosState extends State<TelaGraficos> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          _resumoDoLocal(),
                           const SizedBox(height: 12),
                           _cartoesGraficosDisponiveis(context),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: Text(
+                              'Os indicadores exibidos são demonstrativos até a integração com os aparelhos IoT.',
+                              style: TextStyle(
+                                color: marrom.withValues(alpha: 0.76),
+                                fontSize: 10.5,
+                                height: 1.35,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
                           Row(
                             children: [
                               const Expanded(
@@ -224,6 +232,76 @@ class _TelaGraficosState extends State<TelaGraficos> {
     );
   }
 
+  Widget _resumoDoLocal() {
+    return ValueListenableBuilder<List<AparelhoItem>>(
+      valueListenable: AparelhosStore.aparelhos,
+      builder: (context, aparelhos, _) {
+        final doLocal = aparelhos.where(
+          (aparelho) =>
+              aparelho.local.trim().toLowerCase() ==
+              localSelecionado.trim().toLowerCase(),
+        ).toList();
+        final disponiveis = doLocal.where(_temGraficoDisponivel).length;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.10),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.meeting_room_outlined, color: marrom),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localSelecionado,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: marrom,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${doLocal.length} aparelho(s) • $disponiveis com gráficos',
+                      style: TextStyle(
+                        color: marrom.withValues(alpha: 0.76),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                doLocal.isEmpty ? Icons.devices_other_outlined : Icons.analytics_outlined,
+                color: marrom,
+                size: 22,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   bool _temGraficoDisponivel(AparelhoItem aparelho) {
     final tipo = aparelho.tipo.trim().toLowerCase();
     return tipo == 'tv' || tipo == 'ar condicionado';
@@ -236,8 +314,8 @@ class _TelaGraficosState extends State<TelaGraficos> {
         final disponiveis = aparelhos
             .where(
               (aparelho) =>
-                  aparelho.local.toLowerCase() ==
-                      localSelecionado.toLowerCase() &&
+                  aparelho.local.trim().toLowerCase() ==
+                      localSelecionado.trim().toLowerCase() &&
                   _temGraficoDisponivel(aparelho),
             )
             .toList();
@@ -280,6 +358,10 @@ class _TelaGraficosState extends State<TelaGraficos> {
                         nome: aparelho.nome,
                         subtitulo: 'Disponível',
                         icone: aparelho.icone,
+                        metrica: aparelho.tipo.trim().toLowerCase() == 'tv'
+                            ? '12,5 kWh'
+                            : '28,4 kWh',
+                        mostrarMiniGrafico: true,
                       ),
                     ),
                   );
@@ -299,48 +381,39 @@ class _TelaGraficosState extends State<TelaGraficos> {
         final indisponiveis = aparelhos
             .where(
               (aparelho) =>
-                  aparelho.local.toLowerCase() ==
-                      localSelecionado.toLowerCase() &&
+                  aparelho.local.trim().toLowerCase() ==
+                      localSelecionado.trim().toLowerCase() &&
                   !_temGraficoDisponivel(aparelho),
             )
             .toList();
 
         if (indisponiveis.isEmpty) {
-          return GestureDetector(
-            onTap: () => _mensagemGraficoIndisponivel(
-              'Ainda não há outros aparelhos compatíveis com gráficos neste local.',
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.08),
+              ),
             ),
-            child: Container(
-              width: 166,
-              height: 110,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF4B2).withValues(alpha: 0.60),
-                borderRadius: BorderRadius.circular(21),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.devices_other, color: marrom, size: 34),
-                  SizedBox(height: 8),
-                  Text(
-                    'Outro aparelho',
-                    textAlign: TextAlign.center,
+            child: const Row(
+              children: [
+                Icon(Icons.check_circle_outline_rounded, color: marrom, size: 22),
+                SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    'Todos os aparelhos deste local estão representados acima.',
                     style: TextStyle(
                       color: marrom,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
                     ),
                   ),
-                  Text(
-                    'Indisponível',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
@@ -383,6 +456,8 @@ class _TelaGraficosState extends State<TelaGraficos> {
               ? TipoAparelho.tv
               : TipoAparelho.arCondicionado,
           nomePersonalizado: aparelho.nome,
+          local: aparelho.local,
+          status: aparelho.status,
         ),
       ),
     );
@@ -439,10 +514,12 @@ class _TelaGraficosState extends State<TelaGraficos> {
     required String nome,
     required String subtitulo,
     required IconData icone,
+    String? metrica,
+    bool mostrarMiniGrafico = false,
   }) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
-      height: 110,
+      height: mostrarMiniGrafico ? 142 : 110,
       decoration: BoxDecoration(
         color: fundoCard,
         borderRadius: BorderRadius.circular(22),
@@ -470,11 +547,54 @@ class _TelaGraficosState extends State<TelaGraficos> {
             subtitulo,
             style: const TextStyle(
               color: marrom,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
+          if (mostrarMiniGrafico && metrica != null) ...[
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _miniGrafico(),
+                const SizedBox(width: 7),
+                Text(
+                  metrica,
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+
+  Widget _miniGrafico() {
+    const alturas = <double>[7, 12, 9, 16, 11, 19, 14];
+    return SizedBox(
+      width: 48,
+      height: 20,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: alturas
+            .map(
+              (altura) => Container(
+                width: 4,
+                height: altura,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -579,11 +699,15 @@ class _TelaGraficosState extends State<TelaGraficos> {
 class TelaGraficosDetalhes extends StatefulWidget {
   final TipoAparelho tipo;
   final String? nomePersonalizado;
+  final String local;
+  final String status;
 
   const TelaGraficosDetalhes({
     super.key,
     required this.tipo,
     this.nomePersonalizado,
+    this.local = 'Sala de Estar',
+    this.status = 'Online',
   });
 
   @override
@@ -600,6 +724,8 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   String periodoSelecionado = '7 dias';
 
   bool get isTv => widget.tipo == TipoAparelho.tv;
+
+  bool get estaOnline => widget.status.trim().toLowerCase() == 'online';
 
   String get nomeAparelho =>
       widget.nomePersonalizado ?? (isTv ? 'TV - Cristal' : 'Ar condicionado');
@@ -717,9 +843,9 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
                                 const SizedBox(height: 3),
 
-                                const Text(
-                                  'Visão geral do aparelho',
-                                  style: TextStyle(
+                                Text(
+                                  '${widget.local} • Visão geral do aparelho',
+                                  style: const TextStyle(
                                     color: textoSecundario,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -734,31 +860,32 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                           // ==================================================
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 13,
-                              vertical: 9,
+                              horizontal: 9,
+                              vertical: 7,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.60),
                               borderRadius: BorderRadius.circular(22),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  width: 9,
-                                  height: 9,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF63A33B),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: estaOnline
+                                        ? const Color(0xFF438A37)
+                                        : const Color(0xFFB16B13),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-
-                                const SizedBox(width: 6),
-
-                                const Text(
-                                  'Ativo',
-                                  style: TextStyle(
+                                const SizedBox(width: 5),
+                                Text(
+                                  estaOnline ? 'Online' : 'Offline',
+                                  style: const TextStyle(
                                     color: marrom,
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -797,14 +924,25 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
                       const SizedBox(height: 10),
 
-                      Row(
-                        children: [
-                          Expanded(child: _cardConsumo()),
-
-                          const SizedBox(width: 10),
-
-                          Expanded(child: _cardHorasUso()),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth < 380) {
+                            return Column(
+                              children: [
+                                _cardConsumo(),
+                                const SizedBox(height: 12),
+                                _cardHorasUso(),
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Expanded(child: _cardConsumo()),
+                              const SizedBox(width: 10),
+                              Expanded(child: _cardHorasUso()),
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 14),
@@ -824,15 +962,26 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       // ==================================================
                       // INFORMAÇÕES EXTRAS
                       // ==================================================
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: _cardInfoEspecifica()),
-
-                          const SizedBox(width: 10),
-
-                          Expanded(child: _cardEficiencia()),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth < 410) {
+                            return Column(
+                              children: [
+                                _cardInfoEspecifica(),
+                                const SizedBox(height: 12),
+                                _cardEficiencia(),
+                              ],
+                            );
+                          }
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: _cardInfoEspecifica()),
+                              const SizedBox(width: 10),
+                              Expanded(child: _cardEficiencia()),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -1540,6 +1689,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
         builder: (_) => TelaIndicadorGraficoDetalhe(
           isTv: isTv,
           nomeAparelho: nomeAparelho,
+          local: widget.local,
           indicador: indicador,
         ),
       ),

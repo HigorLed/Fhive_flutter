@@ -12,12 +12,15 @@ class TelaConta extends StatefulWidget {
 class _TelaContaState extends State<TelaConta> {
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
+  final _formPerfilKey = GlobalKey<FormState>();
   final _senhaAtualController = TextEditingController();
   final _novaSenhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
   bool _inicializado = false;
   bool _mostrarSenhaAtual = false;
   bool _mostrarNovaSenha = false;
+  bool _mostrarConfirmarSenha = false;
+  final _formSegurancaKey = GlobalKey<FormState>();
 
   @override
   void didChangeDependencies() {
@@ -52,6 +55,9 @@ class _TelaContaState extends State<TelaConta> {
   }
 
   void _salvarPerfil() {
+    FocusScope.of(context).unfocus();
+    if (!(_formPerfilKey.currentState?.validate() ?? false)) return;
+
     final resultado = AuthStore.atualizarPerfil(
       nome: _nomeController.text,
       email: _emailController.text,
@@ -68,6 +74,8 @@ class _TelaContaState extends State<TelaConta> {
   }
 
   void _alterarSenha() {
+    FocusScope.of(context).unfocus();
+    if (!(_formSegurancaKey.currentState?.validate() ?? false)) return;
     if (_novaSenhaController.text != _confirmarSenhaController.text) {
       _mensagem('A confirmação não corresponde à nova senha.', erro: true);
       return;
@@ -83,8 +91,9 @@ class _TelaContaState extends State<TelaConta> {
     _senhaAtualController.clear();
     _novaSenhaController.clear();
     _confirmarSenhaController.clear();
+    _formSegurancaKey.currentState?.reset();
     FocusScope.of(context).unfocus();
-    _mensagem('Senha alterada nesta sessão.');
+    _mensagem('Senha alterada com sucesso nesta sessão.');
   }
 
   String _iniciais(String nome) {
@@ -106,13 +115,16 @@ class _TelaContaState extends State<TelaConta> {
       appBar: AppBar(
         title: const Text('Perfil'),
         centerTitle: true,
-        backgroundColor: AppColors.surfaceLight,
         foregroundColor: AppColors.primary,
+        backgroundColor: AppColors.backgroundTop,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(gradient: AppGradients.main),
         child: SafeArea(
+          top: false,
           child: ValueListenableBuilder<ContaLocal?>(
             valueListenable: AuthStore.usuarioAtual,
             builder: (context, conta, _) {
@@ -158,7 +170,7 @@ class _TelaContaState extends State<TelaConta> {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withValues(alpha: 0.92),
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(
@@ -237,53 +249,71 @@ class _TelaContaState extends State<TelaConta> {
       titulo: 'Dados pessoais',
       subtitulo: 'Mantenha suas informações atualizadas.',
       icone: Icons.person_rounded,
-      child: Column(
-        children: [
-          TextField(
-            controller: _nomeController,
-            enabled: conta != null,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Nome completo',
-              hintText: 'Como devemos chamar você?',
-              prefixIcon: Icon(Icons.badge_outlined),
+      child: Form(
+        key: _formPerfilKey,
+        child: Column(
+          children: [
+            TextFormField(
+              controller: _nomeController,
+              enabled: conta != null,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Nome completo',
+                hintText: 'Como devemos chamar você?',
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+              validator: (valor) {
+                final nome = valor?.trim() ?? '';
+                if (nome.length < 2) {
+                  return 'Informe pelo menos 2 caracteres.';
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _emailController,
-            enabled: conta != null,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              hintText: 'seuemail@exemplo.com',
-              prefixIcon: Icon(Icons.alternate_email_rounded),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emailController,
+              enabled: conta != null,
+              keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'E-mail',
+                hintText: 'seuemail@exemplo.com',
+                prefixIcon: Icon(Icons.alternate_email_rounded),
+              ),
+              validator: (valor) {
+                final email = valor?.trim() ?? '';
+                if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                    .hasMatch(email)) {
+                  return 'Digite um e-mail válido.';
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: conta == null ? null : _salvarPerfil,
-              icon: const Icon(Icons.save_rounded),
-              label: const Text('Salvar alterações'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.primary.withValues(
-                  alpha: 0.25,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: conta == null ? null : _salvarPerfil,
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Salvar alterações'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.primary.withValues(
+                    alpha: 0.25,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -291,7 +321,7 @@ class _TelaContaState extends State<TelaConta> {
   Widget _cartaoSeguranca(ContaLocal? conta) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withValues(alpha: 0.92),
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Theme(
@@ -322,58 +352,105 @@ class _TelaContaState extends State<TelaConta> {
             style: TextStyle(color: AppColors.primaryDark, fontSize: 11),
           ),
           children: [
-            TextField(
-              controller: _senhaAtualController,
-              enabled: conta != null,
-              obscureText: !_mostrarSenhaAtual,
-              autofillHints: const [AutofillHints.password],
-              decoration: InputDecoration(
-                labelText: 'Senha atual',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  tooltip: _mostrarSenhaAtual
-                      ? 'Ocultar senha'
-                      : 'Mostrar senha',
-                  onPressed: () =>
-                      setState(() => _mostrarSenhaAtual = !_mostrarSenhaAtual),
-                  icon: Icon(
-                    _mostrarSenhaAtual
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
+            Form(
+              key: _formSegurancaKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _senhaAtualController,
+                    enabled: conta != null,
+                    obscureText: !_mostrarSenhaAtual,
+                    autofillHints: const [AutofillHints.password],
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Senha atual',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _mostrarSenhaAtual
+                            ? 'Ocultar senha'
+                            : 'Mostrar senha',
+                        onPressed: () => setState(
+                          () => _mostrarSenhaAtual = !_mostrarSenhaAtual,
+                        ),
+                        icon: Icon(
+                          _mostrarSenhaAtual
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                        ),
+                      ),
+                    ),
+                    validator: (valor) => valor == null || valor.isEmpty
+                        ? 'Informe sua senha atual.'
+                        : null,
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 11),
-            TextField(
-              controller: _novaSenhaController,
-              enabled: conta != null,
-              obscureText: !_mostrarNovaSenha,
-              decoration: InputDecoration(
-                labelText: 'Nova senha',
-                prefixIcon: const Icon(Icons.key_rounded),
-                suffixIcon: IconButton(
-                  tooltip: _mostrarNovaSenha
-                      ? 'Ocultar senha'
-                      : 'Mostrar senha',
-                  onPressed: () =>
-                      setState(() => _mostrarNovaSenha = !_mostrarNovaSenha),
-                  icon: Icon(
-                    _mostrarNovaSenha
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
+                  const SizedBox(height: 11),
+                  TextFormField(
+                    controller: _novaSenhaController,
+                    enabled: conta != null,
+                    obscureText: !_mostrarNovaSenha,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Nova senha',
+                      prefixIcon: const Icon(Icons.key_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _mostrarNovaSenha
+                            ? 'Ocultar senha'
+                            : 'Mostrar senha',
+                        onPressed: () => setState(
+                          () => _mostrarNovaSenha = !_mostrarNovaSenha,
+                        ),
+                        icon: Icon(
+                          _mostrarNovaSenha
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                        ),
+                      ),
+                    ),
+                    validator: (valor) {
+                      final senha = valor ?? '';
+                      if (senha.length < 6 ||
+                          !RegExp(r'[a-z]').hasMatch(senha) ||
+                          !RegExp(r'[A-Z]').hasMatch(senha) ||
+                          !RegExp(r'\d').hasMatch(senha) ||
+                          !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
+                        return 'Use 6+ caracteres, maiúscula, minúscula, número e símbolo.';
+                      }
+                      if (senha == _senhaAtualController.text) {
+                        return 'Escolha uma senha diferente da atual.';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 11),
-            TextField(
-              controller: _confirmarSenhaController,
-              enabled: conta != null,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirmar nova senha',
-                prefixIcon: Icon(Icons.verified_user_outlined),
+                  const SizedBox(height: 11),
+                  TextFormField(
+                    controller: _confirmarSenhaController,
+                    enabled: conta != null,
+                    obscureText: !_mostrarConfirmarSenha,
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      labelText: 'Confirmar nova senha',
+                      prefixIcon: const Icon(Icons.verified_user_outlined),
+                      suffixIcon: IconButton(
+                        tooltip: _mostrarConfirmarSenha
+                            ? 'Ocultar senha'
+                            : 'Mostrar senha',
+                        onPressed: () => setState(
+                          () => _mostrarConfirmarSenha =
+                              !_mostrarConfirmarSenha,
+                        ),
+                        icon: Icon(
+                          _mostrarConfirmarSenha
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                        ),
+                      ),
+                    ),
+                    validator: (valor) =>
+                        (valor ?? '') != _novaSenhaController.text
+                        ? 'A confirmação não corresponde à nova senha.'
+                        : null,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
@@ -420,7 +497,7 @@ class _TelaContaState extends State<TelaConta> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withValues(alpha: 0.92),
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(

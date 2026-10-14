@@ -177,3 +177,22 @@ As telas detalhadas usam o nome personalizado do aparelho no cabeçalho e possue
 - O SDK Flutter/Dart não está disponível neste ambiente; por isso, os testes novos ainda precisam ser executados localmente com `dart format lib test`, `flutter analyze` e `flutter test`.
 - As telas têm conteúdo responsivo e rolável, mas a validação visual em emulador/dispositivo continua recomendada antes da publicação.
 
+## Correção de configuração Gradle Android — 14/10/2026
+
+- `android/build.gradle.kts`: restaurado como script raiz do projeto, removendo o bloco de aplicativo que estava no local errado.
+- `android/app/build.gradle.kts`: aplicado explicitamente `org.jetbrains.kotlin.android`, necessário enquanto `android.builtInKotlin=false` estiver definido.
+- Não foi possível executar o build Android nesta sessão por depender do ambiente local Flutter/Android. Teste com `flutter clean`, `flutter pub get` e `flutter run` no computador de desenvolvimento.
+
+
+
+## Ajuste da barra de navegação do sistema Android — 14/10/2026
+
+- A área inferior do sistema Android agora usa o mesmo tom creme da barra de navegação do Fhive (`AppColors.surfaceLight`).
+- Definida a cor da barra de navegação e dos ícones do sistema por `SystemChrome.setSystemUIOverlayStyle` para versões Android em que essa configuração é respeitada.
+- Em Android 15+ no modo edge-to-edge, a faixa de gestos é transparente; o widget `NavegacaoPorDeslize` desenha o fundo creme sob essa faixa, mantendo o posicionamento dos ícones do app.
+- Alterações realizadas em `lib/main.dart` e `lib/shared/widgets/navegacao_por_deslize.dart`.
+- Para validar no dispositivo: executar `flutter clean`, `flutter pub get` e `flutter run`. O build Android não foi executado neste ambiente.
+
+### Correção complementar da barra de navegação do Android — 14/10/2026
+
+A faixa inferior do Android não acompanhava a barra interna em algumas telas secundárias, pois o fundo era desenhado anteriormente apenas por `NavegacaoPorDeslize`. Para tornar o comportamento global, foi criado `lib/shared/widgets/fundo_navegacao_sistema.dart` e conectado ao `MaterialApp.builder` em `lib/main.dart`. Assim, a mesma cor creme e o estilo de ícones escuros são aplicados também aos detalhes dos gráficos dos aparelhos e à tela de controle dos aparelhos. O teste visual no celular ainda é necessário; esta sessão não dispõe do SDK Flutter para confirmar compilação e execução.

@@ -52,7 +52,24 @@ class AparelhoItem {
   }
 }
 
-/// Estado centralizado dos aparelhos e locais durante a sessão do protótipo.
+
+class AtalhoAparelho {
+  final String id;
+  final String aparelhoId;
+  final String nome;
+  final String comando;
+  final IconData icone;
+
+  const AtalhoAparelho({
+    required this.id,
+    required this.aparelhoId,
+    required this.nome,
+    required this.comando,
+    required this.icone,
+  });
+}
+
+/// Estado centralizado dos aparelhos, locais, favoritos e atalhos durante a sessão.
 /// Os valores ficam em memória; a persistência e sincronização IoT precisam de
 /// um backend ou banco local integrado para sobreviverem ao encerramento do app.
 class AparelhosStore {
@@ -115,6 +132,46 @@ class AparelhosStore {
   static final ValueNotifier<Set<String>> favoritos =
       ValueNotifier<Set<String>>(<String>{});
 
+  static int _proximoAtalho = 1;
+  static final ValueNotifier<List<AtalhoAparelho>> atalhos =
+      ValueNotifier<List<AtalhoAparelho>>(<AtalhoAparelho>[]);
+
+  static List<AtalhoAparelho> atalhosDoAparelho(String aparelhoId) =>
+      atalhos.value
+          .where((atalho) => atalho.aparelhoId == aparelhoId)
+          .toList(growable: false);
+
+  static bool adicionarAtalho({
+    required String aparelhoId,
+    required String nome,
+    required String comando,
+    required IconData icone,
+  }) {
+    final nomeLimpo = nome.trim();
+    if (nomeLimpo.isEmpty || porId(aparelhoId) == null) return false;
+    final duplicado = atalhos.value.any(
+      (atalho) =>
+          atalho.aparelhoId == aparelhoId &&
+          atalho.nome.toLowerCase() == nomeLimpo.toLowerCase(),
+    );
+    if (duplicado) return false;
+    final novo = AtalhoAparelho(
+      id: 'atalho-${_proximoAtalho++}',
+      aparelhoId: aparelhoId,
+      nome: nomeLimpo,
+      comando: comando,
+      icone: icone,
+    );
+    atalhos.value = <AtalhoAparelho>[...atalhos.value, novo];
+    return true;
+  }
+
+  static bool removerAtalho(String id) {
+    final antes = atalhos.value.length;
+    atalhos.value = atalhos.value.where((item) => item.id != id).toList();
+    return antes != atalhos.value.length;
+  }
+
   static Set<String> get favoritosLista =>
       Set<String>.unmodifiable(favoritos.value);
 
@@ -149,6 +206,8 @@ class AparelhosStore {
     locais.value = List<String>.from(locaisSugeridos);
     aparelhos.value = _aparelhosIniciais();
     favoritos.value = <String>{};
+    atalhos.value = <AtalhoAparelho>[];
+    _proximoAtalho = 1;
   }
 
   static bool idJaCadastrado(String id, {String? ignorarId}) {
@@ -249,6 +308,9 @@ class AparelhosStore {
           (favorito) => favorito.trim().toLowerCase() == normalizado,
         );
       favoritos.value = favoritosAtuais;
+      atalhos.value = atalhos.value
+          .where((atalho) => atalho.aparelhoId != id)
+          .toList();
     }
     return removido;
   }

@@ -52,7 +52,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     if (!aceitouTermos) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Você precisa aceitar os termos do Site!'),
+          content: Text('Você precisa aceitar os termos de uso do aplicativo!'),
         ),
       );
       return;
@@ -78,12 +78,21 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Conta criada. Entre com seu e-mail e senha.'),
-      ),
+    // O cadastro e o login usam o mesmo armazenamento local de demonstração.
+    // Autenticamos a conta recém-criada e levamos a pessoa diretamente à Home.
+    final erroLogin = AuthStore.entrar(
+      email: emailController.text,
+      senha: senhaController.text,
     );
-    Navigator.pushReplacementNamed(context, '/entrar');
+    if (erroLogin != null) {
+      _mensagem(
+        'A conta foi criada, mas não foi possível iniciar a sessão. $erroLogin',
+      );
+      Navigator.pushReplacementNamed(context, '/entrar');
+      return;
+    }
+
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
   }
 
   void _mensagem(String texto) {

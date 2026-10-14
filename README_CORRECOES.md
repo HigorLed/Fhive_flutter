@@ -14,7 +14,7 @@ organização e evolução da interface.
 
 - Nova tela inicial em `/inicio`.
 - Fluxo `Tela Inicial → Entrar → Home`.
-- Fluxo `Tela Inicial → Criar Conta → Cadastro → Login → Home`.
+- Fluxo `Tela Inicial → Criar Conta → Cadastro → autenticação automática → Home`.
 - Tela de cadastro padronizada visualmente com base na tela de login.
 - Botões de login/cadastro e login social mantidos dentro da identidade visual
   do Fhive.
@@ -518,7 +518,7 @@ Esta seção consolida neste README o histórico das alterações funcionais rea
 - Criado `lib/shared/state/auth_store.dart` para centralizar as contas e a sessão de demonstração.
 - O login valida e-mail e senha contra uma conta cadastrada, em vez de aceitar somente o preenchimento do formulário.
 - Conta local de demonstração: `teste@fhive.com` / `123456`.
-- O cadastro valida nome, e-mail já existente e requisitos de senha; depois de concluído, retorna à tela de login.
+- O cadastro valida nome, e-mail já existente e requisitos de senha; quando termina com sucesso, autentica a conta recém-criada e abre a Home automaticamente.
 - A recuperação permite redefinir a senha de uma conta local existente e informa claramente quando a conta não é encontrada.
 - Os botões Google/Facebook informam que são necessárias credenciais e integração com um serviço de autenticação; não afirmam que ocorreu uma autenticação externa.
 - **Limite:** a autenticação é um protótipo em memória. Não há envio de e-mail, sessão segura ou backend, e a conta de demonstração não deve ser usada em produção.
@@ -781,7 +781,7 @@ CMake Error at CMakeLists.txt:21 (apply_standard_settings):
 - Restaurado `windows/CMakeLists.txt` como arquivo raiz de configuração CMake para o aplicativo `tcc_mobile`.
 - Incluídas a declaração do projeto CMake, a configuração dos modos `Debug`, `Profile` e `Release`, a função `APPLY_STANDARD_SETTINGS`, as regras de `runner`/plugins e as regras de instalação de assets.
 - Mantido `windows/flutter/CMakeLists.txt` como a configuração específica da integração Flutter para Windows.
-- Removidos do ZIP os diretórios de saída/cache `build/`, `.dart_tool/` e `windows/flutter/ephemeral/`, além de outros arquivos gerados de build que podem reter caminhos da máquina onde o projeto foi compilado. O diretório `.git/` foi preservado. Esses arquivos e diretórios temporários são regenerados pelas ferramentas de desenvolvimento.
+- Removidos do ZIP os diretórios de saída/cache `build/`, `.dart_tool/` e `windows/flutter/ephemeral/`, além de outros arquivos gerados de build que podem reter caminhos da máquina onde o projeto foi compilado. O diretório `.git/` não faz parte do ZIP de entrega. Esses arquivos e diretórios temporários são regenerados pelas ferramentas de desenvolvimento.
 
 ### Como testar no Windows
 
@@ -822,3 +822,81 @@ flutter run -d windows
 ```
 
 Se o erro mudar, registre a nova mensagem completa: ela poderá apontar um próximo problema diferente. A compilação não é considerada confirmada até que o comando termine sem erro.
+
+## Correção do build Android (Gradle/Kotlin) — 14/10/2026
+
+### Diagnóstico
+
+A tentativa de `flutter run` falhou durante a configuração do Gradle, antes de compilar o aplicativo. O arquivo `android/build.gradle.kts` continha o bloco `plugins` e as configurações `android { ... }`, `kotlin { ... }` e `flutter { ... }` que pertencem ao módulo `android/app`, em vez das tarefas e repositórios do projeto Android. Isso fazia o Gradle tentar configurar um módulo de aplicativo na raiz e gerava erros como `Unresolved reference 'compilerOptions'` e `Unresolved reference 'jvmTarget'`.
+
+Também faltava aplicar `org.jetbrains.kotlin.android` em `android/app/build.gradle.kts`, apesar de `settings.gradle.kts` declarar a versão do plugin e o módulo configurar `kotlin.compilerOptions`. Como `android/gradle.properties` mantém `android.builtInKotlin=false`, o projeto precisa aplicar explicitamente o plugin Kotlin Gradle (KGP).
+
+### Correções aplicadas
+
+- Restaurada a configuração raiz de `android/build.gradle.kts`, com repositórios, diretórios de build dos subprojetos, dependência de avaliação do módulo `:app` e tarefa `clean`.
+- Adicionado `id("org.jetbrains.kotlin.android")` ao bloco `plugins` de `android/app/build.gradle.kts`, antes do plugin Gradle do Flutter.
+- Mantidas as versões de AGP, Kotlin e Gradle já declaradas no projeto, assim como `android.newDsl=false` e `android.builtInKotlin=false`; a correção não atualiza dependências do aplicativo sem necessidade.
+- Os avisos de pacotes Dart com versões mais novas não foram tratados como causa desta falha, pois o erro aconteceu durante a compilação dos scripts Gradle.
+
+### Como validar no Windows
+
+Na raiz do projeto `Fhive_flutter`, execute no PowerShell:
+
+```powershell
+flutter clean
+flutter pub get
+flutter run
+```
+
+Se o erro mudar, compartilhe a nova mensagem completa. A alteração corrige a inconsistência identificada nos scripts; a compilação real no celular ainda deve ser confirmada no ambiente local com o SDK Flutter, Java e Android SDK instalados.
+
+
+
+## Ajuste da barra de navegação do sistema Android — 14/10/2026
+
+- A área inferior do sistema Android agora usa o mesmo tom creme da barra de navegação do Fhive (`AppColors.surfaceLight`).
+- Definida a cor da barra de navegação e dos ícones do sistema por `SystemChrome.setSystemUIOverlayStyle` para versões Android em que essa configuração é respeitada.
+- Em Android 15+ no modo edge-to-edge, a faixa de gestos é transparente; o widget `NavegacaoPorDeslize` desenha o fundo creme sob essa faixa, mantendo o posicionamento dos ícones do app.
+- Alterações realizadas em `lib/main.dart` e `lib/shared/widgets/navegacao_por_deslize.dart`.
+- Para validar no dispositivo: executar `flutter clean`, `flutter pub get` e `flutter run`. O build Android não foi executado neste ambiente.
+
+### Correção complementar: consistência da barra do sistema em todas as telas — 14/10/2026
+
+**Problema observado:** a faixa inferior do Android ainda apresentava uma cor diferente em telas secundárias, principalmente nos detalhes dos gráficos dos aparelhos e na tela de controle de aparelhos. Essas telas não passam todas pelo widget `NavegacaoPorDeslize`, que anteriormente era responsável por pintar a área inferior transparente do modo edge-to-edge.
+
+**Correção aplicada:**
+
+- Criado `lib/shared/widgets/fundo_navegacao_sistema.dart`, um wrapper comum que define o estilo da barra de navegação do sistema e pinta de creme (`AppColors.surfaceLight`) a área inferior reservada à barra de gestos quando o Android usa edge-to-edge.
+- Registrado o wrapper no `MaterialApp.builder`, em `lib/main.dart`, para abranger todas as rotas — telas principais, gráficos detalhados e controle de aparelhos — sem precisar alterar o layout interno de cada tela.
+- Mantida a cor escura dos ícones/gestos do sistema para contraste sobre o fundo creme. A altura dos conteúdos e a posição da barra de navegação interna do Fhive não foram alteradas.
+
+**Validação recomendada:** no projeto local, executar `dart format lib/main.dart lib/shared/widgets/fundo_navegacao_sistema.dart`, `flutter analyze`, `flutter test` e `flutter run`. Ainda é necessário conferir no dispositivo Android, sobretudo na tela de detalhes dos gráficos e na tela de controle do aparelho; a compilação real não foi executada neste ambiente.
+
+
+## Polimento visual, perfil, gráficos e controle IoT — 14/10/2026
+
+### Consistência visual
+- Preservada a identidade visual já usada pelo Fhive: amarelos e laranjas em degradê, superfícies creme, marrom principal, cantos arredondados e tipografia existente. As alterações focam hierarquia, alinhamento, espaçamento, legibilidade, áreas de toque e adaptação a telas menores, sem reformular o aplicativo do zero.
+- O ícone do aplicativo usa uma marca simplificada de casa com sinal Wi-Fi, sem texto pequeno, centrada em uma composição quadrada de alto contraste. Os arquivos de launcher das plataformas mantêm a mesma arte.
+- O cabeçalho de Perfil recebeu fundo sólido na cor superior do degradê e o conteúdo continua com o fundo amarelo do tema, reduzindo a emenda visual na transição entre AppBar e conteúdo.
+
+### Cadastro e perfil
+- Ao concluir um cadastro válido, a sessão inicia automaticamente com a conta recém-criada e navega direto para a Home. Se o login local falhar por algum motivo, a tela informa o erro e permite entrar manualmente.
+- Os campos de nome e e-mail do Perfil agora validam os dados antes de salvar e mostram mensagens junto dos respectivos campos; o teclado é recolhido antes de mostrar o resultado.
+- A seção Segurança valida senha atual, força da nova senha, exigência de símbolo e confirmação. Mensagens de sucesso/erro não afirmam persistência no servidor: a autenticação continua sendo um protótipo local em memória.
+- O texto dos termos do cadastro foi ajustado para “termos de uso do aplicativo”.
+
+### Aparelhos, locais e gráficos
+- Os cartões de gráficos são filtrados pelo local selecionado e mostram os aparelhos daquele cômodo que têm métricas disponíveis. Nomes de locais são comparados sem diferença entre maiúsculas/minúsculas e espaços nas pontas.
+- O cabeçalho do local apresenta a quantidade de dispositivos e quantos têm gráficos suportados; quando não há aparelho elegível, é exibido um estado vazio em vez de um dispositivo fictício. Aparelhos sem telemetria compatível continuam identificados como aguardando dados, com explicação clara.
+- As telas de detalhes recebem o status do aparelho para distinguir visualmente dispositivos online/offline. As métricas exibidas seguem sendo demonstrativas enquanto o backend de telemetria IoT não for integrado.
+- Os cartões de dados e indicadores empilham as informações em larguras menores para reduzir risco de overflow e manter a leitura confortável.
+- O favorito na Home tem um alvo de toque de pelo menos 44 × 44 px, e o teste de cadastro de aparelho procura o texto real do botão de teste de conexão, que é um `TextButton`.
+
+### Controle da TV e atalhos
+- A tela de controle da TV reúne energia, volume, canal, modo de imagem, aplicativos e acesso aos gráficos em grupos visuais consistentes com o tema atual.
+- O fluxo “Adicionar atalho” permite nomear um atalho e escolher um comando. Atalhos cadastrados podem ser executados com um toque e removidos com toque longo; os comandos afetam o estado demonstrativo local da tela.
+- A integração física com TVs e outros aparelhos permanece como etapa futura: para comandar hardware real será necessária integração a uma API/serviço IoT e ao protocolo suportado por cada fabricante.
+
+### Validação
+- Foi feita revisão estática dos arquivos modificados e conferência estrutural do conteúdo do pacote. Não foi possível executar `dart format`, `flutter analyze`, `flutter test` nem compilar o aplicativo nesta sessão, pois o SDK Flutter/Dart não está disponível no ambiente. Execute esses comandos localmente para confirmar a compilação e os testes antes de publicar.
