@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
 class TelaDeCadastro extends StatefulWidget {
   const TelaDeCadastro({super.key});
@@ -24,13 +26,13 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
   static const TextStyle _estiloRotulo = TextStyle(
     color: AppColors.primary,
     fontSize: 18,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontWeight: FontWeight.w700,
   );
 
   static const TextStyle _estiloCampo = TextStyle(
     color: AppColors.primary,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontSize: 15,
   );
 
@@ -44,55 +46,115 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
 
   Future<void> cadastrar() async {
     FocusScope.of(context).unfocus();
-
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (carregando || !_formKey.currentState!.validate()) return;
 
     if (!aceitouTermos) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Você precisa aceitar os termos de uso do aplicativo!'),
+        const SnackBar(content: Text('Você precisa aceitar os termos de uso do aplicativo!')),
+      );
+      return;
+    }
+
+    setState(() => carregando = true);
+    try {
+      final erro = await AuthStore.iniciarCadastro(
+        nome: nomeController.text,
+        email: emailController.text,
+        senha: senhaController.text,
+      );
+      if (!mounted) return;
+      if (erro != null) {
+        _mensagem(erro);
+        return;
+      }
+
+      _mensagem('Enviamos um código para confirmar seu e-mail.');
+      final codigo = await _pedirCodigoConfirmacao();
+      if (!mounted || codigo == null) return;
+
+      final erroConfirmacao = await AuthStore.confirmarCadastro(
+        email: emailController.text,
+        codigo: codigo,
+      );
+      if (!mounted) return;
+      if (erroConfirmacao != null) {
+        _mensagem(erroConfirmacao);
+        return;
+      }
+
+      final erroLogin = await AuthStore.entrar(
+        email: emailController.text,
+        senha: senhaController.text,
+      );
+      if (!mounted) return;
+      if (erroLogin != null) {
+        _mensagem('Cadastro confirmado. Entre para iniciar a sessão. $erroLogin');
+        Navigator.pushReplacementNamed(context, '/entrar');
+        return;
+      }
+
+      var falhaSincronizacao = false;
+      try {
+        await AparelhosStore.carregarDoBackend();
+      } catch (_) {
+        falhaSincronizacao = true;
+      }
+      try {
+        await RotinasStore.carregarDoBackend();
+      } catch (_) {
+        falhaSincronizacao = true;
+      }
+      if (!mounted) return;
+      if (falhaSincronizacao) {
+        _mensagem('Conta criada. Alguns dados não puderam ser sincronizados.');
+      }
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
+
+  Future<String?> _pedirCodigoConfirmacao() async {
+    final codigoController = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final codigo = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Confirme seu e-mail'),
+        content: Form(
+          key: key,
+          child: TextFormField(
+            controller: codigoController,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Código de confirmação',
+              helperText: 'Digite o código enviado para seu e-mail.',
+            ),
+            validator: (valor) => (valor == null || valor.trim().isEmpty)
+                ? 'Informe o código recebido.'
+                : null,
+          ),
         ),
-      );
-      return;
-    }
-
-    setState(() {
-      carregando = true;
-    });
-
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-
-    if (!mounted) return;
-
-    final erro = AuthStore.cadastrar(
-      nome: nomeController.text,
-      email: emailController.text,
-      senha: senhaController.text,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (key.currentState!.validate()) {
+                Navigator.pop(dialogContext, codigoController.text.trim());
+              }
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
     );
-    setState(() => carregando = false);
-
-    if (erro != null) {
-      _mensagem(erro);
-      return;
-    }
-
-    // O cadastro e o login usam o mesmo armazenamento local de demonstração.
-    // Autenticamos a conta recém-criada e levamos a pessoa diretamente à Home.
-    final erroLogin = AuthStore.entrar(
-      email: emailController.text,
-      senha: senhaController.text,
-    );
-    if (erroLogin != null) {
-      _mensagem(
-        'A conta foi criada, mas não foi possível iniciar a sessão. $erroLogin',
-      );
-      Navigator.pushReplacementNamed(context, '/entrar');
-      return;
-    }
-
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    codigoController.dispose();
+    return codigo;
   }
 
   void _mensagem(String texto) {
@@ -145,7 +207,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
       hintText: hint,
       hintStyle: const TextStyle(
         color: Color(0xAD964800),
-        fontFamily: 'Arvo',
+        fontFamily: AppFonts.title,
         fontSize: 15,
       ),
       prefixIcon: Icon(icone, color: AppColors.primary, size: 20),
@@ -162,7 +224,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     var pontos = 0;
 
     // Cada requisito atendido vale 1 ponto.
-    if (senha.length >= 6) pontos++;
+    if (senha.length >= 8) pontos++;
     if (RegExp(r'[a-z]').hasMatch(senha)) pontos++;
     if (RegExp(r'[A-Z]').hasMatch(senha)) pontos++;
     if (RegExp(r'\d').hasMatch(senha)) pontos++;
@@ -175,8 +237,8 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     final senha = senhaController.text;
     final faltantes = <String>[];
 
-    if (senha.length < 6) {
-      faltantes.add('6 caracteres');
+    if (senha.length < 8) {
+      faltantes.add('8 caracteres');
     }
     if (!RegExp(r'[a-z]').hasMatch(senha)) {
       faltantes.add('1 letra minúscula');
@@ -289,7 +351,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           texto,
                           style: TextStyle(
                             color: cor,
-                            fontFamily: 'Arvo',
+                            fontFamily: AppFonts.title,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -301,7 +363,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                               'A senha precisa de: ${faltantes.join(' • ')}',
                               style: const TextStyle(
                                 color: AppColors.primary,
-                                fontFamily: 'Montserrat',
+                                fontFamily: AppFonts.body,
                                 fontSize: 10.5,
                                 height: 1.25,
                               ),
@@ -312,7 +374,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             'Todos os requisitos foram atendidos.',
                             style: TextStyle(
                               color: AppColors.primary,
-                              fontFamily: 'Montserrat',
+                              fontFamily: AppFonts.body,
                               fontSize: 10.5,
                               height: 1.25,
                             ),
@@ -354,7 +416,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 14,
-                  fontFamily: 'Arvo',
+                  fontFamily: AppFonts.title,
                 ),
               ),
             ),
@@ -381,7 +443,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                   Positioned(
                     left: -30,
                     top: 175,
-                    child: _circulo(90, const Color(0xFFFFF261)),
+                    child: _circulo(90, AppColors.highlight),
                   ),
                   Positioned(
                     right: -58,
@@ -391,7 +453,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                   Positioned(
                     right: -15,
                     top: 22,
-                    child: _circulo(75, const Color(0xFFFFF261)),
+                    child: _circulo(75, AppColors.highlight),
                   ),
 
                   // Painel principal — mesma proporção e estilo da tela de login.
@@ -402,8 +464,8 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                       decoration: const BoxDecoration(
                         color: Color(0xFFFFFEF2),
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(25),
-                          topRight: Radius.circular(25),
+                          topLeft: Radius.circular(AppRadius.bottomSheet),
+                          topRight: Radius.circular(AppRadius.bottomSheet),
                         ),
                       ),
                       child: SingleChildScrollView(
@@ -424,7 +486,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                   style: TextStyle(
                                     color: AppColors.primary,
                                     fontSize: 40,
-                                    fontFamily: 'Arvo',
+                                    fontFamily: AppFonts.title,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -528,8 +590,8 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     return 'Digite sua senha';
                                   }
 
-                                  if (valor.length < 6) {
-                                    return 'A senha deve ter pelo menos 6 caracteres';
+                                  if (valor.length < 8) {
+                                    return 'A senha deve ter pelo menos 8 caracteres';
                                   }
 
                                   if (!RegExp(r'[a-z]').hasMatch(valor)) {
@@ -583,7 +645,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                               aceitouTermos = valor ?? false;
                                             });
                                           },
-                                          activeColor: const Color(0xFFFFF261),
+                                          activeColor: AppColors.highlight,
                                           checkColor: AppColors.primary,
                                           side: const BorderSide(
                                             color: Color(0xFFB8A77B),
@@ -600,7 +662,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                                 style: TextStyle(
                                                   color: AppColors.primary,
                                                   fontSize: 13,
-                                                  fontFamily: 'Montserrat',
+                                                  fontFamily: AppFonts.body,
                                                 ),
                                               ),
                                               TextSpan(
@@ -608,7 +670,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                                 style: TextStyle(
                                                   color: AppColors.primary,
                                                   fontSize: 13,
-                                                  fontFamily: 'Montserrat',
+                                                  fontFamily: AppFonts.body,
                                                   fontWeight: FontWeight.w700,
                                                   decoration:
                                                       TextDecoration.underline,
@@ -631,7 +693,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 child: ElevatedButton(
                                   onPressed: carregando ? null : cadastrar,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFFF261),
+                                    backgroundColor: AppColors.highlight,
                                     disabledBackgroundColor: const Color(
                                       0xFFE9D94A,
                                     ),
@@ -639,7 +701,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     elevation: 4,
                                     shadowColor: Colors.black26,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
+                                      borderRadius: BorderRadius.circular(AppRadius.bottomSheet),
                                     ),
                                   ),
                                   child: carregando
@@ -655,7 +717,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                           'Cadastrar',
                                           style: TextStyle(
                                             fontSize: 18,
-                                            fontFamily: 'Montserrat',
+                                            fontFamily: AppFonts.body,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -682,7 +744,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                       style: TextStyle(
                                         color: AppColors.primary,
                                         fontSize: 14,
-                                        fontFamily: 'Montserrat',
+                                        fontFamily: AppFonts.body,
                                       ),
                                     ),
                                   ),
@@ -708,7 +770,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                         width: 23,
                                         height: 23,
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                           shape: BoxShape.circle,
                                           border: Border.all(
                                             color: const Color(0xFFCCCCCC),
@@ -743,7 +805,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                           child: Text(
                                             'f',
                                             style: TextStyle(
-                                              color: Colors.white,
+                                              color: AppColors.white,
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -767,7 +829,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     style: TextStyle(
                                       color: AppColors.primary,
                                       fontSize: 13,
-                                      fontFamily: 'Montserrat',
+                                      fontFamily: AppFonts.body,
                                     ),
                                   ),
                                   InkWell(
@@ -786,7 +848,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                         style: TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 13,
-                                          fontFamily: 'Arvo',
+                                          fontFamily: AppFonts.title,
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -827,7 +889,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 style: TextStyle(
                                   color: AppColors.primary,
                                   fontSize: 14,
-                                  fontFamily: 'Arvo',
+                                  fontFamily: AppFonts.title,
                                 ),
                               ),
                             ],

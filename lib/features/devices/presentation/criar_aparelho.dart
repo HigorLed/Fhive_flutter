@@ -37,6 +37,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
   int _revisaoDropdownLocal = 0;
   bool _mostrarSenha = false;
   bool _conexaoTestada = false;
+  bool _salvando = false;
 
   static const _tipos = [
     'TV',
@@ -107,9 +108,9 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         _mostrarErro('Informe o ID do dispositivo.');
         return false;
       }
-      if (!RegExp(r'^[A-Za-z0-9_-]{4,32}$').hasMatch(id)) {
+      if (!RegExp(r'^[A-Za-z0-9_-]{4,64}$').hasMatch(id)) {
         _mostrarErro(
-          'O ID deve ter de 4 a 32 caracteres: letras, números, _ ou -.',
+          'O ID deve ter de 4 a 64 caracteres: letras, números, _ ou -.',
         );
         return false;
       }
@@ -162,8 +163,8 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
     setState(() => _etapa--);
   }
 
-  void _criarAparelho() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _criarAparelho() async {
+    if (_salvando || !_formKey.currentState!.validate()) return;
 
     final nome = _nomeController.text.trim();
     final id = _idController.text.trim();
@@ -173,33 +174,41 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       _mostrarErro('Já existe um aparelho com esse nome.');
       return;
     }
-
     if (AparelhosStore.idJaCadastrado(id)) {
       setState(() => _etapa = 0);
       _mostrarErro('Esse ID de dispositivo já está cadastrado.');
       return;
     }
 
-    AparelhosStore.adicionar(
-      AparelhoItem(
-        nome: nome,
-        id: id,
-        tipo: _tipoSelecionado,
-        fabricante: _fabricanteController.text.trim().isEmpty
-            ? 'Não informado'
-            : _fabricanteController.text.trim(),
-        modelo: _modeloController.text.trim().isEmpty
-            ? 'Não informado'
-            : _modeloController.text.trim(),
-        status: 'Aguardando conexão',
-        icone: _iconeSelecionado,
-        wifi: _conexaoSelecionada == 'Wi-Fi',
-        local: _localSelecionado,
-        conexao: _conexaoSelecionada,
-      ),
-    );
-
-    Navigator.of(context).pop(true);
+    setState(() => _salvando = true);
+    try {
+      await AparelhosStore.criarNoBackend(
+        AparelhoItem(
+          nome: nome,
+          id: id,
+          tipo: _tipoSelecionado,
+          fabricante: _fabricanteController.text.trim().isEmpty
+              ? 'Não informado'
+              : _fabricanteController.text.trim(),
+          modelo: _modeloController.text.trim().isEmpty
+              ? 'Não informado'
+              : _modeloController.text.trim(),
+          status: 'Offline',
+          icone: _iconeSelecionado,
+          wifi: _conexaoSelecionada == 'Wi-Fi',
+          local: _localSelecionado,
+          conexao: _conexaoSelecionada,
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) {
+        _mostrarErro(error.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
 
   void _testarConexao() {
@@ -240,17 +249,17 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       hintText: hint,
       labelStyle: const TextStyle(
         color: AppColors.primary,
-        fontFamily: 'Montserrat',
+        fontFamily: AppFonts.body,
         fontWeight: FontWeight.w600,
       ),
       floatingLabelStyle: const TextStyle(
         color: AppColors.primary,
-        fontFamily: 'Montserrat',
+        fontFamily: AppFonts.body,
         fontWeight: FontWeight.w700,
       ),
       hintStyle: const TextStyle(
         color: AppColors.primaryDark,
-        fontFamily: 'Montserrat',
+        fontFamily: AppFonts.body,
         fontSize: 12.5,
       ),
       prefixIcon: Icon(icone, color: AppColors.primary),
@@ -296,7 +305,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadius.button),
                 ),
                 child: const Icon(
                   Icons.devices_other_rounded,
@@ -309,8 +318,8 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                 child: Text(
                   'Adicionar aparelho',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Arvo',
+                    color: AppColors.white,
+                    fontFamily: AppFonts.title,
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
                   ),
@@ -345,7 +354,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
             'Etapa ${_etapa + 1} de 4',
             style: const TextStyle(
               color: Colors.white70,
-              fontFamily: 'Montserrat',
+              fontFamily: AppFonts.body,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
             ),
@@ -376,7 +385,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   _tituloEtapa,
                   style: const TextStyle(
                     color: AppColors.primary,
-                    fontFamily: 'Montserrat',
+                    fontFamily: AppFonts.body,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -386,7 +395,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   _descricaoEtapa,
                   style: const TextStyle(
                     color: AppColors.primaryDark,
-                    fontFamily: 'Montserrat',
+                    fontFamily: AppFonts.body,
                     fontSize: 11.5,
                     height: 1.35,
                   ),
@@ -421,7 +430,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           textInputAction: TextInputAction.next,
           style: const TextStyle(
             color: AppColors.primary,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
           ),
           decoration: _decoracaoCampo(
             label: 'Nome do dispositivo',
@@ -436,7 +445,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           textCapitalization: TextCapitalization.characters,
           style: const TextStyle(
             color: AppColors.primary,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
             letterSpacing: 0.5,
           ),
           decoration: _decoracaoCampo(
@@ -466,7 +475,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   'O ID identifica o aparelho dentro do sistema. Use o número de série, MAC ou identificador fornecido pelo fabricante.',
                   style: TextStyle(
                     color: AppColors.primaryDark,
-                    fontFamily: 'Montserrat',
+                    fontFamily: AppFonts.body,
                     fontSize: 11.5,
                     height: 1.35,
                   ),
@@ -488,7 +497,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           dropdownColor: AppColors.surfaceLight,
           style: const TextStyle(
             color: AppColors.primary,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
           ),
           decoration: _decoracaoCampo(
             label: 'Tipo de aparelho',
@@ -512,7 +521,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                 textInputAction: TextInputAction.next,
                 style: const TextStyle(
                   color: AppColors.primary,
-                  fontFamily: 'Montserrat',
+                  fontFamily: AppFonts.body,
                 ),
                 decoration: _decoracaoCampo(
                   label: 'Fabricante',
@@ -528,7 +537,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                 textInputAction: TextInputAction.next,
                 style: const TextStyle(
                   color: AppColors.primary,
-                  fontFamily: 'Montserrat',
+                  fontFamily: AppFonts.body,
                 ),
                 decoration: _decoracaoCampo(
                   label: 'Modelo',
@@ -546,7 +555,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           dropdownColor: AppColors.surfaceLight,
           style: const TextStyle(
             color: AppColors.primary,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
           ),
           decoration: _decoracaoCampo(
             label: 'Local do aparelho',
@@ -656,7 +665,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.primary,
-                  fontFamily: 'Montserrat',
+                  fontFamily: AppFonts.body,
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -694,7 +703,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
             textInputAction: TextInputAction.next,
             style: const TextStyle(
               color: AppColors.primary,
-              fontFamily: 'Montserrat',
+              fontFamily: AppFonts.body,
             ),
             decoration: _decoracaoCampo(
               label: 'Nome da rede Wi-Fi',
@@ -709,7 +718,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
             textInputAction: TextInputAction.done,
             style: const TextStyle(
               color: AppColors.primary,
-              fontFamily: 'Montserrat',
+              fontFamily: AppFonts.body,
             ),
             decoration: _decoracaoCampo(
               label: 'Senha da rede',
@@ -749,7 +758,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                         : 'Use esta opção quando o aparelho já estiver ligado à rede por cabo Ethernet.',
                     style: const TextStyle(
                       color: AppColors.primaryDark,
-                      fontFamily: 'Montserrat',
+                      fontFamily: AppFonts.body,
                       fontSize: 11.5,
                       height: 1.35,
                     ),
@@ -783,7 +792,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                       : 'Teste a configuração antes de finalizar.',
                   style: const TextStyle(
                     color: AppColors.primary,
-                    fontFamily: 'Montserrat',
+                    fontFamily: AppFonts.body,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -795,7 +804,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                   _conexaoTestada ? 'Testado' : 'Testar conexão',
                   style: const TextStyle(
                     color: AppColors.primary,
-                    fontFamily: 'Montserrat',
+                    fontFamily: AppFonts.body,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -808,7 +817,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           'Nesta versão do projeto, o teste confirma somente a configuração preenchida. O pareamento físico com um dispositivo depende da integração com o hardware e do protocolo escolhido.',
           style: TextStyle(
             color: AppColors.primaryDark,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
             fontSize: 10.5,
             height: 1.35,
           ),
@@ -824,7 +833,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
         color: AppColors.surfaceSoft,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         children: [
@@ -839,7 +848,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
               titulo,
               style: const TextStyle(
                 color: AppColors.primaryDark,
-                fontFamily: 'Montserrat',
+                fontFamily: AppFonts.body,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
               ),
@@ -852,7 +861,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.primary,
-                fontFamily: 'Montserrat',
+                fontFamily: AppFonts.body,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
@@ -872,7 +881,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             color: AppColors.surfaceStrong,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Row(
             children: [
@@ -900,7 +909,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                           : _nomeController.text.trim(),
                       style: const TextStyle(
                         color: AppColors.primary,
-                        fontFamily: 'Montserrat',
+                        fontFamily: AppFonts.body,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
@@ -911,7 +920,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.primaryDark,
-                        fontFamily: 'Montserrat',
+                        fontFamily: AppFonts.body,
                         fontSize: 11,
                       ),
                     ),
@@ -955,7 +964,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
           'Ao adicionar, o aparelho passa a aparecer na lista da casa e poderá ser acessado pelos detalhes do dispositivo.',
           style: TextStyle(
             color: AppColors.primaryDark,
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
             fontSize: 10.5,
             height: 1.35,
           ),
@@ -1039,7 +1048,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                                 vertical: 13,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(AppRadius.button),
                               ),
                             ),
                           ),
@@ -1055,14 +1064,14 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 17,
                               vertical: 13,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(AppRadius.button),
                             ),
                           ),
                         ),

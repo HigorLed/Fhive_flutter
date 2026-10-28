@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/features/devices/data/dispositivos_api.dart';
 
 enum TipoIndicadorGrafico {
   energia,
@@ -12,13 +13,14 @@ enum TipoIndicadorGrafico {
   eficiencia,
 }
 
-/// Tela secundária de um indicador. Os valores desta versão são demonstrativos;
-/// os dados reais virão da integração com a API/hardware IoT.
+/// Tela secundária de um indicador. Consumo pode vir da telemetria da API;
+/// os demais valores continuam demonstrativos enquanto o hardware não os enviar.
 class TelaIndicadorGraficoDetalhe extends StatefulWidget {
   final bool isTv;
   final String nomeAparelho;
   final String local;
   final TipoIndicadorGrafico indicador;
+  final String? deviceBackendId;
 
   const TelaIndicadorGraficoDetalhe({
     super.key,
@@ -26,6 +28,7 @@ class TelaIndicadorGraficoDetalhe extends StatefulWidget {
     required this.nomeAparelho,
     this.local = 'Sala de Estar',
     required this.indicador,
+    this.deviceBackendId,
   });
 
   @override
@@ -36,7 +39,6 @@ class TelaIndicadorGraficoDetalhe extends StatefulWidget {
 class _TelaIndicadorGraficoDetalheState
     extends State<TelaIndicadorGraficoDetalhe> {
   static const Color marrom = AppColors.primary;
-  static const Color marromEscuro = AppColors.primaryDark;
   static const Color creme = AppColors.surfaceLight;
   static const Color amarelo = AppColors.accent;
   static const Color amareloSuave = AppColors.surface;
@@ -45,8 +47,18 @@ class _TelaIndicadorGraficoDetalheState
 
   String periodoEnergia = 'Mensal';
   String periodoHistorico = 'Semanal';
+  bool _carregandoTelemetria = false;
+  String? _erroTelemetria;
+  List<Map<String, dynamic>> _telemetrias = <Map<String, dynamic>>[];
 
-  double get energia => widget.isTv ? 12.5 : 28.4;
+  Map<String, dynamic>? get _ultimaTelemetria =>
+      _telemetrias.isEmpty ? null : _telemetrias.first;
+
+  double get energia {
+    final consumoWh = _ultimaTelemetria?['consumoAcumulado'];
+    if (consumoWh is num) return consumoWh.toDouble() / 1000;
+    return widget.isTv ? 12.5 : 28.4;
+  }
   double get limiteDiario => widget.isTv ? 15.0 : 35.0;
   int get horas => widget.isTv ? 12 : 18;
   int get pontuacao => widget.isTv ? 76 : 82;
@@ -71,6 +83,76 @@ class _TelaIndicadorGraficoDetalheState
   }
 
   @override
+  void initState() {
+    super.initState();
+    _carregarTelemetria();
+  }
+
+  Future<void> _carregarTelemetria() async {
+    final id = widget.deviceBackendId;
+    if (id == null || id.isEmpty) return;
+    setState(() {
+      _carregandoTelemetria = true;
+      _erroTelemetria = null;
+    });
+    try {
+      final dados = await DispositivosApi.telemetrias(id);
+      if (!mounted) return;
+      setState(() => _telemetrias = dados);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _erroTelemetria = error.toString());
+    } finally {
+      if (mounted) setState(() => _carregandoTelemetria = false);
+    }
+  }
+
+  Widget _cartaoEstadoTelemetria() {
+    final telemetria = _ultimaTelemetria;
+    String texto;
+    if (_carregandoTelemetria) {
+      texto = 'Carregando as leituras do dispositivo...';
+    } else if (_erroTelemetria != null) {
+      texto = 'Não foi possível consultar a telemetria: $_erroTelemetria';
+    } else if (widget.deviceBackendId == null || widget.deviceBackendId!.isEmpty) {
+      texto = 'Os indicadores abaixo são demonstrativos: este aparelho não possui vínculo com um registro da API.';
+    } else if (telemetria == null) {
+      texto = 'Nenhuma leitura real foi recebida pelo backend. Os indicadores sem telemetria continuam demonstrativos.';
+    } else {
+      final minuto = telemetria['minutoAtual'] ?? '—';
+      final consumo = telemetria['consumoAcumulado'];
+      texto = consumo is num
+          ? 'Telemetria recebida do backend: minuto $minuto, consumo acumulado ${consumo.toStringAsFixed(4)} Wh. Os outros indicadores ainda são demonstrativos.'
+          : 'Telemetria recebida do backend, mas sem valor de consumo reconhecido. Os outros indicadores são demonstrativos.';
+    }
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(14, 6, 14, 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: amareloSuave.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: marrom.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(_carregandoTelemetria ? Icons.sync : Icons.sensors_outlined, color: marrom, size: 19),
+          const SizedBox(width: 8),
+          Expanded(child: Text(texto, style: const TextStyle(color: marrom, fontSize: 11.5, height: 1.35))),
+          if (widget.deviceBackendId != null && widget.deviceBackendId!.isNotEmpty)
+            IconButton(
+              tooltip: 'Atualizar leituras',
+              onPressed: _carregandoTelemetria ? null : _carregarTelemetria,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.refresh, size: 18, color: marrom),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -81,6 +163,7 @@ class _TelaIndicadorGraficoDetalheState
           child: Column(
             children: [
               _cabecalhoSuperior(),
+              _cartaoEstadoTelemetria(),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(14, 8, 14, 22),
@@ -104,7 +187,7 @@ class _TelaIndicadorGraficoDetalheState
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
             decoration: BoxDecoration(
               color: marrom,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppRadius.largeCard),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x22000000),
@@ -119,7 +202,7 @@ class _TelaIndicadorGraficoDetalheState
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
               ),
@@ -145,7 +228,7 @@ class _TelaIndicadorGraficoDetalheState
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: marrom,
-                    fontFamily: 'Arvo',
+                    fontFamily: AppFonts.title,
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
                   ),
@@ -307,7 +390,7 @@ class _TelaIndicadorGraficoDetalheState
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              Container(height: 18, color: const Color(0xFFE8DDB8)),
+              Container(height: 18, color: AppColors.track),
               FractionallySizedBox(
                 widthFactor: fracao,
                 child: Container(
@@ -348,7 +431,7 @@ class _TelaIndicadorGraficoDetalheState
           children: [
             _legenda(const Color(0xFFFF9C9D), 'Energia usada'),
             const SizedBox(width: 13),
-            _legenda(const Color(0xFFE8DDB8), 'Limite de energia'),
+            _legenda(AppColors.track, 'Limite de energia'),
           ],
         ),
         const SizedBox(height: 20),
@@ -376,7 +459,7 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       decoration: BoxDecoration(
         color: amarelo.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         children: [
@@ -456,7 +539,7 @@ class _TelaIndicadorGraficoDetalheState
                     child: Text(
                       opcao,
                       style: TextStyle(
-                        color: ativo ? Colors.white : const Color(0xFFFFE8B0),
+                        color: ativo ? AppColors.white : AppColors.surfaceWarm,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                       ),
@@ -484,7 +567,7 @@ class _TelaIndicadorGraficoDetalheState
                       e,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Color(0xFFFFE8B0),
+                        color: AppColors.surfaceWarm,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                       ),
@@ -575,7 +658,7 @@ class _TelaIndicadorGraficoDetalheState
                   children: [
                     const Icon(
                       Icons.trending_up_rounded,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: 18,
                     ),
                     const SizedBox(width: 6),
@@ -586,7 +669,7 @@ class _TelaIndicadorGraficoDetalheState
                             : 'Uso elevado em relação a ontem',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                         ),
@@ -631,7 +714,7 @@ class _TelaIndicadorGraficoDetalheState
         ),
         const SizedBox(height: 5),
         ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           child: Container(
             height: 43,
             color: corFundo,
@@ -644,11 +727,11 @@ class _TelaIndicadorGraficoDetalheState
                   child: Container(
                     decoration: BoxDecoration(
                       color: corPreenchimento,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     alignment: Alignment.centerLeft,
-                    child: Icon(icone, color: Colors.white, size: 20),
+                    child: Icon(icone, color: AppColors.white, size: 20),
                   ),
                 ),
                 Positioned.fill(
@@ -658,7 +741,7 @@ class _TelaIndicadorGraficoDetalheState
                       padding: const EdgeInsets.only(right: 10),
                       child: Icon(
                         icone,
-                        color: Colors.white.withValues(alpha: 0.78),
+                        color: AppColors.white.withValues(alpha: 0.78),
                         size: 16,
                       ),
                     ),
@@ -681,7 +764,7 @@ class _TelaIndicadorGraficoDetalheState
               child: Text(
                 '${horasPeriodo}h',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
@@ -701,7 +784,7 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: amareloSuave,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppRadius.largeCard),
           ),
           child: Column(
             children: [
@@ -715,7 +798,7 @@ class _TelaIndicadorGraficoDetalheState
                       child: CircularProgressIndicator(
                         value: pontuacao / 100,
                         strokeWidth: 12,
-                        backgroundColor: const Color(0xFFE8DDB8),
+                        backgroundColor: AppColors.track,
                         valueColor: const AlwaysStoppedAnimation<Color>(marrom),
                       ),
                     ),
@@ -748,7 +831,7 @@ class _TelaIndicadorGraficoDetalheState
                 widget.isTv ? 'Muito bom!' : 'Excelente!',
                 style: const TextStyle(
                   color: marrom,
-                  fontFamily: 'Arvo',
+                  fontFamily: AppFonts.title,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -824,7 +907,7 @@ class _TelaIndicadorGraficoDetalheState
                         padding: const EdgeInsets.symmetric(horizontal: 3),
                         child: InkWell(
                           onTap: () => setState(() => periodoHistorico = opcao),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppRadius.button),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 11,
@@ -834,14 +917,14 @@ class _TelaIndicadorGraficoDetalheState
                               color: periodoHistorico == opcao
                                   ? const Color(0xFF71420D)
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(AppRadius.button),
                             ),
                             child: Text(
                               opcao,
                               style: TextStyle(
                                 color: periodoHistorico == opcao
-                                    ? Colors.white
-                                    : const Color(0xFFFFE8B0),
+                                    ? AppColors.white
+                                    : AppColors.surfaceWarm,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -871,7 +954,7 @@ class _TelaIndicadorGraficoDetalheState
                           e,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: Color(0xFFFFE8B0),
+                            color: AppColors.surfaceWarm,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -966,7 +1049,7 @@ class _TelaIndicadorGraficoDetalheState
                 height: 62,
                 decoration: BoxDecoration(
                   color: amarelo,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Icon(
                   widget.isTv ? Icons.tv_rounded : Icons.thermostat_rounded,
@@ -1011,7 +1094,7 @@ class _TelaIndicadorGraficoDetalheState
           'Sugestões para você',
           style: TextStyle(
             color: marrom,
-            fontFamily: 'Arvo',
+            fontFamily: AppFonts.title,
             fontSize: 18,
             fontWeight: FontWeight.w900,
           ),
@@ -1100,7 +1183,7 @@ class _TelaIndicadorGraficoDetalheState
                       child: CircularProgressIndicator(
                         value: eficiencia / 100,
                         strokeWidth: 15,
-                        backgroundColor: const Color(0xFFE8DDB8),
+                        backgroundColor: AppColors.track,
                         valueColor: const AlwaysStoppedAnimation<Color>(marrom),
                       ),
                     ),
@@ -1133,7 +1216,7 @@ class _TelaIndicadorGraficoDetalheState
                 widget.isTv ? 'Bom aproveitamento' : 'Pode melhorar',
                 style: const TextStyle(
                   color: marrom,
-                  fontFamily: 'Arvo',
+                  fontFamily: AppFonts.title,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -1223,7 +1306,7 @@ class _TelaIndicadorGraficoDetalheState
             child: LinearProgressIndicator(
               value: progresso.clamp(0.0, 1.0).toDouble(),
               minHeight: 9,
-              backgroundColor: const Color(0xFFE8DDB8),
+              backgroundColor: AppColors.track,
               valueColor: const AlwaysStoppedAnimation<Color>(marrom),
             ),
           ),
@@ -1417,7 +1500,7 @@ class MedidorSemicircularPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Rect.fromLTWH(8, 3, size.width - 16, size.height * 1.78);
     final fundo = Paint()
-      ..color = const Color(0xFFE8DDB8)
+      ..color = AppColors.track
       ..style = PaintingStyle.stroke
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round;

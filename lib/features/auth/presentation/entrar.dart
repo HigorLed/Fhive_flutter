@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
 class TelaDeLogin extends StatefulWidget {
   const TelaDeLogin({super.key});
@@ -15,19 +17,20 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool mostrarSenha = false;
+  bool carregando = false;
 
   static final RegExp _regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   static const TextStyle _estiloRotulo = TextStyle(
     color: AppColors.primary,
     fontSize: 18,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontWeight: FontWeight.w700,
   );
 
   static const TextStyle _estiloCampo = TextStyle(
     color: AppColors.primary,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontSize: 15,
   );
 
@@ -48,103 +51,153 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
 
   /// Usada tanto pelo botão "Entrar" quanto pelo "Enter" do teclado,
   /// para que os dois caminhos tenham sempre o mesmo comportamento.
-  void entrar() {
+  Future<void> entrar() async {
     FocusScope.of(context).unfocus();
+    if (carregando || !_formKey.currentState!.validate()) return;
+    setState(() => carregando = true);
 
-    if (!_formKey.currentState!.validate()) {
-      return;
+    try {
+      final erro = await AuthStore.entrar(
+        email: emailController.text,
+        senha: senhaController.text,
+      );
+      if (erro != null) {
+        _mensagem(erro);
+        return;
+      }
+
+      var falhaSincronizacao = false;
+      try {
+        await AparelhosStore.carregarDoBackend();
+      } catch (_) {
+        falhaSincronizacao = true;
+      }
+      try {
+        await RotinasStore.carregarDoBackend();
+      } catch (_) {
+        falhaSincronizacao = true;
+      }
+      if (!mounted) return;
+      if (falhaSincronizacao) {
+        _mensagem('Login realizado. Alguns dados não puderam ser sincronizados; confira sua conexão com o backend.');
+      }
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    } finally {
+      if (mounted) setState(() => carregando = false);
     }
-
-    final erro = AuthStore.entrar(
-      email: emailController.text,
-      senha: senhaController.text,
-    );
-    if (erro != null) {
-      _mensagem(erro);
-      return;
-    }
-
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
   }
 
   Future<void> _recuperarSenha() async {
     final email = TextEditingController(text: emailController.text.trim());
-    final novaSenha = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final dados = await showDialog<Map<String, String>>(
+    final formEmailKey = GlobalKey<FormState>();
+    final emailConfirmado = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Recuperar senha'),
         content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'E-mail da conta'),
-                validator: (valor) =>
-                    (valor == null || !_regexEmail.hasMatch(valor.trim()))
-                    ? 'Digite um e-mail válido.'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: novaSenha,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nova senha',
-                  helperText:
-                      'Use 6+ caracteres, maiúscula, minúscula, número e símbolo.',
-                ),
-                validator: (valor) {
-                  final senha = valor ?? '';
-                  if (senha.length < 6 ||
-                      !RegExp(r'[a-z]').hasMatch(senha) ||
-                      !RegExp(r'[A-Z]').hasMatch(senha) ||
-                      !RegExp(r'\d').hasMatch(senha) ||
-                      !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
-                    return 'A senha não atende aos requisitos.';
-                  }
-                  return null;
-                },
-              ),
-            ],
+          key: formEmailKey,
+          child: TextFormField(
+            controller: email,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'E-mail da conta'),
+            validator: (valor) => (valor == null || !_regexEmail.hasMatch(valor.trim()))
+                ? 'Digite um e-mail válido.'
+                : null,
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(dialogContext, <String, String>{
-                'email': email.text.trim(),
-                'senha': novaSenha.text,
-              });
+              if (formEmailKey.currentState!.validate()) {
+                Navigator.pop(dialogContext, email.text.trim());
+              }
+            },
+            child: const Text('Enviar código'),
+          ),
+        ],
+      ),
+    );
+    email.dispose();
+    if (!mounted || emailConfirmado == null) return;
+
+    final erroSolicitacao = await AuthStore.solicitarRecuperacao(email: emailConfirmado);
+    if (!mounted) return;
+    if (erroSolicitacao != null) {
+      _mensagem(erroSolicitacao);
+      return;
+    }
+    _mensagem('Se o e-mail estiver cadastrado, o código de recuperação será enviado.');
+
+    final codigo = TextEditingController();
+    final novaSenha = TextEditingController();
+    final formCodigoKey = GlobalKey<FormState>();
+    final dados = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Confirmar recuperação'),
+        content: Form(
+          key: formCodigoKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: codigo,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Código recebido por e-mail'),
+                  validator: (valor) => (valor == null || valor.trim().isEmpty) ? 'Informe o código.' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: novaSenha,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Nova senha', helperText: '8+ caracteres, maiúscula, minúscula, número e símbolo.'),
+                  validator: (valor) {
+                    final senha = valor ?? '';
+                    if (senha.length < 8 || !RegExp(r'[a-z]').hasMatch(senha) ||
+                        !RegExp(r'[A-Z]').hasMatch(senha) || !RegExp(r'\d').hasMatch(senha) ||
+                        !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
+                      return 'A senha não atende aos requisitos.';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () {
+              if (!formCodigoKey.currentState!.validate()) return;
+              Navigator.pop(dialogContext, <String, String>{'codigo': codigo.text.trim(), 'senha': novaSenha.text});
             },
             child: const Text('Redefinir'),
           ),
         ],
       ),
     );
-    email.dispose();
+    codigo.dispose();
     novaSenha.dispose();
     if (!mounted || dados == null) return;
 
-    final redefinida = AuthStore.redefinirSenha(
-      email: dados['email'] ?? '',
+    final erroCodigo = await AuthStore.verificarCodigoRecuperacao(
+      email: emailConfirmado,
+      codigo: dados['codigo'] ?? '',
+    );
+    if (erroCodigo != null) {
+      _mensagem(erroCodigo);
+      return;
+    }
+    final erroSenha = await AuthStore.redefinirSenha(
+      email: emailConfirmado,
+      codigo: dados['codigo'] ?? '',
       novaSenha: dados['senha'] ?? '',
     );
-    _mensagem(
-      redefinida
-          ? 'Senha redefinida nesta demonstração local.'
-          : 'Não encontramos uma conta local com esse e-mail. A recuperação por e-mail exige integração com um servidor.',
-    );
+    if (!mounted) return;
+    _mensagem(erroSenha ?? 'Senha redefinida com sucesso. Entre com a nova senha.');
   }
 
   void _informarLoginSocial() {
@@ -194,7 +247,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
       hintText: hint,
       hintStyle: const TextStyle(
         color: Color(0xAD964800),
-        fontFamily: 'Arvo',
+        fontFamily: AppFonts.title,
         fontSize: 15,
       ),
       prefixIcon: Icon(icone, color: AppColors.primary, size: 20),
@@ -231,7 +284,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 14,
-                  fontFamily: 'Arvo',
+                  fontFamily: AppFonts.title,
                 ),
               ),
             ),
@@ -266,7 +319,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   Positioned(
                     left: -30,
                     top: 175,
-                    child: _circulo(90, const Color(0xFFFFF261)),
+                    child: _circulo(90, AppColors.highlight),
                   ),
 
                   Positioned(
@@ -278,7 +331,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   Positioned(
                     right: -15,
                     top: 22,
-                    child: _circulo(75, const Color(0xFFFFF261)),
+                    child: _circulo(75, AppColors.highlight),
                   ),
 
                   // ---------------------------------------------
@@ -291,8 +344,8 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                       decoration: const BoxDecoration(
                         color: Color(0xFFFFFEF2),
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(25),
-                          topRight: Radius.circular(25),
+                          topLeft: Radius.circular(AppRadius.bottomSheet),
+                          topRight: Radius.circular(AppRadius.bottomSheet),
                         ),
                       ),
                       child: SingleChildScrollView(
@@ -313,7 +366,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                   style: TextStyle(
                                     color: AppColors.primary,
                                     fontSize: 40,
-                                    fontFamily: 'Arvo',
+                                    fontFamily: AppFonts.title,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -405,7 +458,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                       style: TextStyle(
                                         color: AppColors.primary,
                                         fontSize: 13,
-                                        fontFamily: 'Montserrat',
+                                        fontFamily: AppFonts.body,
                                         fontWeight: FontWeight.w500,
                                         decoration: TextDecoration.underline,
                                       ),
@@ -420,21 +473,21 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                               SizedBox(
                                 height: 52,
                                 child: ElevatedButton(
-                                  onPressed: entrar,
+                                  onPressed: carregando ? null : entrar,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFFF261),
+                                    backgroundColor: AppColors.highlight,
                                     foregroundColor: AppColors.primary,
                                     elevation: 4,
                                     shadowColor: Colors.black26,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
+                                      borderRadius: BorderRadius.circular(AppRadius.bottomSheet),
                                     ),
                                   ),
                                   child: const Text(
                                     'Entrar',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      fontFamily: 'Montserrat',
+                                      fontFamily: AppFonts.body,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -461,7 +514,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                       style: TextStyle(
                                         color: AppColors.primary,
                                         fontSize: 14,
-                                        fontFamily: 'Montserrat',
+                                        fontFamily: AppFonts.body,
                                       ),
                                     ),
                                   ),
@@ -487,7 +540,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                         width: 23,
                                         height: 23,
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                           shape: BoxShape.circle,
                                           border: Border.all(
                                             color: const Color(0xFFCCCCCC),
@@ -524,7 +577,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                           child: Text(
                                             'f',
                                             style: TextStyle(
-                                              color: Colors.white,
+                                              color: AppColors.white,
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -548,7 +601,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                     style: TextStyle(
                                       color: AppColors.primary,
                                       fontSize: 13,
-                                      fontFamily: 'Montserrat',
+                                      fontFamily: AppFonts.body,
                                     ),
                                   ),
                                   InkWell(
@@ -567,7 +620,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                         style: TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 13,
-                                          fontFamily: 'Arvo',
+                                          fontFamily: AppFonts.title,
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -610,7 +663,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                 style: TextStyle(
                                   color: AppColors.primary,
                                   fontSize: 14,
-                                  fontFamily: 'Arvo',
+                                  fontFamily: AppFonts.title,
                                 ),
                               ),
                             ],

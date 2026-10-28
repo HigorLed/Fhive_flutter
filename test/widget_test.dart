@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:tcc_mobile/core/network/api_client.dart';
 import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
 import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 import 'package:tcc_mobile/main.dart';
@@ -8,14 +13,142 @@ import 'package:tcc_mobile/shared/state/auth_store.dart';
 import 'package:tcc_mobile/shared/state/preferencias_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
+const String emailTeste = 'teste@fhive.com';
+const String senhaTeste = 'Fhive@123';
+
+late MockClient _clienteMock;
+late Map<String, dynamic> _usuarioMock;
+String _senhaMock = senhaTeste;
+int _contadorDispositivo = 0;
+
+http.Response _resposta(Object? corpo, {int status = 200}) => http.Response(
+  jsonEncode(corpo),
+  status,
+  headers: const {'content-type': 'application/json; charset=utf-8'},
+);
+
+Future<http.Response> _responder(http.Request request) async {
+  final path = request.url.path;
+  final metodo = request.method;
+  final dynamic corpo = request.body.isEmpty ? <String, dynamic>{} : jsonDecode(request.body);
+  final dados = corpo is Map ? Map<String, dynamic>.from(corpo) : <String, dynamic>{};
+
+  if (metodo == 'POST' && path == '/usuarios/login') {
+    if (dados['email'] != _usuarioMock['email'] || dados['senha'] != _senhaMock) {
+      return _resposta({'mensagem': 'E-mail ou senha inválidos.'}, status: 401);
+    }
+    return _resposta({'token': 'token-de-teste', 'usuario': _usuarioMock});
+  }
+  if (metodo == 'POST' && path == '/usuarios') {
+    _usuarioMock = <String, dynamic>{
+      'id': 'user-1', 'nome': dados['nome'], 'email': dados['email'], 'fotoPerfil': null,
+    };
+    _senhaMock = '${dados['senha'] ?? senhaTeste}';
+    return _resposta({'mensagem': 'Código de confirmação enviado.'}, status: 201);
+  }
+  if (metodo == 'POST' && path == '/usuarios/confirmarEmail') {
+    return _resposta({'mensagem': 'E-mail confirmado.'}, status: 201);
+  }
+  if (metodo == 'GET' && path == '/usuarios/perfil') {
+    return _resposta({'usuario': _usuarioMock});
+  }
+  if (metodo == 'PATCH' && path == '/usuarios/perfil') {
+    if (dados['senhaAtual'] != null && dados['senhaAtual'] != _senhaMock) {
+      return _resposta({'mensagem': 'A senha atual está incorreta.'}, status: 400);
+    }
+    if (dados['novaSenha'] is String) _senhaMock = dados['novaSenha'] as String;
+    _usuarioMock = <String, dynamic>{
+      ..._usuarioMock,
+      'nome': dados['nome'] ?? _usuarioMock['nome'],
+      'email': dados['email'] ?? _usuarioMock['email'],
+      'fotoPerfil': dados['fotoPerfil'] ?? _usuarioMock['fotoPerfil'],
+    };
+    return _resposta({'usuario': _usuarioMock});
+  }
+  if (metodo == 'POST' && <String>[
+    '/usuarios/esqueci-senha', '/usuarios/verificar-codigo-recuperacao',
+    '/usuarios/redefinir-senha',
+  ].contains(path)) {
+    if (path == '/usuarios/redefinir-senha' && dados['novaSenha'] is String) {
+      _senhaMock = dados['novaSenha'] as String;
+    }
+    return _resposta({'mensagem': 'Operação concluída.'});
+  }
+  if (metodo == 'GET' && path == '/dispositivos') {
+    return _resposta([
+      {
+        'id': 'mongo-device-tv-1', 'deviceId': 'FH-TV-CRISTAL-001',
+        'nome': 'TV - Cristal', 'tipo': 'TV', 'fabricante': 'Fhive',
+        'modelo': 'Cristal', 'status': 'online', 'local': 'Sala de Estar', 'conexao': 'Wi-Fi',
+      },
+      {
+        'id': 'mongo-device-ac-1', 'deviceId': 'FH-AC-SALA-001',
+        'nome': 'Ar-condicionado', 'tipo': 'Ar condicionado', 'fabricante': 'Fhive',
+        'modelo': 'Smart AC', 'status': 'offline', 'local': 'Sala de Estar', 'conexao': 'Wi-Fi',
+      },
+    ]);
+  }
+  if (metodo == 'POST' && path == '/dispositivos') {
+    _contadorDispositivo++;
+    return _resposta({
+      'mensagem': 'Dispositivo criado com sucesso.',
+      'dispositivo': {
+        'id': 'mongo-device-new-$_contadorDispositivo',
+        'deviceId': dados['deviceId'] ?? 'FH-TESTE-$_contadorDispositivo',
+        'nome': dados['nome'] ?? 'Aparelho de teste', 'tipo': dados['tipo'] ?? 'Sensor',
+        'fabricante': dados['fabricante'], 'modelo': dados['modelo'],
+        'conexao': dados['conexao'] ?? 'Wi-Fi', 'local': dados['local'] ?? 'Sala de Estar',
+        'status': 'offline',
+      },
+    }, status: 201);
+  }
+  if (metodo == 'GET' && path.endsWith('/telemetrias')) return _resposta(<dynamic>[]);
+  if (metodo == 'GET' && path.startsWith('/dispositivos/')) {
+    return _resposta({
+      'id': 'mongo-device-tv-1', 'deviceId': 'FH-TV-CRISTAL-001',
+      'nome': 'TV - Cristal', 'tipo': 'TV', 'local': 'Sala de Estar', 'status': 'online',
+    });
+  }
+  if (metodo == 'DELETE' && path.startsWith('/dispositivos/')) {
+    return _resposta({'mensagem': 'Dispositivo excluído com sucesso.'});
+  }
+  if (metodo == 'GET' && path == '/rotinas') {
+    return _resposta([
+      {
+        'id': 'routine-1', 'nome': 'Acordar', 'horarioInicial': '07:00',
+        'horarioFinal': null, 'diasSemana': {'segunda': true, 'terca': true},
+        'acoes': [
+          {'ordem': 1, 'horario': '07:00', 'tipo': 'ligar', 'instrucoes': {'estado': true}},
+        ], 'ativo': true, 'dispositivo': {
+          'id': 'mongo-device-tv-1', 'deviceId': 'FH-TV-CRISTAL-001',
+          'nome': 'TV - Cristal', 'local': 'Sala de Estar',
+        },
+      },
+    ]);
+  }
+  if (metodo == 'POST' && path == '/rotinas') {
+    return _resposta({'rotina': {
+      'id': 'routine-new', ...dados, 'ativo': true,
+      'dispositivo': {'deviceId': dados['dispositivoId'], 'nome': 'TV - Cristal', 'local': 'Sala de Estar'},
+    }}, status: 201);
+  }
+  if (metodo == 'PUT' && path.startsWith('/rotinas/')) {
+    return _resposta({'rotina': {'id': path.split('/').last, ...dados}});
+  }
+  if (metodo == 'DELETE' && path.startsWith('/rotinas/')) {
+    return _resposta({'mensagem': 'Rotina excluída.'});
+  }
+  return _resposta({'mensagem': 'Rota de teste não configurada: $metodo $path'}, status: 404);
+}
+
 Future<void> entrarComDadosValidos(WidgetTester tester) async {
   await tester.tap(find.widgetWithText(ElevatedButton, 'Entrar'));
   await tester.pumpAndSettle();
 
   final campos = find.byType(TextFormField);
   expect(campos, findsNWidgets(2));
-  await tester.enterText(campos.at(0), AuthStore.emailDemonstracao);
-  await tester.enterText(campos.at(1), AuthStore.senhaDemonstracao);
+  await tester.enterText(campos.at(0), emailTeste);
+  await tester.enterText(campos.at(1), senhaTeste);
 
   final botao = find.widgetWithText(ElevatedButton, 'Entrar');
   await tester.ensureVisible(botao);
@@ -25,6 +158,14 @@ Future<void> entrarComDadosValidos(WidgetTester tester) async {
 
 void main() {
   setUp(() {
+    _usuarioMock = <String, dynamic>{
+      'id': 'user-1', 'nome': 'Usuário de Teste', 'email': emailTeste, 'fotoPerfil': null,
+    };
+    _senhaMock = senhaTeste;
+    _contadorDispositivo = 0;
+    _clienteMock = MockClient(_responder);
+    ApiClient.usarCliente(_clienteMock);
+    ApiClient.limparToken();
     AparelhosStore.reset();
     RotinasStore.reset();
     AuthStore.reset();
@@ -41,7 +182,7 @@ void main() {
     expect(find.widgetWithText(ElevatedButton, 'Criar Conta'), findsOneWidget);
   });
 
-  testWidgets('Login local de demonstração abre a Home', (tester) async {
+  testWidgets('Login via API abre a Home', (tester) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
     await entrarComDadosValidos(tester);
@@ -109,7 +250,7 @@ void main() {
     expect(AparelhosStore.porId('FH-SENSOR-TESTE-001'), isNotNull);
     expect(
       AparelhosStore.porId('FH-SENSOR-TESTE-001')!.status,
-      'Aguardando conexão',
+      'Offline',
     );
   });
 
@@ -245,67 +386,58 @@ void main() {
     expect(find.text('Como adicionar um aparelho?'), findsOneWidget);
   });
 
-  test('AuthStore cadastra, autentica e redefine senha localmente', () {
+  test('AuthStore cadastra, autentica e atualiza dados via API', () async {
     const email = 'novo@fhive.com';
     const senhaInicial = 'Fhive@123';
     const senhaNova = 'Fhive@456';
 
     expect(
-      AuthStore.cadastrar(
+      await AuthStore.iniciarCadastro(
         nome: 'Pessoa de Teste',
         email: email,
         senha: senhaInicial,
       ),
       isNull,
     );
-    expect(AuthStore.entrar(email: email, senha: senhaInicial), isNull);
+    expect(await AuthStore.confirmarCadastro(email: email, codigo: '123456'), isNull);
+    expect(await AuthStore.entrar(email: email, senha: senhaInicial), isNull);
     expect(AuthStore.usuarioAtual.value?.nome, 'Pessoa de Teste');
-    expect(AuthStore.atualizarNome('Nome Atualizado'), isTrue);
+
+    expect(
+      await AuthStore.atualizarPerfil(
+        nome: 'Nome Atualizado',
+        email: 'atualizado@fhive.com',
+      ),
+      isNull,
+    );
     expect(AuthStore.usuarioAtual.value?.nome, 'Nome Atualizado');
+    expect(AuthStore.usuarioAtual.value?.email, 'atualizado@fhive.com');
+
     expect(
-      AuthStore.redefinirSenha(email: email, novaSenha: senhaNova),
-      isTrue,
+      await AuthStore.atualizarSenha(
+        senhaAtual: senhaInicial,
+        novaSenha: senhaNova,
+      ),
+      isNull,
     );
-    expect(AuthStore.entrar(email: email, senha: senhaInicial), isNotNull);
-    expect(AuthStore.entrar(email: email, senha: senhaNova), isNull);
-    expect(
-      AuthStore.cadastrar(nome: 'Duplicado', email: email, senha: senhaInicial),
-      isNotNull,
-    );
+    AuthStore.sair();
+    expect(await AuthStore.entrar(email: 'atualizado@fhive.com', senha: senhaInicial), isNotNull);
+    expect(await AuthStore.entrar(email: 'atualizado@fhive.com', senha: senhaNova), isNull);
   });
 
-  test('Perfil local permite alterar nome, e-mail e senha com validação', () {
+  test('Recuperação de senha percorre os endpoints do backend', () async {
+    expect(await AuthStore.solicitarRecuperacao(email: emailTeste), isNull);
     expect(
-      AuthStore.entrar(
-        email: AuthStore.emailDemonstracao,
-        senha: AuthStore.senhaDemonstracao,
-      ),
+      await AuthStore.verificarCodigoRecuperacao(email: emailTeste, codigo: '123456'),
       isNull,
     );
-
     expect(
-      AuthStore.atualizarPerfil(
-        nome: 'Higor Teste',
-        email: 'higor.teste@fhive.com',
-      ),
-      isNull,
-    );
-    expect(AuthStore.usuarioAtual.value?.nome, 'Higor Teste');
-    expect(AuthStore.usuarioAtual.value?.email, 'higor.teste@fhive.com');
-
-    expect(
-      AuthStore.atualizarSenha(
-        senhaAtual: AuthStore.senhaDemonstracao,
+      await AuthStore.redefinirSenha(
+        email: emailTeste,
+        codigo: '123456',
         novaSenha: 'NovaSenha@123',
       ),
       isNull,
-    );
-    expect(
-      AuthStore.atualizarSenha(
-        senhaAtual: 'senha-incorreta',
-        novaSenha: 'OutraSenha@123',
-      ),
-      isNotNull,
     );
   });
 
@@ -324,7 +456,49 @@ void main() {
     expect(PreferenciasStore.sugestoes, isTrue);
   });
 
+  test('Locais vazios não aparecem entre os locais com aparelhos', () {
+    expect(AparelhosStore.locaisComAparelhos, isEmpty);
+    expect(AparelhosStore.locaisSugeridos, isNot(contains('Outro local')));
+
+    expect(AparelhosStore.locaisDisponiveis, contains('Cozinha'));
+    expect(AparelhosStore.locaisComAparelhos, isNot(contains('Cozinha')));
+
+    AparelhosStore.adicionar(
+      const AparelhoItem(
+        nome: 'Lâmpada cozinha',
+        id: 'FH-LAMP-COZ-001',
+        tipo: 'Lâmpada',
+        fabricante: 'Fhive',
+        modelo: 'Smart Light',
+        status: 'Offline',
+        icone: Icons.lightbulb_outline,
+        wifi: true,
+        local: 'Cozinha',
+        conexao: 'Wi-Fi',
+      ),
+    );
+    expect(
+      AparelhosStore.locaisComAparelhos,
+      <String>['Cozinha'],
+    );
+  });
+
   test('Store de aparelhos cria, edita, favorita e remove por ID', () {
+    AparelhosStore.adicionar(
+      const AparelhoItem(
+        nome: 'TV de teste',
+        id: 'FH-TV-CRISTAL-001',
+        backendId: 'mongo-device-tv-1',
+        tipo: 'TV',
+        fabricante: 'Fhive',
+        modelo: 'Cristal',
+        status: 'Online',
+        icone: Icons.tv,
+        wifi: true,
+        local: 'Sala de Estar',
+        conexao: 'Wi-Fi',
+      ),
+    );
     final original = AparelhosStore.porId('FH-TV-CRISTAL-001');
     expect(original, isNotNull);
     AparelhosStore.alternarFavorito(original!.id);
@@ -344,22 +518,18 @@ void main() {
     expect(AparelhosStore.ehFavorito('FH-TV-CRISTAL-999'), isFalse);
   });
 
-  test('Store de rotinas adiciona, alterna, registra execução e remove', () {
-    expect(RotinasStore.rotinas.value.length, 4);
-    final nova = RotinasStore.adicionar(
-      nome: 'Teste',
-      local: 'Sala de Estar',
-      horario: '18:00',
-      acoes: const ['Ligar TV'],
-    )!;
+  test('Store de rotinas carrega, alterna e remove dados do backend', () async {
+    await RotinasStore.carregarDoBackend();
+    expect(RotinasStore.rotinas.value.length, 1);
+    final rotina = RotinasStore.porId('routine-1');
+    expect(rotina?.nome, 'Acordar');
+    expect(rotina?.ativa, isTrue);
 
-    expect(RotinasStore.alternar(nova.id), isTrue);
-    expect(RotinasStore.porId(nova.id)!.ativa, isFalse);
-    expect(RotinasStore.executar(nova.id), isFalse);
-    RotinasStore.alternar(nova.id);
-    expect(RotinasStore.executar(nova.id), isTrue);
-    expect(RotinasStore.porId(nova.id)!.ultimaExecucao, isNotNull);
-    expect(RotinasStore.remover(nova.id), isTrue);
-    expect(RotinasStore.porId(nova.id), isNull);
+    await RotinasStore.alternarNoBackend('routine-1');
+    expect(RotinasStore.porId('routine-1')!.ativa, isFalse);
+    expect(RotinasStore.executar('routine-1'), isFalse);
+
+    await RotinasStore.removerDoBackend('routine-1');
+    expect(RotinasStore.porId('routine-1'), isNull);
   });
 }

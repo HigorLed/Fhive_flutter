@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/features/devices/data/dispositivos_api.dart';
 
 class AparelhoItem {
   final String nome;
   final String id;
+  /// ID do registro no MongoDB, usado para consultar/excluir o recurso na API.
+  final String backendId;
   final String tipo;
   final String fabricante;
   final String modelo;
@@ -15,6 +18,7 @@ class AparelhoItem {
   const AparelhoItem({
     required this.nome,
     required this.id,
+    this.backendId = '',
     required this.tipo,
     required this.fabricante,
     required this.modelo,
@@ -28,6 +32,7 @@ class AparelhoItem {
   AparelhoItem copyWith({
     String? nome,
     String? id,
+    String? backendId,
     String? tipo,
     String? fabricante,
     String? modelo,
@@ -40,6 +45,7 @@ class AparelhoItem {
     return AparelhoItem(
       nome: nome ?? this.nome,
       id: id ?? this.id,
+      backendId: backendId ?? this.backendId,
       tipo: tipo ?? this.tipo,
       fabricante: fabricante ?? this.fabricante,
       modelo: modelo ?? this.modelo,
@@ -82,7 +88,6 @@ class AparelhosStore {
     'Banheiro',
     'Escritório',
     'Área externa',
-    'Outro local',
   ];
 
   static final ValueNotifier<List<String>> locais = ValueNotifier<List<String>>(
@@ -106,6 +111,24 @@ class AparelhosStore {
     for (final aparelho in aparelhos.value) {
       incluir(aparelho.local);
     }
+    return resultado;
+  }
+
+  /// Locais que já possuem ao menos um aparelho cadastrado.
+  /// Usado na tela de aparelhos para não exibir cômodos vazios.
+  static List<String> get locaisComAparelhos {
+    final resultado = <String>[];
+
+    for (final aparelho in aparelhos.value) {
+      final nome = aparelho.local.trim();
+      if (nome.isEmpty) continue;
+      if (!resultado.any(
+        (local) => local.toLowerCase() == nome.toLowerCase(),
+      )) {
+        resultado.add(nome);
+      }
+    }
+
     return resultado;
   }
 
@@ -175,32 +198,88 @@ class AparelhosStore {
   static Set<String> get favoritosLista =>
       Set<String>.unmodifiable(favoritos.value);
 
-  static List<AparelhoItem> _aparelhosIniciais() => <AparelhoItem>[
-    const AparelhoItem(
-      nome: 'TV - Cristal',
-      id: 'FH-TV-CRISTAL-001',
-      tipo: 'TV',
-      fabricante: 'Fhive',
-      modelo: 'Cristal',
-      status: 'Online',
-      icone: Icons.tv,
-      wifi: true,
-      local: 'Sala de Estar',
-      conexao: 'Wi-Fi',
-    ),
-    const AparelhoItem(
-      nome: 'Ar condicionado',
-      id: 'FH-AC-SALA-001',
-      tipo: 'Ar condicionado',
-      fabricante: 'Fhive',
-      modelo: 'Smart Air',
-      status: 'Offline',
-      icone: Icons.air,
-      wifi: true,
-      local: 'Sala de Estar',
-      conexao: 'Wi-Fi',
-    ),
-  ];
+  // Os aparelhos vêm do backend após o login; não usamos aparelhos fictícios.
+  static List<AparelhoItem> _aparelhosIniciais() => <AparelhoItem>[];
+
+  static IconData _iconeParaTipo(String tipo) => switch (tipo.trim().toLowerCase()) {
+    'tv' || 'televisão' || 'televisao' => Icons.tv,
+    'ar condicionado' || 'ar-condicionado' => Icons.air,
+    'lâmpada' || 'lampada' => Icons.lightbulb_outline,
+    'câmera' || 'camera' => Icons.videocam_outlined,
+    'tomada inteligente' => Icons.power,
+    'sensor' => Icons.sensors_outlined,
+    _ => Icons.devices_other,
+  };
+
+  static AparelhoItem _doBackend(Map<String, dynamic> dados) {
+    final tipo = '${dados['tipo'] ?? 'Outro'}';
+    final statusApi = '${dados['status'] ?? 'offline'}';
+    final status = switch (statusApi.toLowerCase()) {
+      'online' => 'Online',
+      'offline' => 'Offline',
+      _ => statusApi,
+    };
+    return AparelhoItem(
+      nome: '${dados['nome'] ?? 'Aparelho'}',
+      id: '${dados['deviceId'] ?? dados['id'] ?? ''}',
+      backendId: '${dados['id'] ?? ''}',
+      tipo: tipo,
+      fabricante: '${dados['fabricante'] ?? 'Não informado'}',
+      modelo: '${dados['modelo'] ?? 'Não informado'}',
+      status: status,
+      icone: _iconeParaTipo(tipo),
+      wifi: '${dados['conexao'] ?? 'Wi-Fi'}' == 'Wi-Fi',
+      local: '${dados['local'] ?? 'Locais'}',
+      conexao: '${dados['conexao'] ?? 'Wi-Fi'}',
+    );
+  }
+
+  /// Atualiza a lista usando GET /dispositivos.
+  static Future<void> carregarDoBackend() async {
+    final dados = await DispositivosApi.listar();
+    final carregados = dados.map(_doBackend).where((item) => item.id.isNotEmpty).toList();
+    aparelhos.value = carregados;
+    final locaisNovos = List<String>.from(locais.value);
+    for (final aparelho in carregados) {
+      if (!locaisNovos.any((local) => local.toLowerCase() == aparelho.local.toLowerCase())) {
+        locaisNovos.add(aparelho.local);
+      }
+    }
+    locais.value = locaisNovos;
+    final idsValidos = carregados.map((item) => item.id).toSet();
+    favoritos.value = favoritos.value.where(idsValidos.contains).toSet();
+    atalhos.value = atalhos.value.where((atalho) => idsValidos.contains(atalho.aparelhoId)).toList();
+  }
+
+  /// Cria o aparelho no servidor e só o inclui na interface após resposta 2xx.
+  static Future<AparelhoItem> criarNoBackend(AparelhoItem aparelho) async {
+    final resposta = await DispositivosApi.criar(
+      nome: aparelho.nome,
+      tipo: aparelho.tipo,
+      deviceId: aparelho.id,
+      local: aparelho.local,
+      fabricante: aparelho.fabricante,
+      modelo: aparelho.modelo,
+      conexao: aparelho.conexao,
+    );
+    final dados = resposta['dispositivo'] is Map
+        ? (resposta['dispositivo'] as Map).map((key, value) => MapEntry('$key', value))
+        : resposta;
+    final criado = _doBackend(Map<String, dynamic>.from(dados));
+    adicionar(criado);
+    return criado;
+  }
+
+  /// Exclui no backend antes de retirar o item da lista local.
+  static Future<void> removerDoBackend(String id) async {
+    final aparelho = porId(id);
+    if (aparelho == null) return;
+    if (aparelho.backendId.isNotEmpty) {
+      await DispositivosApi.excluir(aparelho.backendId);
+    }
+    removerPorId(id);
+  }
+
 
   static void reset() {
     locais.value = List<String>.from(locaisSugeridos);

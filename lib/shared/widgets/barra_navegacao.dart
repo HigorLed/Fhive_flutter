@@ -112,7 +112,7 @@ class BarraNavegacao extends StatelessWidget {
           ),
           child: Icon(
             icone,
-            color: selecionado ? Colors.white : marrom,
+            color: selecionado ? AppColors.white : marrom,
             size: selecionado ? 29 : 27,
           ),
         ),

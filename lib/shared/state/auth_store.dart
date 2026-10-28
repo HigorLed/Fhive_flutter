@@ -1,183 +1,255 @@
 import 'package:flutter/foundation.dart';
+import 'package:tcc_mobile/core/network/api_client.dart';
+import 'package:tcc_mobile/features/auth/data/auth_api.dart';
+import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
 class ContaLocal {
+  final String id;
   final String nome;
   final String email;
-  final String senha;
+  final String? fotoPerfil;
 
   const ContaLocal({
+    required this.id,
     required this.nome,
     required this.email,
-    required this.senha,
+    this.fotoPerfil,
   });
 
-  ContaLocal copyWith({String? nome, String? email, String? senha}) {
+  ContaLocal copyWith({
+    String? id,
+    String? nome,
+    String? email,
+    String? fotoPerfil,
+    bool limparFotoPerfil = false,
+  }) {
     return ContaLocal(
+      id: id ?? this.id,
       nome: nome ?? this.nome,
       email: email ?? this.email,
-      senha: senha ?? this.senha,
+      fotoPerfil: limparFotoPerfil ? null : (fotoPerfil ?? this.fotoPerfil),
     );
   }
 }
 
-/// Autenticação de demonstração local. Não substitui Firebase, Supabase ou API:
-/// as contas ficam apenas na memória do processo e a senha não deve ser usada
-/// assim em produção.
+/// Estado da sessão autenticada no backend Fhive.
+/// O token é mantido em memória; ele não é persistido ao fechar o aplicativo.
 class AuthStore {
   AuthStore._();
 
-  static const String emailDemonstracao = 'teste@fhive.com';
-  static const String senhaDemonstracao = '123456';
-
-  static Map<String, ContaLocal> _contasIniciais() => <String, ContaLocal>{
-    emailDemonstracao: const ContaLocal(
-      nome: 'Usuário Fhive',
-      email: emailDemonstracao,
-      senha: senhaDemonstracao,
-    ),
-  };
-
-  static Map<String, ContaLocal> _contas = _contasIniciais();
   static final ValueNotifier<ContaLocal?> usuarioAtual =
       ValueNotifier<ContaLocal?>(null);
 
   static String normalizarEmail(String email) => email.trim().toLowerCase();
 
-  static String? entrar({required String email, required String senha}) {
+  static Future<String?> entrar({
+    required String email,
+    required String senha,
+  }) async {
     final emailLimpo = normalizarEmail(email);
     if (emailLimpo.isEmpty || senha.isEmpty) {
       return 'Informe seu e-mail e sua senha.';
     }
-    final conta = _contas[emailLimpo];
-    if (conta == null || conta.senha != senha) {
-      return 'E-mail ou senha incorretos.';
+    if (!_emailValido(emailLimpo)) return 'Digite um e-mail válido.';
+
+    // A tela de login representa uma sessão nova; não preserve token antigo em falha.
+    ApiClient.limparToken();
+    usuarioAtual.value = null;
+    try {
+      final resposta = await AuthApi.entrar(email: emailLimpo, senha: senha);
+      final token = resposta['token'];
+      final usuario = _map(resposta['usuario']);
+      if (token is! String || token.isEmpty) {
+        return 'O backend não retornou um token de autenticação.';
+      }
+      ApiClient.definirToken(token);
+      usuarioAtual.value = _conta(usuario);
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
     }
-    usuarioAtual.value = conta;
-    return null;
   }
 
-  /// Retorna null se o cadastro for concluído; caso contrário, retorna o erro.
-  static String? cadastrar({
+  /// Inicia o cadastro; o backend envia um código para o e-mail informado.
+  static Future<String?> iniciarCadastro({
     required String nome,
     required String email,
     required String senha,
-  }) {
+  }) async {
     final nomeLimpo = nome.trim();
     final emailLimpo = normalizarEmail(email);
-    if (nomeLimpo.isEmpty || emailLimpo.isEmpty || senha.isEmpty) {
-      return 'Preencha todos os campos obrigatórios.';
-    }
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(emailLimpo)) {
-      return 'Digite um e-mail válido.';
-    }
-    if (_contas.containsKey(emailLimpo)) {
-      return 'Já existe uma conta cadastrada com esse e-mail.';
-    }
+    if (nomeLimpo.length < 2) return 'Informe um nome válido.';
+    if (!_emailValido(emailLimpo)) return 'Digite um e-mail válido.';
     if (!_senhaForte(senha)) {
-      return 'A senha ainda não atende a todos os requisitos.';
+      return 'A senha precisa ter 8 caracteres, maiúscula, minúscula, número e caractere especial.';
     }
-    _contas[emailLimpo] = ContaLocal(
-      nome: nomeLimpo,
-      email: emailLimpo,
-      senha: senha,
-    );
-    return null;
+    try {
+      await AuthApi.cadastrar(
+        nome: nomeLimpo,
+        email: emailLimpo,
+        senha: senha,
+      );
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
   }
 
-  static bool redefinirSenha({
+  static Future<String?> confirmarCadastro({
     required String email,
-    required String novaSenha,
-  }) {
-    final emailLimpo = normalizarEmail(email);
-    final conta = _contas[emailLimpo];
-    if (conta == null || !_senhaForte(novaSenha)) return false;
-    _contas[emailLimpo] = conta.copyWith(senha: novaSenha);
-    if (usuarioAtual.value?.email == emailLimpo) {
-      usuarioAtual.value = _contas[emailLimpo];
+    required String codigo,
+  }) async {
+    try {
+      await AuthApi.confirmarCadastro(email: email, codigo: codigo);
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
     }
-    return true;
   }
 
-  static bool atualizarNome(String nome) {
-    final atual = usuarioAtual.value;
-    final nomeLimpo = nome.trim();
-    if (atual == null || nomeLimpo.isEmpty) return false;
-    final alterada = atual.copyWith(nome: nomeLimpo);
-    _contas[normalizarEmail(atual.email)] = alterada;
-    usuarioAtual.value = alterada;
-    return true;
+  static Future<String?> solicitarRecuperacao({required String email}) async {
+    final emailLimpo = normalizarEmail(email);
+    if (!_emailValido(emailLimpo)) return 'Digite um e-mail válido.';
+    try {
+      await AuthApi.solicitarRecuperacao(email: emailLimpo);
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
   }
 
-  /// Atualiza nome e e-mail no armazenamento local da demonstração.
-  /// Retorna null em caso de sucesso ou uma mensagem para a interface.
-  static String? atualizarPerfil({
+  static Future<String?> verificarCodigoRecuperacao({
+    required String email,
+    required String codigo,
+  }) async {
+    try {
+      await AuthApi.verificarCodigoRecuperacao(email: email, codigo: codigo);
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
+  }
+
+  static Future<String?> redefinirSenha({
+    required String email,
+    required String codigo,
+    required String novaSenha,
+  }) async {
+    if (!_senhaForte(novaSenha)) {
+      return 'A nova senha precisa ter 8 caracteres, maiúscula, minúscula, número e caractere especial.';
+    }
+    try {
+      await AuthApi.redefinirSenha(
+        email: email,
+        codigo: codigo,
+        novaSenha: novaSenha,
+      );
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
+  }
+
+  static Future<String?> carregarPerfil() async {
+    try {
+      final resposta = await AuthApi.perfil();
+      usuarioAtual.value = _conta(_map(resposta['usuario']));
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
+  }
+
+  static Future<String?> atualizarPerfil({
     required String nome,
     required String email,
-  }) {
-    final atual = usuarioAtual.value;
+    String? fotoPerfil,
+  }) async {
     final nomeLimpo = nome.trim();
     final emailLimpo = normalizarEmail(email);
+    if (nomeLimpo.length < 2) return 'Informe um nome com pelo menos 2 caracteres.';
+    if (!_emailValido(emailLimpo)) return 'Digite um e-mail válido.';
+    if (usuarioAtual.value == null) return 'Entre na sua conta para editar o perfil.';
 
-    if (atual == null) return 'Entre na sua conta para editar o perfil.';
-    if (nomeLimpo.length < 2) {
-      return 'Informe um nome com pelo menos 2 caracteres.';
+    try {
+      final resposta = await AuthApi.atualizarPerfil(
+        nome: nomeLimpo,
+        email: emailLimpo,
+        fotoPerfil: fotoPerfil,
+      );
+      usuarioAtual.value = _conta(_map(resposta['usuario']));
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
     }
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(emailLimpo)) {
-      return 'Digite um e-mail válido.';
-    }
-
-    final emailAnterior = normalizarEmail(atual.email);
-    if (emailLimpo != emailAnterior && _contas.containsKey(emailLimpo)) {
-      return 'Este e-mail já está vinculado a outra conta.';
-    }
-
-    final alterada = atual.copyWith(nome: nomeLimpo, email: emailLimpo);
-    _contas.remove(emailAnterior);
-    _contas[emailLimpo] = alterada;
-    usuarioAtual.value = alterada;
-    return null;
   }
 
-  /// Altera a senha local após validar a senha atual e os requisitos de força.
-  static String? atualizarSenha({
+  static Future<String?> atualizarSenha({
     required String senhaAtual,
     required String novaSenha,
-  }) {
-    final atual = usuarioAtual.value;
-    if (atual == null) return 'Entre na sua conta para alterar a senha.';
-    if (atual.senha != senhaAtual) return 'A senha atual não confere.';
+  }) async {
+    if (usuarioAtual.value == null) return 'Entre na sua conta para alterar a senha.';
     if (senhaAtual == novaSenha) return 'Escolha uma senha diferente da atual.';
     if (!_senhaForte(novaSenha)) {
-      return 'A nova senha precisa ter 6 caracteres, maiúscula, minúscula, número e caractere especial.';
+      return 'A nova senha precisa ter 8 caracteres, maiúscula, minúscula, número e caractere especial.';
     }
-
-    final alterada = atual.copyWith(senha: novaSenha);
-    _contas[normalizarEmail(atual.email)] = alterada;
-    usuarioAtual.value = alterada;
-    return null;
+    try {
+      final atual = usuarioAtual.value!;
+      final resposta = await AuthApi.atualizarPerfil(
+        nome: atual.nome,
+        email: atual.email,
+        senhaAtual: senhaAtual,
+        novaSenha: novaSenha,
+      );
+      usuarioAtual.value = _conta(_map(resposta['usuario']));
+      return null;
+    } catch (error) {
+      return _mensagemErro(error);
+    }
   }
 
-  static void sair() => usuarioAtual.value = null;
-
-  static void apagarTodasContas() {
-    _contas.clear();
+  static void sair() {
+    ApiClient.limparToken();
     usuarioAtual.value = null;
+    // Evita que os dados em memória de uma conta apareçam para outra sessão.
+    AparelhosStore.reset();
+    RotinasStore.reset();
   }
 
-  /// Reinicia o estado para testes sem remover a conta de demonstração.
-  static void resetSessao() => usuarioAtual.value = null;
+  /// Mantido para o botão de sair já existente nas configurações.
+  static void reset() => sair();
 
-  /// Reinicia toda a autenticação local, incluindo as contas criadas na sessão.
-  static void reset() {
-    _contas = _contasIniciais();
-    usuarioAtual.value = null;
-  }
+  static void resetSessao() => sair();
+
+  static bool _emailValido(String email) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
 
   static bool _senhaForte(String senha) {
-    return senha.length >= 6 &&
+    return senha.length >= 8 &&
         RegExp(r'[a-z]').hasMatch(senha) &&
         RegExp(r'[A-Z]').hasMatch(senha) &&
         RegExp(r'\d').hasMatch(senha) &&
         RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha);
+  }
+
+  static ContaLocal _conta(Map<String, dynamic> dados) => ContaLocal(
+    id: '${dados['id'] ?? ''}',
+    nome: '${dados['nome'] ?? ''}',
+    email: '${dados['email'] ?? ''}',
+    fotoPerfil: dados['fotoPerfil'] is String
+        ? dados['fotoPerfil'] as String
+        : null,
+  );
+
+  static Map<String, dynamic> _map(dynamic valor) {
+    if (valor is Map<String, dynamic>) return valor;
+    if (valor is Map) return valor.map((key, value) => MapEntry('$key', value));
+    return <String, dynamic>{};
+  }
+
+  static String _mensagemErro(Object error) {
+    if (error is ApiException) return error.message;
+    return 'Não foi possível concluir a operação. Tente novamente.';
   }
 }

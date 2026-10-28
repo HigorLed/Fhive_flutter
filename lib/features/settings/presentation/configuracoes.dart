@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/core/network/api_client.dart';
+import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/shared/state/preferencias_store.dart';
@@ -20,9 +22,9 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
   bool sincronizarFavoritos = PreferenciasStore.sincronizarFavoritos;
   bool sugestoes = PreferenciasStore.sugestoes;
 
-  static const Color marrom = Color(0xFF4A2100);
-  static const Color marromCard = Color(0xFF663000);
-  static const Color creme = Color(0xFFFFFCEB);
+  static const Color marrom = AppColors.primaryDeep;
+  static const Color marromCard = AppColors.primaryCard;
+  static const Color creme = AppColors.cream;
 
   void mostrarMensagem(String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -30,7 +32,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
         content: Text(
           mensagem,
           style: const TextStyle(
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -52,13 +54,13 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
             style: const TextStyle(
               color: marrom,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
+              fontFamily: AppFonts.body,
             ),
           ),
 
           content: Text(
             texto,
-            style: const TextStyle(color: marrom, fontFamily: 'Montserrat'),
+            style: const TextStyle(color: marrom, fontFamily: AppFonts.body),
           ),
 
           actions: [
@@ -76,18 +78,31 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
     );
   }
 
-  void _mostrarDiagnostico() {
+  Future<void> _mostrarDiagnostico() async {
     final aparelhos = AparelhosStore.aparelhos.value;
     final favoritos = AparelhosStore.favoritosLista.length;
     final rotinas = RotinasStore.rotinas.value;
     final rotinasAtivas = rotinas.where((rotina) => rotina.ativa).length;
+    var estadoApi = 'Não foi possível verificar a API.';
+    try {
+      final resposta = await ApiClient.get('/');
+      final mensagem = resposta is Map ? resposta['mensagem'] : null;
+      estadoApi = mensagem is String && mensagem.trim().isNotEmpty
+          ? 'Conectada — $mensagem'
+          : 'Conectada';
+    } catch (error) {
+      estadoApi = 'Indisponível — $error';
+    }
+    if (!mounted) return;
     final texto =
+        'Estado da API: $estadoApi\n'
         'Aparelhos cadastrados: ${aparelhos.length}\n'
         'Favoritos: $favoritos\n'
         'Rotinas cadastradas: ${rotinas.length}\n'
         'Rotinas ativas: $rotinasAtivas\n\n'
-        'Os dados ficam apenas na memória desta sessão. O diagnóstico não testa '
-        'a conexão física dos aparelhos; isso depende da integração IoT.';
+        'Aparelhos e rotinas são sincronizados com o backend. '
+        'Favoritos e preferências continuam locais. O diagnóstico não testa a '
+        'conexão física dos aparelhos; isso depende do hardware e do MQTT.';
     abrirDialogo(titulo: 'Recursos avançados', texto: texto);
   }
 
@@ -99,10 +114,10 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.button),
 
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal, vertical: 10),
 
         child: Row(
           children: [
@@ -114,9 +129,9 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                   Text(
                     titulo,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontSize: 15,
-                      fontFamily: 'Montserrat',
+                      fontFamily: AppFonts.body,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -130,7 +145,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                         color: Colors.white70,
                         fontSize: 11,
                         height: 1.2,
-                        fontFamily: 'Montserrat',
+                        fontFamily: AppFonts.body,
                       ),
                     ),
                   ],
@@ -155,7 +170,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
 
       decoration: BoxDecoration(
         color: marromCard,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadius.largeCard),
       ),
 
       child: Column(children: children),
@@ -201,9 +216,9 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                             child: Text(
                               'Configurações do Fhive',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.white,
                                 fontSize: 17,
-                                fontFamily: 'Montserrat',
+                                fontFamily: AppFonts.body,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -215,7 +230,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                             tooltip: 'Criar aparelho',
                             icon: const Icon(
                               Icons.add,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 29,
                             ),
                           ),
@@ -240,7 +255,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                           separador(),
                           itemMenu(
                             titulo: 'Entrar',
-                            subtitulo: 'Acesse uma conta local já cadastrada',
+                            subtitulo: 'Entre com sua conta Fhive cadastrada no backend',
                             onTap: () =>
                                 Navigator.pushNamed(context, '/entrar'),
                           ),
@@ -302,8 +317,8 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                               });
                               mostrarMensagem(
                                 sincronizarFavoritos
-                                    ? 'Sincronização marcada como ativa localmente; sincronização em nuvem exige backend.'
-                                    : 'Sincronização em nuvem desativada nesta sessão.',
+                                    ? 'Ainda não existe endpoint de favoritos; esta opção só altera a preferência local.'
+                                    : 'A sincronização de favoritos está desativada nesta sessão.',
                               );
                             },
 
@@ -318,8 +333,8 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                                 });
                                 mostrarMensagem(
                                   valor
-                                      ? 'Sincronização marcada como ativa localmente; sincronização em nuvem exige backend.'
-                                      : 'Sincronização em nuvem desativada nesta sessão.',
+                                      ? 'Ainda não existe endpoint de favoritos; esta opção só altera a preferência local.'
+                                      : 'A sincronização de favoritos está desativada nesta sessão.',
                                 );
                               },
                             ),
@@ -402,9 +417,9 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                         child: Text(
                           'Privacidade',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontSize: 13,
-                            fontFamily: 'Montserrat',
+                            fontFamily: AppFonts.body,
                           ),
                         ),
                       ),
@@ -419,11 +434,8 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                               abrirDialogo(
                                 titulo: 'Aviso de privacidade',
                                 texto:
-                                    'Este protótipo não envia informações para um servidor. '
-                                    'Perfil, aparelhos, favoritos, rotinas e preferências ficam '
-                                    'na memória do aplicativo e são perdidos quando o processo '
-                                    'é encerrado. Este aviso descreve o protótipo e não substitui '
-                                    'uma política de privacidade de produção.',
+                                    'O app envia ao backend os dados necessários para autenticação, perfil, aparelhos, rotinas e telemetria disponível. Favoritos, atalhos e preferências permanecem locais. '
+                                    'Use apenas uma instância de backend confiável e uma conexão HTTPS em produção. Este aviso não substitui uma política de privacidade formal.',
                               );
                             },
                           ),
@@ -439,9 +451,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                               abrirDialogo(
                                 titulo: 'Consentimento',
                                 texto:
-                                    'A coleta remota de dados não está habilitada nesta versão. '
-                                    'As opções desta tela alteram somente preferências locais; '
-                                    'nenhum consentimento é enviado a um servidor.',
+                                    'As opções desta tela alteram preferências locais e ainda não enviam consentimento ao backend. A API consulta apenas os dados necessários às funções conectadas.',
                               );
                             },
                           ),
@@ -479,8 +489,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                             titulo: 'Sair do Fhive',
 
                             subtitulo:
-                                'Apaga todos os seus dados do Fhive e exclui o serviço '
-                                'Fhive da sua conta',
+                                'Encerra a sessão neste dispositivo; não exclui sua conta no servidor',
 
                             onTap: () {
                               showDialog(
@@ -499,7 +508,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                                     ),
 
                                     content: const Text(
-                                      'Isso descarta os dados locais desta demonstração e retorna ao estado inicial do Fhive. Deseja continuar?',
+                                      'Isso encerra sua sessão e limpa do aplicativo o cache de aparelhos e rotinas. Sua conta e seus dados salvos no backend não serão excluídos. Deseja continuar?',
                                       style: TextStyle(color: marrom),
                                     ),
 

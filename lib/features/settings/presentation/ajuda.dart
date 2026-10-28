@@ -15,11 +15,11 @@ class TelaAjuda extends StatelessWidget {
     ),
     (
       'Como criar uma rotina?',
-      'Abra Rotinas, escolha Adicionar rotina, informe um nome e salve. Use o botão de reprodução para registrar a execução da rotina na demonstração.',
+      'Abra Rotinas, escolha Adicionar rotina, selecione o aparelho e o horário e salve. A rotina é persistida no backend. A API atual ainda não executa comandos físicos; o botão informa essa limitação.',
     ),
     (
       'Por que alguns dados são demonstrativos?',
-      'O aplicativo ainda precisa de uma API, banco de dados e integração com os dispositivos físicos para obter telemetria e enviar comandos reais.',
+      'A autenticação, o perfil, os aparelhos e as rotinas usam o backend. As métricas sem telemetria MQTT real continuam demonstrativas, e os comandos físicos dos aparelhos ainda não estão conectados a uma API de controle.',
     ),
   ];
 
@@ -41,7 +41,7 @@ class TelaAjuda extends StatelessWidget {
               'Como podemos ajudar?',
               style: TextStyle(
                 color: AppColors.primary,
-                fontFamily: 'Arvo',
+                fontFamily: AppFonts.title,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),

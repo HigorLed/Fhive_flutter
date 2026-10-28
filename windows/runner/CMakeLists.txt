@@ -1,4 +1,16 @@
 cmake_minimum_required(VERSION 3.14)
+
+# Fallback para projetos em que a função padrão não veio do CMakeLists.txt raiz.
+if(NOT COMMAND apply_standard_settings)
+  function(apply_standard_settings TARGET)
+    target_compile_features(${TARGET} PUBLIC cxx_std_17)
+    if(MSVC)
+      target_compile_options(${TARGET} PRIVATE /W4 /WX /wd"4100" /EHsc)
+    endif()
+    target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
+    target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
+  endfunction()
+endif()
 project(runner LANGUAGES CXX)
 
 # Define the application target. To change its name, change BINARY_NAME in the

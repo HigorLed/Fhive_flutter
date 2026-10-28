@@ -24,7 +24,7 @@ class TelaInicial extends StatelessWidget {
                     _BotaoPrincipal(
                       texto: 'Entrar',
                       fundo: AppColors.primary,
-                      textoCor: Colors.white,
+                      textoCor: AppColors.white,
                       onPressed: () => Navigator.pushNamed(context, '/entrar'),
                     ),
                     const SizedBox(height: 14),
@@ -70,7 +70,7 @@ class _LogoFhive extends StatelessWidget {
           'Fhive',
           style: TextStyle(
             color: AppColors.primary,
-            fontFamily: 'Arvo',
+            fontFamily: AppFonts.title,
             fontSize: 42,
             fontWeight: FontWeight.w800,
             height: 1,
@@ -108,13 +108,13 @@ class _BotaoPrincipal extends StatelessWidget {
           shadowColor: Colors.black26,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppRadius.largeCard),
           ),
         ),
         child: Text(
           texto,
           style: const TextStyle(
-            fontFamily: 'Montserrat',
+            fontFamily: AppFonts.body,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),

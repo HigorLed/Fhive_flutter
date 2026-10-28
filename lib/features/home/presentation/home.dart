@@ -53,7 +53,7 @@ class _TelaHomeState extends State<TelaHome> {
       context: context,
       backgroundColor: AppColors.surfaceLight,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
       ),
       builder: (context) {
         return Padding(
@@ -183,6 +183,7 @@ class _TelaHomeState extends State<TelaHome> {
         builder: (_) => TelaDetalhesAparelho(
           nome: aparelho.nome,
           id: aparelho.id,
+          backendId: aparelho.backendId,
           tipo: aparelho.tipo,
           fabricante: aparelho.fabricante,
           modelo: aparelho.modelo,
@@ -276,7 +277,7 @@ class _TelaHomeState extends State<TelaHome> {
                             color: marrom,
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
-                            fontFamily: 'Arvo',
+                            fontFamily: AppFonts.title,
                           ),
                         ),
 
@@ -374,7 +375,7 @@ class _TelaHomeState extends State<TelaHome> {
                             color: marrom,
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
-                            fontFamily: 'Arvo',
+                            fontFamily: AppFonts.title,
                           ),
                         ),
 
@@ -411,7 +412,7 @@ class _TelaHomeState extends State<TelaHome> {
                                           color: marrom,
                                           fontSize: 20,
                                           fontWeight: FontWeight.w700,
-                                          fontFamily: 'Arvo',
+                                          fontFamily: AppFonts.title,
                                         ),
                                       ),
                                     ],
@@ -443,6 +444,7 @@ class _TelaHomeState extends State<TelaHome> {
                                                   TelaDetalhesAparelho(
                                                     nome: aparelho.nome,
                                                     id: aparelho.id,
+                                                    backendId: aparelho.backendId,
                                                     tipo: aparelho.tipo,
                                                     fabricante:
                                                         aparelho.fabricante,
@@ -485,7 +487,7 @@ class _TelaHomeState extends State<TelaHome> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.button),
 
       child: Container(
         height: 55,
@@ -494,7 +496,7 @@ class _TelaHomeState extends State<TelaHome> {
 
         decoration: BoxDecoration(
           color: AppColors.surfaceSoft,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.button),
         ),
 
         child: Row(
@@ -591,7 +593,7 @@ class _TelaHomeState extends State<TelaHome> {
                         color: marrom,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        fontFamily: 'Arvo',
+                        fontFamily: AppFonts.title,
                       ),
                     ),
                     SizedBox(height: 3),

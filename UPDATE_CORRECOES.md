@@ -196,3 +196,24 @@ As telas detalhadas usam o nome personalizado do aparelho no cabeçalho e possue
 ### Correção complementar da barra de navegação do Android — 14/10/2026
 
 A faixa inferior do Android não acompanhava a barra interna em algumas telas secundárias, pois o fundo era desenhado anteriormente apenas por `NavegacaoPorDeslize`. Para tornar o comportamento global, foi criado `lib/shared/widgets/fundo_navegacao_sistema.dart` e conectado ao `MaterialApp.builder` em `lib/main.dart`. Assim, a mesma cor creme e o estilo de ícones escuros são aplicados também aos detalhes dos gráficos dos aparelhos e à tela de controle dos aparelhos. O teste visual no celular ainda é necessário; esta sessão não dispõe do SDK Flutter para confirmar compilação e execução.
+
+
+## Integração com backend Fhive — 28/10/2026
+
+- Substituída a autenticação demonstrativa pela autenticação da API: cadastro com confirmação por e-mail, login JWT, perfil, alteração de senha e recuperação por código.
+- Adicionado cliente HTTP central em `lib/core/network/api_client.dart`, com URL configurável por `FHIVE_API_BASE_URL`, cabeçalho Bearer, timeout e mensagens de falha.
+- Dispositivos e rotinas agora são carregados do backend; criação/exclusão de aparelhos e operações de rotina usam os endpoints REST existentes. As listas começam vazias e não inserem aparelhos ou rotinas fictícios.
+- O app consulta telemetria pelo ID interno MongoDB e diferencia leituras reais de valores demonstrativos.
+- Acrescentada a camada de serviço de equipes, pronta para uso quando houver interface correspondente.
+- O token e os caches de conta são limpos ao sair. Favoritos, atalhos e preferências continuam locais.
+- Padronizada a senha forte nos fluxos de cadastro, alteração e recuperação: mínimo de 8 caracteres, maiúscula, minúscula, número e símbolo, validado tanto no mobile como nos controllers do backend.
+- Limitações assumidas: ainda não há API para enviar comandos físicos aos aparelhos ou executar rotinas sob demanda; a integração MQTT de comando deverá ser definida no backend. Cadastro/recuperação exigem SMTP válido.
+- O backend recebeu os campos de local/fabricante/modelo/conexão nos dispositivos, o endpoint autenticado para exclusão e documentação de configuração em `.env.example` e `README.md`.
+- A camada Flutter ainda precisa ser validada no ambiente de desenvolvimento com `dart format lib test`, `flutter analyze` e `flutter test`; essas ferramentas não estavam disponíveis durante a edição.
+
+## Correção da configuração Windows/CMake e análise Dart
+- Adicionada uma definição alternativa protegida de `apply_standard_settings` nos CMakeLists do runner e da camada Flutter, para evitar o erro `Unknown CMake command` quando a configuração de plataforma está inconsistente.
+- Removidos qualificadores `this.` desnecessários e adicionado `@override` no método `build` da tela de detalhes dos gráficos.
+- Removida constante de cor não utilizada, atualizados parâmetros de campos suspensos para `initialValue` e adicionadas verificações `mounted` após operações assíncronas na tela de conta.
+- Aplicada a sintaxe de elementos de mapa null-aware do Dart 3.8+ nos serviços de autenticação e equipes.
+- A compilação Windows ainda deve ser confirmada localmente com `flutter run -d windows`, pois o ambiente de edição não possui a toolchain Flutter/Visual Studio para validar esse alvo.

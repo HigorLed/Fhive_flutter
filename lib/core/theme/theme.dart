@@ -32,6 +32,30 @@ class AppColors {
   static const Color danger = Color(0xFFE10D00);
 
   static const Color white = Colors.white;
+
+  /// Amarelo vivo usado em detalhes e seleções das telas de autenticação.
+  static const Color highlight = Color(0xFFFFF261);
+
+  /// Trilha/barra neutra dos gráficos e indicadores.
+  static const Color track = Color(0xFFE8DDB8);
+
+  /// Superfície quente usada nos gráficos e seletores.
+  static const Color surfaceWarm = Color(0xFFFFE8B0);
+
+  /// Marrom escuro da tela de configurações.
+  static const Color primaryDeep = Color(0xFF4A2100);
+
+  /// Marrom dos cartões da tela de configurações.
+  static const Color primaryCard = Color(0xFF663000);
+
+  /// Creme claro usado nos controles da tela de configurações.
+  static const Color cream = Color(0xFFFFFCEB);
+}
+
+class AppFonts {
+  static const String title = 'Arvo';
+
+  static const String body = 'Montserrat';
 }
 
 class AppGradients {
@@ -80,26 +104,26 @@ class AppTextStyles {
   static const TextStyle pageTitle = TextStyle(
     color: AppColors.primary,
     fontSize: 24,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontWeight: FontWeight.w800,
   );
 
   static const TextStyle sectionTitle = TextStyle(
     color: AppColors.primary,
     fontSize: 19,
-    fontFamily: 'Arvo',
+    fontFamily: AppFonts.title,
     fontWeight: FontWeight.w800,
   );
 
   static const TextStyle body = TextStyle(
     color: AppColors.primary,
-    fontFamily: 'Montserrat',
+    fontFamily: AppFonts.body,
     fontSize: 14,
   );
 
   static const TextStyle bodyBold = TextStyle(
     color: AppColors.primary,
-    fontFamily: 'Montserrat',
+    fontFamily: AppFonts.body,
     fontSize: 14,
     fontWeight: FontWeight.w700,
   );
@@ -159,17 +183,17 @@ class AppTheme {
 
       textTheme: base.textTheme.copyWith(
         bodyLarge: base.textTheme.bodyLarge?.copyWith(
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           color: AppColors.primary,
         ),
 
         bodyMedium: base.textTheme.bodyMedium?.copyWith(
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           color: AppColors.primary,
         ),
 
         bodySmall: base.textTheme.bodySmall?.copyWith(
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           color: AppColors.primary,
         ),
 
@@ -210,13 +234,13 @@ class AppTheme {
         ),
         titleTextStyle: const TextStyle(
           color: AppColors.primary,
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           fontSize: 20,
           fontWeight: FontWeight.w800,
         ),
         contentTextStyle: const TextStyle(
           color: AppColors.primary,
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           fontSize: 14,
           height: 1.4,
         ),
@@ -228,7 +252,7 @@ class AppTheme {
 
         contentTextStyle: TextStyle(
           color: Colors.white,
-          fontFamily: 'Montserrat',
+          fontFamily: AppFonts.body,
           fontWeight: FontWeight.w600,
         ),
 

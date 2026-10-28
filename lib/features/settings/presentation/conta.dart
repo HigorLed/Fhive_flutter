@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
@@ -30,7 +32,19 @@ class _TelaContaState extends State<TelaConta> {
       _nomeController.text = conta?.nome ?? '';
       _emailController.text = conta?.email ?? '';
       _inicializado = true;
+      unawaited(_carregarPerfilRemoto());
     }
+  }
+
+  Future<void> _carregarPerfilRemoto() async {
+    final erro = await AuthStore.carregarPerfil();
+    if (!mounted || erro != null) return;
+    final conta = AuthStore.usuarioAtual.value;
+    if (conta == null) return;
+    setState(() {
+      _nomeController.text = conta.nome;
+      _emailController.text = conta.email;
+    });
   }
 
   @override
@@ -54,14 +68,15 @@ class _TelaContaState extends State<TelaConta> {
       );
   }
 
-  void _salvarPerfil() {
+  Future<void> _salvarPerfil() async {
     FocusScope.of(context).unfocus();
     if (!(_formPerfilKey.currentState?.validate() ?? false)) return;
 
-    final resultado = AuthStore.atualizarPerfil(
+    final resultado = await AuthStore.atualizarPerfil(
       nome: _nomeController.text,
       email: _emailController.text,
     );
+    if (!mounted) return;
     if (resultado != null) {
       _mensagem(resultado, erro: true);
       return;
@@ -73,17 +88,18 @@ class _TelaContaState extends State<TelaConta> {
     _mensagem('Perfil atualizado com sucesso.');
   }
 
-  void _alterarSenha() {
+  Future<void> _alterarSenha() async {
     FocusScope.of(context).unfocus();
     if (!(_formSegurancaKey.currentState?.validate() ?? false)) return;
     if (_novaSenhaController.text != _confirmarSenhaController.text) {
       _mensagem('A confirmação não corresponde à nova senha.', erro: true);
       return;
     }
-    final resultado = AuthStore.atualizarSenha(
+    final resultado = await AuthStore.atualizarSenha(
       senhaAtual: _senhaAtualController.text,
       novaSenha: _novaSenhaController.text,
     );
+    if (!mounted) return;
     if (resultado != null) {
       _mensagem(resultado, erro: true);
       return;
@@ -93,7 +109,7 @@ class _TelaContaState extends State<TelaConta> {
     _confirmarSenhaController.clear();
     _formSegurancaKey.currentState?.reset();
     FocusScope.of(context).unfocus();
-    _mensagem('Senha alterada com sucesso nesta sessão.');
+    _mensagem('Senha alterada com sucesso no backend.');
   }
 
   String _iniciais(String nome) {
@@ -146,7 +162,7 @@ class _TelaContaState extends State<TelaConta> {
                     _cartaoSeguranca(conta),
                     const SizedBox(height: 14),
                     const Text(
-                      'As alterações são mantidas na sessão de demonstração. Para persistir os dados entre acessos, conecte o app a uma API ou banco de dados.',
+                      'Os dados do perfil são salvos no backend Fhive. A sessão é encerrada ao sair do aplicativo; autenticação biométrica e armazenamento local seguro ainda não estão integrados.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.primaryDark,
@@ -189,7 +205,7 @@ class _TelaContaState extends State<TelaConta> {
               _iniciais(nome),
               style: const TextStyle(
                 color: AppColors.primary,
-                fontFamily: 'Arvo',
+                fontFamily: AppFonts.title,
                 fontSize: 27,
                 fontWeight: FontWeight.w900,
               ),
@@ -201,7 +217,7 @@ class _TelaContaState extends State<TelaConta> {
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.primary,
-              fontFamily: 'Arvo',
+              fontFamily: AppFonts.title,
               fontSize: 21,
               fontWeight: FontWeight.w900,
             ),
@@ -301,13 +317,13 @@ class _TelaContaState extends State<TelaConta> {
                 label: const Text('Salvar alterações'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   disabledBackgroundColor: AppColors.primary.withValues(
                     alpha: 0.25,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
                   ),
                 ),
               ),
@@ -408,12 +424,12 @@ class _TelaContaState extends State<TelaConta> {
                     ),
                     validator: (valor) {
                       final senha = valor ?? '';
-                      if (senha.length < 6 ||
+                      if (senha.length < 8 ||
                           !RegExp(r'[a-z]').hasMatch(senha) ||
                           !RegExp(r'[A-Z]').hasMatch(senha) ||
                           !RegExp(r'\d').hasMatch(senha) ||
                           !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
-                        return 'Use 6+ caracteres, maiúscula, minúscula, número e símbolo.';
+                        return 'Use 8+ caracteres, maiúscula, minúscula, número e símbolo.';
                       }
                       if (senha == _senhaAtualController.text) {
                         return 'Escolha uma senha diferente da atual.';
@@ -457,7 +473,7 @@ class _TelaContaState extends State<TelaConta> {
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Use pelo menos 6 caracteres, uma maiúscula, uma minúscula, um número e um caractere especial.',
+                'Use pelo menos 8 caracteres, uma maiúscula, uma minúscula, um número e um caractere especial.',
                 style: TextStyle(
                   color: AppColors.primaryDark,
                   fontSize: 11,
@@ -477,7 +493,7 @@ class _TelaContaState extends State<TelaConta> {
                   side: const BorderSide(color: AppColors.primary, width: 1.2),
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
                   ),
                 ),
               ),

@@ -101,14 +101,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           icon: const Icon(Icons.more_vert, color: marrom, size: 26),
           onSelected: (valor) {
             if (valor == 'atualizar') {
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${RotinasStore.rotinas.value.length} rotinas disponíveis.',
-                  ),
-                ),
-              );
+              _carregarRotinas();
             }
 
             if (valor == 'ajuda') {
@@ -323,7 +316,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
                 ),
                 child: const Icon(
                   Icons.play_arrow,
-                  color: Colors.white,
+                  color: AppColors.white,
                   size: 15,
                 ),
               ),
@@ -337,7 +330,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
             icon: const Icon(Icons.more_vert, color: marrom, size: 17),
             onSelected: (acao) {
               if (acao == 'alternar') {
-                RotinasStore.alternar(rotina.id);
+                _alternarRotina(rotina);
               } else if (acao == 'remover') {
                 _confirmarRemocaoRotina(rotina);
               }
@@ -379,7 +372,16 @@ class _TelaRotinasState extends State<TelaRotinas> {
       ),
     );
     if (!mounted || confirmar != true) return;
-    RotinasStore.remover(rotina.id);
+    try {
+      await RotinasStore.removerDoBackend(rotina.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rotina "${rotina.nome}" removida.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) _mensagemRotina(error.toString());
+    }
   }
 
   // ============================================================
@@ -395,7 +397,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             color: creme,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -445,57 +447,137 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
 
   void _adicionarRotina() {
+    final dispositivos = AparelhosStore.aparelhos.value;
+    if (dispositivos.isEmpty) {
+      _mensagemRotina('Cadastre um aparelho antes de criar uma rotina.');
+      return;
+    }
+
     final controller = TextEditingController();
+    var dispositivoSelecionado = dispositivos.first.id;
+    var horarioSelecionado = '07:00';
+    var salvando = false;
+
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(
-          'Adicionar rotina',
-          style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(hintText: 'Nome da rotina'),
-          onSubmitted: (_) => _salvarNovaRotina(dialogContext, controller),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar', style: TextStyle(color: marrom)),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text(
+            'Adicionar rotina',
+            style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
           ),
-          TextButton(
-            onPressed: () => _salvarNovaRotina(dialogContext, controller),
-            child: const Text('Adicionar', style: TextStyle(color: marrom)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(hintText: 'Nome da rotina'),
+                ),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  initialValue: dispositivoSelecionado,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Aparelho'),
+                  items: dispositivos.map((dispositivo) => DropdownMenuItem<String>(
+                    value: dispositivo.id,
+                    child: Text(dispositivo.nome, overflow: TextOverflow.ellipsis),
+                  )).toList(),
+                  onChanged: salvando ? null : (valor) {
+                    if (valor != null) setDialogState(() => dispositivoSelecionado = valor);
+                  },
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: salvando ? null : () async {
+                    final horario = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(
+                        hour: int.parse(horarioSelecionado.split(':')[0]),
+                        minute: int.parse(horarioSelecionado.split(':')[1]),
+                      ),
+                    );
+                    if (horario != null) {
+                      setDialogState(() => horarioSelecionado =
+                          '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}');
+                    }
+                  },
+                  icon: const Icon(Icons.schedule),
+                  label: Text('Horário inicial: $horarioSelecionado'),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'A rotina será salva no backend para todos os dias da semana, com uma ação inicial de ligar o aparelho. A execução física depende do executor de rotinas, ainda não exposto pela API.',
+                  style: TextStyle(fontSize: 12, color: marrom),
+                ),
+              ],
+            ),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: salvando ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar', style: TextStyle(color: marrom)),
+            ),
+            ElevatedButton(
+              onPressed: salvando ? null : () async {
+                final nome = controller.text.trim();
+                if (nome.isEmpty) {
+                  _mensagemRotina('Digite um nome para a rotina.');
+                  return;
+                }
+                final dispositivo = dispositivos.firstWhere(
+                  (item) => item.id == dispositivoSelecionado,
+                );
+                setDialogState(() => salvando = true);
+                try {
+                  await RotinasStore.adicionarNoBackend(
+                    nome: nome,
+                    dispositivoId: dispositivo.id,
+                    nomeDispositivo: dispositivo.nome,
+                    local: dispositivo.local,
+                    horario: horarioSelecionado,
+                  );
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (mounted) _mensagemRotina('Rotina "$nome" salva no backend.');
+                } catch (error) {
+                  if (dialogContext.mounted) setDialogState(() => salvando = false);
+                  if (mounted) _mensagemRotina(error.toString());
+                }
+              },
+              child: Text(salvando ? 'Salvando...' : 'Adicionar'),
+            ),
+          ],
+        ),
       ),
     ).then((_) => controller.dispose());
   }
 
-  void _salvarNovaRotina(
-    BuildContext dialogContext,
-    TextEditingController controller,
-  ) {
-    final nome = controller.text.trim();
-    if (nome.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Digite um nome para a rotina.')),
-      );
-      return;
+  Future<void> _alternarRotina(RotinaItem rotina) async {
+    try {
+      await RotinasStore.alternarNoBackend(rotina.id);
+    } catch (error) {
+      if (mounted) _mensagemRotina(error.toString());
     }
-    final rotina = RotinasStore.adicionar(
-      nome: nome,
-      local: localSelecionado,
-      horario: 'Sem horário',
-      acoes: const <String>[],
-    );
-    if (rotina == null) return;
-    Navigator.pop(dialogContext);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Rotina "$nome" adicionada.')));
+  }
+
+  Future<void> _carregarRotinas() async {
+    try {
+      await RotinasStore.carregarDoBackend();
+      if (mounted) {
+        _mensagemRotina('${RotinasStore.rotinas.value.length} rotinas sincronizadas.');
+      }
+    } catch (error) {
+      if (mounted) _mensagemRotina(error.toString());
+    }
+  }
+
+  void _mensagemRotina(String mensagem) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   // ============================================================
@@ -506,19 +588,11 @@ class _TelaRotinasState extends State<TelaRotinas> {
     final rotina = RotinasStore.porId(id);
     if (rotina == null) return;
     if (!rotina.ativa) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ative esta rotina antes de executá-la.')),
-      );
+      _mensagemRotina('Ative esta rotina antes de executá-la.');
       return;
     }
-    RotinasStore.executar(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Execução de "${rotina.nome}" registrada (simulação local).',
-        ),
-        duration: const Duration(seconds: 2),
-      ),
+    _mensagemRotina(
+      'A rotina está salva no backend, mas a API ainda não disponibiliza a execução física dos comandos.',
     );
   }
 

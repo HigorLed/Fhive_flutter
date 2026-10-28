@@ -98,7 +98,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                                   color: marrom,
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
-                                  fontFamily: 'Arvo',
+                                  fontFamily: AppFonts.title,
                                 ),
                               ),
                             ),
@@ -166,19 +166,6 @@ class _TelaGraficosState extends State<TelaGraficos> {
                           _resumoDoLocal(),
                           const SizedBox(height: 12),
                           _cartoesGraficosDisponiveis(context),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: Text(
-                              'Os indicadores exibidos são demonstrativos até a integração com os aparelhos IoT.',
-                              style: TextStyle(
-                                color: marrom.withValues(alpha: 0.76),
-                                fontSize: 10.5,
-                                height: 1.35,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
                           const SizedBox(height: 28),
                           Row(
                             children: [
@@ -458,6 +445,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           nomePersonalizado: aparelho.nome,
           local: aparelho.local,
           status: aparelho.status,
+          deviceBackendId: aparelho.backendId,
         ),
       ),
     );
@@ -471,7 +459,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
           color: Color(0xFFFFF4B2),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
         ),
         child: SafeArea(
           child: Column(
@@ -522,7 +510,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
       height: mostrarMiniGrafico ? 142 : 110,
       decoration: BoxDecoration(
         color: fundoCard,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadius.largeCard),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -612,7 +600,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           decoration: const BoxDecoration(
             color: Color(0xFFFFF4B2),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -630,7 +618,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                   ),
                   onTap: () {
                     Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(this.context).showSnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
                           'Os gráficos usam dados demonstrativos. A atualização em tempo real depende da integração IoT.',
@@ -654,7 +642,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                   onTap: () {
                     Navigator.pop(sheetContext);
                     showDialog(
-                      context: this.context,
+                      context: context,
                       builder: (dialogContext) {
                         return AlertDialog(
                           title: const Text(
@@ -701,6 +689,7 @@ class TelaGraficosDetalhes extends StatefulWidget {
   final String? nomePersonalizado;
   final String local;
   final String status;
+  final String? deviceBackendId;
 
   const TelaGraficosDetalhes({
     super.key,
@@ -708,6 +697,7 @@ class TelaGraficosDetalhes extends StatefulWidget {
     this.nomePersonalizado,
     this.local = 'Sala de Estar',
     this.status = 'Online',
+    this.deviceBackendId,
   });
 
   @override
@@ -772,6 +762,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
     return <String>['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -834,7 +825,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                                           color: marrom,
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
-                                          fontFamily: 'Arvo',
+                                          fontFamily: AppFonts.title,
                                         ),
                                       ),
                                     ),
@@ -864,8 +855,8 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                               vertical: 7,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.60),
-                              borderRadius: BorderRadius.circular(22),
+                              color: AppColors.white.withValues(alpha: 0.60),
+                              borderRadius: BorderRadius.circular(AppRadius.largeCard),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -918,7 +909,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                           color: marrom,
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          fontFamily: 'Arvo',
+                          fontFamily: AppFonts.title,
                         ),
                       ),
 
@@ -1032,7 +1023,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 Text(
                   '$pontos',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 27,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1066,7 +1057,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   ),
                   decoration: BoxDecoration(
                     color: marrom.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                   child: Text(
                     avaliacao,
@@ -1302,7 +1293,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   });
                 },
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadius.button),
                 ),
                 itemBuilder: (context) {
                   return const [
@@ -1691,6 +1682,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           nomeAparelho: nomeAparelho,
           local: widget.local,
           indicador: indicador,
+          deviceBackendId: widget.deviceBackendId,
         ),
       ),
     );

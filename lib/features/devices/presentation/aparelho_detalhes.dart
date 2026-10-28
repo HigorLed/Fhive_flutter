@@ -7,6 +7,7 @@ import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 class TelaDetalhesAparelho extends StatefulWidget {
   final String nome;
   final String id;
+  final String backendId;
   final String tipo;
   final String fabricante;
   final String modelo;
@@ -19,6 +20,7 @@ class TelaDetalhesAparelho extends StatefulWidget {
     super.key,
     this.nome = 'Ar condicionado',
     this.id = 'FH-AC-SALA-001',
+    this.backendId = '',
     this.tipo = 'Ar condicionado',
     this.fabricante = 'Não informado',
     this.modelo = 'Não informado',
@@ -250,7 +252,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               end: Alignment.bottomRight,
               colors: [Color(0xFFFFF3A0), Color(0xFFFFE05C)],
             ),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppRadius.largeCard),
             border: Border.all(color: marrom.withValues(alpha: 0.09)),
           ),
           child: Column(
@@ -331,7 +333,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                       onPressed: () => setState(() => ligado = !ligado),
                       icon: Icon(
                         ligado ? Icons.power_settings_new_rounded : Icons.power_settings_new,
-                        color: Colors.white,
+                        color: AppColors.white,
                         size: 29,
                       ),
                     ),
@@ -347,10 +349,10 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                   label: Text(ligado ? 'Desligar TV' : 'Ligar TV'),
                   style: FilledButton.styleFrom(
                     backgroundColor: marrom,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
                   ),
                 ),
@@ -535,9 +537,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                   width: (MediaQuery.sizeOf(context).width - 84) / 2,
                   child: Material(
                     color: amareloCard,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                       onTap: () => _executarAtalhoTV(atalho.comando),
                       onLongPress: () => _removerAtalhoTV(atalho.id),
                       child: Padding(
@@ -602,7 +604,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: comandoSelecionado,
+                initialValue: comandoSelecionado,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Comando'),
                 items: comandos.keys.map((comando) => DropdownMenuItem<String>(
@@ -1207,7 +1209,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               child: Center(
                 child: Icon(
                   item.$3,
-                  color: ehAdicionar ? marrom : Colors.white,
+                  color: ehAdicionar ? marrom : AppColors.white,
                   size: ehAdicionar ? 31 : 27,
                 ),
               ),
@@ -1224,7 +1226,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: amareloCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         children: [
@@ -1497,6 +1499,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           nomePersonalizado: widget.nome,
           local: widget.local,
           status: widget.status,
+          deviceBackendId: widget.backendId,
         ),
       ),
     );
@@ -1552,11 +1555,12 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       ),
     );
     if (!mounted || confirmar != true) return;
-    if (AparelhosStore.removerPorId(widget.id)) {
-      Navigator.pop(context);
-      return;
+    try {
+      await AparelhosStore.removerDoBackend(widget.id);
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) _mensagem(error.toString());
     }
-    _mensagem('Este aparelho não está cadastrado na lista.');
   }
 
   void _mensagem(String mensagem) {

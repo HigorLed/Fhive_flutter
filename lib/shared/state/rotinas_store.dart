@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:tcc_mobile/features/routines/data/rotinas_api.dart';
 
 class RotinaItem {
+  /// ID do registro no backend (MongoDB).
   final String id;
   final String nome;
   final String local;
@@ -8,6 +10,8 @@ class RotinaItem {
   final List<String> acoes;
   final bool ativa;
   final DateTime? ultimaExecucao;
+  final String dispositivoId;
+  final String nomeDispositivo;
 
   const RotinaItem({
     required this.id,
@@ -17,6 +21,8 @@ class RotinaItem {
     required this.acoes,
     this.ativa = true,
     this.ultimaExecucao,
+    this.dispositivoId = '',
+    this.nomeDispositivo = '',
   });
 
   RotinaItem copyWith({
@@ -27,6 +33,8 @@ class RotinaItem {
     List<String>? acoes,
     bool? ativa,
     DateTime? ultimaExecucao,
+    String? dispositivoId,
+    String? nomeDispositivo,
     bool limparUltimaExecucao = false,
   }) {
     return RotinaItem(
@@ -39,54 +47,20 @@ class RotinaItem {
       ultimaExecucao: limparUltimaExecucao
           ? null
           : (ultimaExecucao ?? this.ultimaExecucao),
+      dispositivoId: dispositivoId ?? this.dispositivoId,
+      nomeDispositivo: nomeDispositivo ?? this.nomeDispositivo,
     );
   }
 }
 
-/// Armazena rotinas do protótipo em memória e oferece operações de CRUD.
+/// Cache de interface das rotinas que foram salvas no backend.
 class RotinasStore {
   RotinasStore._();
 
-  static int _proximoId = 5;
-
-  static List<RotinaItem> _iniciais() => <RotinaItem>[
-    const RotinaItem(
-      id: 'rotina-1',
-      nome: 'Acordar',
-      local: 'Locais',
-      horario: '07:00',
-      acoes: <String>['Ligar TV'],
-    ),
-    const RotinaItem(
-      id: 'rotina-2',
-      nome: 'Ao sair de casa',
-      local: 'Locais',
-      horario: '08:00',
-      acoes: <String>['Desligar aparelhos'],
-    ),
-    const RotinaItem(
-      id: 'rotina-3',
-      nome: 'Dormir',
-      local: 'Locais',
-      horario: '22:00',
-      acoes: <String>['Desligar luzes'],
-    ),
-    const RotinaItem(
-      id: 'rotina-4',
-      nome: 'Economizar energia',
-      local: 'Locais',
-      horario: 'Sem horário',
-      acoes: <String>['Ativar modo econômico'],
-    ),
-  ];
-
   static final ValueNotifier<List<RotinaItem>> rotinas =
-      ValueNotifier<List<RotinaItem>>(_iniciais());
+      ValueNotifier<List<RotinaItem>>(<RotinaItem>[]);
 
-  static void reset() {
-    _proximoId = 5;
-    rotinas.value = _iniciais();
-  }
+  static void reset() => rotinas.value = <RotinaItem>[];
 
   static RotinaItem? porId(String id) {
     for (final rotina in rotinas.value) {
@@ -95,59 +69,105 @@ class RotinasStore {
     return null;
   }
 
-  static RotinaItem? adicionar({
+  static Future<void> carregarDoBackend() async {
+    final dados = await RotinasApi.listar();
+    rotinas.value = dados.map(_doBackend).toList(growable: false);
+  }
+
+  static Future<RotinaItem> adicionarNoBackend({
     required String nome,
+    required String dispositivoId,
+    required String nomeDispositivo,
     required String local,
     required String horario,
-    required List<String> acoes,
-  }) {
-    final nomeLimpo = nome.trim();
-    if (nomeLimpo.isEmpty) return null;
-
-    final rotina = RotinaItem(
-      id: 'rotina-${_proximoId++}',
-      nome: nomeLimpo,
-      local: local.trim().isEmpty ? 'Locais' : local.trim(),
-      horario: horario.trim().isEmpty ? 'Sem horário' : horario.trim(),
-      acoes: List<String>.unmodifiable(
-        acoes.map((acao) => acao.trim()).where((acao) => acao.isNotEmpty),
-      ),
+  }) async {
+    final resposta = await RotinasApi.criar(
+      nome: nome,
+      dispositivoId: dispositivoId,
+      horarioInicial: horario,
+      acoes: <Map<String, dynamic>>[
+        <String, dynamic>{
+          'ordem': 1,
+          'horario': horario,
+          'tipo': 'ligar',
+          'instrucoes': <String, dynamic>{'estado': true},
+        },
+      ],
     );
-    rotinas.value = <RotinaItem>[...rotinas.value, rotina];
-    return rotina;
+    final dados = _map(resposta['rotina'] ?? resposta);
+    final criada = _doBackend(<String, dynamic>{
+      ...dados,
+      'dispositivo': <String, dynamic>{
+        'deviceId': dispositivoId,
+        'nome': nomeDispositivo,
+        'local': local,
+      },
+    });
+    rotinas.value = <RotinaItem>[criada, ...rotinas.value];
+    return criada;
   }
 
-  static bool atualizar(RotinaItem rotina) {
-    final indice = rotinas.value.indexWhere((item) => item.id == rotina.id);
-    if (indice < 0 || rotina.nome.trim().isEmpty) return false;
-    final novas = List<RotinaItem>.from(rotinas.value);
-    novas[indice] = rotina.copyWith(nome: rotina.nome.trim());
-    rotinas.value = novas;
-    return true;
-  }
-
-  static bool alternar(String id) {
+  static Future<void> alternarNoBackend(String id) async {
     final atual = porId(id);
-    if (atual == null) return false;
-    return atualizar(atual.copyWith(ativa: !atual.ativa));
+    if (atual == null) return;
+    final resposta = await RotinasApi.atualizar(id, <String, dynamic>{
+      'ativo': !atual.ativa,
+    });
+    final dados = _map(resposta['rotina'] ?? resposta);
+    final atualizada = atual.copyWith(
+      ativa: dados['ativo'] is bool ? dados['ativo'] as bool : !atual.ativa,
+    );
+    _substituir(atualizada);
   }
 
-  static bool executar(String id) {
-    final atual = porId(id);
-    if (atual == null || !atual.ativa) return false;
-    final dataAtual = DateTime.now();
-    final novas = List<RotinaItem>.from(rotinas.value);
-    final indice = novas.indexWhere((item) => item.id == id);
-    novas[indice] = atual.copyWith(ultimaExecucao: dataAtual);
-    rotinas.value = novas;
-    // Este registro confirma a execução na interface. Executar comandos físicos
-    // exige integração com o serviço/hardware IoT correspondente.
-    return true;
-  }
-
-  static bool remover(String id) {
-    final antes = rotinas.value.length;
+  static Future<void> removerDoBackend(String id) async {
+    await RotinasApi.excluir(id);
     rotinas.value = rotinas.value.where((item) => item.id != id).toList();
-    return rotinas.value.length < antes;
+  }
+
+  /// Execução de ações físicas ainda não existe como endpoint no backend.
+  /// Este método não deve ser usado para afirmar que o aparelho foi acionado.
+  static bool executar(String id) => false;
+
+  static void _substituir(RotinaItem rotina) {
+    final novas = List<RotinaItem>.from(rotinas.value);
+    final indice = novas.indexWhere((item) => item.id == rotina.id);
+    if (indice < 0) return;
+    novas[indice] = rotina;
+    rotinas.value = novas;
+  }
+
+  static RotinaItem _doBackend(Map<String, dynamic> dados) {
+    final dispositivo = _map(dados['dispositivo']);
+    final acoesApi = dados['acoes'] is List ? dados['acoes'] as List : const [];
+    final acoes = acoesApi.map((acao) {
+      if (acao is Map) {
+        final tipo = acao['tipo'];
+        return tipo is String ? tipo : 'Ação';
+      }
+      return 'Ação';
+    }).toList(growable: false);
+    final dias = _map(dados['diasSemana']);
+    final diasAtivos = dias.entries
+        .where((entry) => entry.value == true)
+        .map((entry) => entry.key)
+        .join(', ');
+    final horario = '${dados['horarioInicial'] ?? 'Sem horário'}';
+    return RotinaItem(
+      id: '${dados['id'] ?? ''}',
+      nome: '${dados['nome'] ?? 'Rotina'}',
+      local: '${dispositivo['local'] ?? 'Locais'}',
+      horario: horario,
+      acoes: List<String>.unmodifiable(acoes.isEmpty ? <String>[diasAtivos] : acoes),
+      ativa: dados['ativo'] is bool ? dados['ativo'] as bool : true,
+      dispositivoId: '${dispositivo['deviceId'] ?? dados['dispositivoId'] ?? ''}',
+      nomeDispositivo: '${dispositivo['nome'] ?? ''}',
+    );
+  }
+
+  static Map<String, dynamic> _map(dynamic valor) {
+    if (valor is Map<String, dynamic>) return valor;
+    if (valor is Map) return valor.map((key, value) => MapEntry('$key', value));
+    return <String, dynamic>{};
   }
 }

@@ -74,7 +74,9 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
 
     setState(() {
       _mostrarLocaisDisponiveis = true;
-      _localFiltro = nomeLimpo;
+      // O local recém-criado fica disponível no cadastro, mas só aparecerá
+      // na lista da casa depois que receber um aparelho.
+      _localFiltro = null;
       _locaisAbertos[nomeLimpo] = true;
     });
     _mensagemLocal('Local "$nomeLimpo" criado.');
@@ -235,11 +237,16 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                         ),
                         if (_mostrarLocaisDisponiveis) ...[
                           const SizedBox(height: 12),
-                          ValueListenableBuilder<List<String>>(
-                            valueListenable: AparelhosStore.locais,
-                            builder: (context, locaisRegistrados, _) {
+                          ValueListenableBuilder<List<AparelhoItem>>(
+                            valueListenable: AparelhosStore.aparelhos,
+                            builder: (context, aparelhosAtuais, _) {
                               final locaisDisponiveis =
-                                  AparelhosStore.locaisDisponiveis;
+                                  AparelhosStore.locaisComAparelhos;
+                              final filtroDisponivel = _localFiltro != null &&
+                                  locaisDisponiveis.any(
+                                    (local) => local.toLowerCase() ==
+                                        _localFiltro!.toLowerCase(),
+                                  );
                               return Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(13),
@@ -272,7 +279,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                       children: [
                                         ChoiceChip(
                                           label: const Text('Todos'),
-                                          selected: _localFiltro == null,
+                                          selected: !filtroDisponivel,
                                           onSelected: (_) => setState(
                                             () => _localFiltro = null,
                                           ),
@@ -292,7 +299,9 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                         for (final local in locaisDisponiveis)
                                           ChoiceChip(
                                             label: Text(local),
-                                            selected: _localFiltro == local,
+                                            selected: filtroDisponivel &&
+                                                _localFiltro!.toLowerCase() ==
+                                                    local.toLowerCase(),
                                             onSelected: (_) => setState(() {
                                               _localFiltro = local;
                                               _locaisAbertos[local] = true;
@@ -342,10 +351,21 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                         ValueListenableBuilder<List<AparelhoItem>>(
                           valueListenable: AparelhosStore.aparelhos,
                           builder: (context, aparelhos, _) {
-                            final locais = AparelhosStore.locaisDisponiveis;
-                            final locaisExibidos = _localFiltro == null
+                            final locais = AparelhosStore.locaisComAparelhos;
+                            final filtroDisponivel = _localFiltro != null &&
+                                locais.any(
+                                  (local) => local.toLowerCase() ==
+                                      _localFiltro!.toLowerCase(),
+                                );
+                            final locaisExibidos = filtroDisponivel
                                 ? locais
-                                : <String>[_localFiltro!];
+                                      .where(
+                                        (local) =>
+                                            local.toLowerCase() ==
+                                            _localFiltro!.toLowerCase(),
+                                      )
+                                      .toList()
+                                : locais;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,37 +375,24 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                     local,
                                     aparelhos
                                         .where(
-                                          (aparelho) => aparelho.local.trim().toLowerCase() == local.trim().toLowerCase(),
+                                          (aparelho) =>
+                                              aparelho.local.trim().toLowerCase() ==
+                                              local.trim().toLowerCase(),
                                         )
                                         .length,
                                   ),
                                   if (_locaisAbertos[local] ?? true) ...[
                                     const SizedBox(height: 18),
-                                    if (aparelhos.any(
-                                      (aparelho) => aparelho.local.trim().toLowerCase() == local.trim().toLowerCase(),
-                                    ))
-                                      _gradeAparelhos(
-                                        context,
-                                        aparelhos
-                                            .where(
-                                              (aparelho) =>
-                                                  aparelho.local.trim().toLowerCase() ==
-                                                  local.trim().toLowerCase(),
-                                            )
-                                            .toList(),
-                                      )
-                                    else
-                                      const Padding(
-                                        padding: EdgeInsets.only(bottom: 3),
-                                        child: Text(
-                                          'Nenhum aparelho neste local ainda. Use + para adicionar um dispositivo.',
-                                          style: TextStyle(
-                                            color: TelaAparelhos.marrom,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
+                                    _gradeAparelhos(
+                                      context,
+                                      aparelhos
+                                          .where(
+                                            (aparelho) =>
+                                                aparelho.local.trim().toLowerCase() ==
+                                                local.trim().toLowerCase(),
+                                          )
+                                          .toList(),
+                                    )
                                   ],
                                   const SizedBox(height: 27),
                                 ],
@@ -393,9 +400,9 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Text(
-                                      _localFiltro == null
-                                          ? 'Nenhum aparelho cadastrado.'
-                                          : 'Nenhum aparelho cadastrado neste local.',
+                                      filtroDisponivel
+                                          ? 'Nenhum aparelho cadastrado neste local.'
+                                          : 'Nenhum aparelho cadastrado.',
                                       style: const TextStyle(
                                         color: TelaAparelhos.marrom,
                                         fontSize: 14,
@@ -477,6 +484,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                       builder: (_) => TelaDetalhesAparelho(
                         nome: aparelho.nome,
                         id: aparelho.id,
+                        backendId: aparelho.backendId,
                         tipo: aparelho.tipo,
                         fabricante: aparelho.fabricante,
                         modelo: aparelho.modelo,

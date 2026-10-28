@@ -900,3 +900,27 @@ Se o erro mudar, compartilhe a nova mensagem completa. A alteração corrige a i
 
 ### Validação
 - Foi feita revisão estática dos arquivos modificados e conferência estrutural do conteúdo do pacote. Não foi possível executar `dart format`, `flutter analyze`, `flutter test` nem compilar o aplicativo nesta sessão, pois o SDK Flutter/Dart não está disponível no ambiente. Execute esses comandos localmente para confirmar a compilação e os testes antes de publicar.
+
+## Correção 2026-10-25 — Locais vazios e ícone do aplicativo
+
+- A tela **Aparelhos** agora apresenta apenas cômodos que possuem pelo menos um dispositivo cadastrado.
+- Os filtros de locais também exibem somente cômodos preenchidos por aparelhos e são atualizados quando a lista de dispositivos muda.
+- Criar um local vazio o deixa disponível no formulário de cadastro, sem exibi-lo como cômodo da casa até que um aparelho seja associado a ele.
+- A opção genérica **Outro local** foi removida das sugestões do seletor de cômodo. Continua sendo possível criar um local personalizado.
+- O ícone do Fhive foi simplificado para mostrar somente o contorno marrom de um favo de mel, com fundo transparente e sem o gradiente amarelo ou o símbolo de Wi-Fi.
+- O novo ícone foi aplicado aos recursos de inicialização e ícones do Android, iOS, macOS, Windows e Web, além dos arquivos de imagem usados pelo projeto.
+
+
+
+## Integração com backend Fhive — 28/10/2026
+
+- Substituída a autenticação demonstrativa pela autenticação da API: cadastro com confirmação por e-mail, login JWT, perfil, alteração de senha e recuperação por código.
+- Adicionado cliente HTTP central em `lib/core/network/api_client.dart`, com URL configurável por `FHIVE_API_BASE_URL`, cabeçalho Bearer, timeout e mensagens de falha.
+- Dispositivos e rotinas agora são carregados do backend; criação/exclusão de aparelhos e operações de rotina usam os endpoints REST existentes. As listas começam vazias e não inserem aparelhos ou rotinas fictícios.
+- O app consulta telemetria pelo ID interno MongoDB e diferencia leituras reais de valores demonstrativos.
+- Acrescentada a camada de serviço de equipes, pronta para uso quando houver interface correspondente.
+- O token e os caches de conta são limpos ao sair. Favoritos, atalhos e preferências continuam locais.
+- Padronizada a senha forte nos fluxos de cadastro, alteração e recuperação: mínimo de 8 caracteres, maiúscula, minúscula, número e símbolo, validado tanto no mobile como nos controllers do backend.
+- Limitações assumidas: ainda não há API para enviar comandos físicos aos aparelhos ou executar rotinas sob demanda; a integração MQTT de comando deverá ser definida no backend. Cadastro/recuperação exigem SMTP válido.
+- O backend recebeu os campos de local/fabricante/modelo/conexão nos dispositivos, o endpoint autenticado para exclusão e documentação de configuração em `.env.example` e `README.md`.
+- A camada Flutter ainda precisa ser validada no ambiente de desenvolvimento com `dart format lib test`, `flutter analyze` e `flutter test`; essas ferramentas não estavam disponíveis durante a edição.
