@@ -10,7 +10,9 @@ lib/
 │       └── theme.dart
 ├── shared/
 │   └── widgets/
-│       └── barra_navegacao.dart
+│       ├── barra_navegacao.dart
+│       ├── cabecalho_pagina.dart   (cabeçalho, título de seção, cartão e botão voltar)
+│       └── logo_fhive.dart
 └── features/
     ├── auth/
     │   └── presentation/
@@ -35,6 +37,12 @@ Tela Inicial
 
 A tela inicial é a rota `/inicio`. A Home permanece em `/home`.
 
-## Compatibilidade
+## Design system
 
-A pasta `lib/widget/` permanece como compatibilidade com imports antigos do projeto. As novas telas devem ser criadas dentro de `lib/features/`.
+Todo o visual vem de `core/theme/theme.dart`: `AppColors`, `AppTextStyles`,
+`AppRadius`, `AppSpacing`, `AppShadows` e o `AppTheme` (botões, campos, chips,
+diálogos, AppBar, etc.). As telas **não** devem declarar cores (`Color(0x...)`),
+tamanhos de fonte ou raios fixos; usem os tokens e os widgets de
+`shared/widgets/cabecalho_pagina.dart`.
+
+As novas telas devem ser criadas dentro de `lib/features/`.

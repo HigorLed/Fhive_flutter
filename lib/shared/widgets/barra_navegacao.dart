@@ -99,7 +99,7 @@ class BarraNavegacao extends StatelessWidget {
             // O preenchimento marrom e o ícone branco deixam a aba ativa
             // claramente distinguível do fundo creme da barra.
             color: selecionado ? marrom : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             boxShadow: selecionado
                 ? [
                     BoxShadow(

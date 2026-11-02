@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
-import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/features/analytics/presentation/indicador_grafico_detalhe.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
+import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 
 enum TipoAparelho { tv, arCondicionado }
 
@@ -25,7 +25,6 @@ class _TelaGraficosState extends State<TelaGraficos> {
   static const Color fundoCard = AppColors.surface;
   static const Color fundoCardExterno = AppColors.surfaceStrong;
 
-  bool locaisAbertos = true;
   String localSelecionado = 'Sala de Estar';
 
   @override
@@ -51,160 +50,19 @@ class _TelaGraficosState extends State<TelaGraficos> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ==================================================
-                        // CABEÇALHO
-                        // ==================================================
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Minha casa',
-                                style: AppTextStyles.pageTitle,
-                              ),
-                            ),
-
-                            IconButton(
-                              tooltip: 'Adicionar aparelho',
-                              onPressed: () => mostrarCriarAparelho(context),
-                              icon: const Icon(
-                                Icons.add_rounded,
-                                color: marrom,
-                                size: 28,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'Mais opções',
-                              onPressed: _abrirMenu,
-                              icon: const Icon(
-                                Icons.more_vert_rounded,
-                                color: marrom,
-                                size: 25,
-                              ),
-                            ),
-                          ],
-                        ),
-
+                        const CabecalhoPagina(titulo: 'Minha casa'),
                         const SizedBox(height: AppSpacing.section),
-
-                        // ==================================================
-                        // GRÁFICOS DISPONÍVEIS
-                        // ==================================================
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Gráficos disponíveis',
-                                style: TextStyle(
-                                  color: marrom,
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: AppFonts.title,
-                                ),
-                              ),
-                            ),
-
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  locaisAbertos = !locaisAbertos;
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  const Text(
-                                    'Locais',
-                                    style: TextStyle(
-                                      color: marrom,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Icon(
-                                    locaisAbertos
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    color: marrom,
-                                    size: 22,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        if (locaisAbertos) ...[
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: _selecionarLocal,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 3),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    localSelecionado,
-                                    style: const TextStyle(
-                                      color: marrom,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 3),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: marrom,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          _resumoDoLocal(),
-                          const SizedBox(height: 12),
-                          _cartoesGraficosDisponiveis(context),
-                          const SizedBox(height: 28),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: Text(
-                                  'Gráficos indisponíveis',
-                                  style: TextStyle(
-                                    color: marrom,
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _selecionarLocal,
-                                child: Row(
-                                  children: const [
-                                    Text(
-                                      'Locais',
-                                      style: TextStyle(
-                                        color: marrom,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    SizedBox(width: 3),
-                                    Icon(
-                                      Icons.keyboard_arrow_down,
-                                      color: marrom,
-                                      size: 22,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _cartoesGraficosIndisponiveis(context),
-                        ],
+                        const TituloSecao(titulo: 'Gráficos disponíveis'),
+                        const SizedBox(height: AppSpacing.md),
+                        _seletorLocal(),
+                        const SizedBox(height: AppSpacing.md),
+                        _resumoDoLocal(),
+                        const SizedBox(height: AppSpacing.md),
+                        _cartoesGraficosDisponiveis(context),
+                        const SizedBox(height: AppSpacing.section),
+                        const TituloSecao(titulo: 'Gráficos indisponíveis'),
+                        const SizedBox(height: AppSpacing.md),
+                        _cartoesGraficosIndisponiveis(context),
                       ],
                     ),
                   ),
@@ -234,7 +92,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
           decoration: BoxDecoration(
             color: AppColors.surfaceLight.withValues(alpha: 0.72),
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.button),
             border: Border.all(
               color: AppColors.primary.withValues(alpha: 0.10),
             ),
@@ -246,7 +104,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                 height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
                 child: const Icon(Icons.meeting_room_outlined, color: marrom),
               ),
@@ -259,18 +117,14 @@ class _TelaGraficosState extends State<TelaGraficos> {
                       localSelecionado,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: marrom,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: AppTextStyles.bodyBold,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${doLocal.length} aparelho(s) • $disponiveis com gráficos',
                       style: TextStyle(
                         color: marrom.withValues(alpha: 0.76),
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -286,6 +140,26 @@ class _TelaGraficosState extends State<TelaGraficos> {
           ),
         );
       },
+    );
+  }
+
+  Widget _seletorLocal() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+        onTap: _selecionarLocal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(localSelecionado, style: AppTextStyles.cardTitle),
+              const Icon(Icons.keyboard_arrow_down, size: 22),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -313,7 +187,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: fundoCardExterno,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.card),
             ),
             child: const Text(
               'Nenhum aparelho com gráficos disponíveis neste local.',
@@ -328,7 +202,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: fundoCardExterno,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -380,7 +254,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.surfaceLight.withValues(alpha: 0.58),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.card),
               border: Border.all(
                 color: AppColors.primary.withValues(alpha: 0.08),
               ),
@@ -394,7 +268,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                     'Todos os aparelhos deste local estão representados acima.',
                     style: TextStyle(
                       color: marrom,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       height: 1.3,
                     ),
@@ -458,7 +332,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
       builder: (sheetContext) => Container(
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
-          color: Color(0xFFFFF4B2),
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
         ),
         child: SafeArea(
@@ -470,7 +344,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                 'Selecionar local',
                 style: TextStyle(
                   color: marrom,
-                  fontSize: 18,
+                  fontSize: 19,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -510,7 +384,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
       height: mostrarMiniGrafico ? 142 : 110,
       decoration: BoxDecoration(
         color: fundoCard,
-        borderRadius: BorderRadius.circular(AppRadius.largeCard),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -524,20 +398,12 @@ class _TelaGraficosState extends State<TelaGraficos> {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.cardTitle,
           ),
 
           Text(
             subtitulo,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTextStyles.caption,
           ),
           if (mostrarMiniGrafico && metrica != null) ...[
             const SizedBox(height: 5),
@@ -550,7 +416,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                   metrica,
                   style: const TextStyle(
                     color: marrom,
-                    fontSize: 10.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -586,98 +452,6 @@ class _TelaGraficosState extends State<TelaGraficos> {
       ),
     );
   }
-
-  // ================================================================
-  // MENU
-  // ================================================================
-
-  void _abrirMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFF4B2),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  leading: const Icon(Icons.refresh, color: marrom),
-                  title: const Text(
-                    'Atualizar gráficos',
-                    style: TextStyle(
-                      color: marrom,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Os gráficos usam dados demonstrativos. A atualização em tempo real depende da integração IoT.',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  leading: const Icon(Icons.info_outline, color: marrom),
-                  title: const Text(
-                    'Informações',
-                    style: TextStyle(
-                      color: marrom,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    showDialog(
-                      context: context,
-                      builder: (dialogContext) {
-                        return AlertDialog(
-                          title: const Text(
-                            'Gráficos',
-                            style: TextStyle(
-                              color: marrom,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          content: const Text(
-                            'Nesta tela você poderá acompanhar os dados dos aparelhos conectados.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(dialogContext);
-                              },
-                              child: const Text(
-                                'Fechar',
-                                style: TextStyle(color: marrom),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ================================================================
@@ -706,10 +480,10 @@ class TelaGraficosDetalhes extends StatefulWidget {
 
 class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   static const Color marrom = AppColors.primary;
-  static const Color laranja = Color(0xFFC46B00);
-  static const Color textoSecundario = Color(0xFF81500F);
-  static const Color amareloClaro = Color(0xFFFFF1A3);
-  static const Color amareloCard = Color(0xFFFFE48A);
+  static const Color laranja = AppColors.warning;
+  static const Color textoSecundario = AppColors.primaryDark;
+  static const Color amareloClaro = AppColors.surface;
+  static const Color amareloCard = AppColors.surfaceStrong;
 
   String periodoSelecionado = '7 dias';
 
@@ -783,24 +557,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       // ==================================================
                       Row(
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: amareloClaro.withValues(alpha: 0.80),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back,
-                                color: marrom,
-                                size: 25,
-                              ),
-                            ),
-                          ),
+                          const BotaoVoltar(),
 
                           const SizedBox(width: 12),
 
@@ -823,7 +580,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                                         nomeAparelho,
                                         style: const TextStyle(
                                           color: marrom,
-                                          fontSize: 22,
+                                          fontSize: 24,
                                           fontWeight: FontWeight.w800,
                                           fontFamily: AppFonts.title,
                                         ),
@@ -838,7 +595,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                                   '${widget.local} • Visão geral do aparelho',
                                   style: const TextStyle(
                                     color: textoSecundario,
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -856,7 +613,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.white.withValues(alpha: 0.60),
-                              borderRadius: BorderRadius.circular(AppRadius.largeCard),
+                              borderRadius: BorderRadius.circular(AppRadius.card),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -866,19 +623,15 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                                   height: 8,
                                   decoration: BoxDecoration(
                                     color: estaOnline
-                                        ? const Color(0xFF438A37)
-                                        : const Color(0xFFB16B13),
+                                        ? AppColors.success
+                                        : AppColors.warning,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
                                   estaOnline ? 'Online' : 'Offline',
-                                  style: const TextStyle(
-                                    color: marrom,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                                  style: AppTextStyles.caption,
                                 ),
                               ],
                             ),
@@ -907,7 +660,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                         'Seu consumo',
                         style: TextStyle(
                           color: marrom,
-                          fontSize: 20,
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                           fontFamily: AppFonts.title,
                         ),
@@ -997,11 +750,11 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
       height: 150,
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE27A),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surfaceStrong,
+        borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33000000),
+            color: Colors.black12,
             offset: Offset(0, 4),
             blurRadius: 6,
           ),
@@ -1024,7 +777,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   '$pontos',
                   style: const TextStyle(
                     color: AppColors.white,
-                    fontSize: 27,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1043,7 +796,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   'Pontos de gestão',
                   style: TextStyle(
                     color: marrom,
-                    fontSize: 18,
+                    fontSize: 19,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -1061,11 +814,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   ),
                   child: Text(
                     avaliacao,
-                    style: const TextStyle(
-                      color: marrom,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: AppTextStyles.caption,
                   ),
                 ),
 
@@ -1077,7 +826,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       : 'Resultado baseado no consumo, horas de uso e eficiência do aparelho.',
                   style: const TextStyle(
                     color: laranja,
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     height: 1.15,
                   ),
@@ -1107,11 +856,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
               SizedBox(width: 5),
               Text(
                 'Energia',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.cardTitle,
               ),
             ],
           ),
@@ -1133,7 +878,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
             'consumo de energia',
             style: TextStyle(
               color: textoSecundario,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1146,7 +891,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF63A33B),
+                  color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1155,11 +900,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
               const Text(
                 'Dentro do esperado',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.caption,
               ),
             ],
           ),
@@ -1187,11 +928,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
               Text(
                 'Uso',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.cardTitle,
               ),
             ],
           ),
@@ -1213,7 +950,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
             'tempo de utilização',
             style: TextStyle(
               color: textoSecundario,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1232,11 +969,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
               Text(
                 isTv ? 'Uso estável' : 'Uso elevado',
-                style: const TextStyle(
-                  color: marrom,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.caption,
               ),
             ],
           ),
@@ -1256,10 +989,10 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 11),
       decoration: BoxDecoration(
         color: amareloCard,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33000000),
+            color: Colors.black12,
             offset: Offset(0, 3),
             blurRadius: 4,
           ),
@@ -1276,11 +1009,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
               const Expanded(
                 child: Text(
                   'Uso ao longo do tempo',
-                  style: TextStyle(
-                    color: marrom,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: AppTextStyles.cardTitle,
                 ),
               ),
 
@@ -1338,17 +1067,13 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   ),
                   decoration: BoxDecoration(
                     color: amareloClaro,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.chip),
                   ),
                   child: Row(
                     children: [
                       Text(
                         periodoSelecionado,
-                        style: const TextStyle(
-                          color: marrom,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: AppTextStyles.caption,
                       ),
 
                       const SizedBox(width: 4),
@@ -1406,7 +1131,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: textoSecundario,
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1434,7 +1159,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
             isTv ? 'Recomendações' : 'Temperatura',
             style: const TextStyle(
               color: marrom,
-              fontSize: 18,
+              fontSize: 19,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1468,7 +1193,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
               terceiraValor,
               style: const TextStyle(
                 color: laranja,
-                fontSize: 34,
+                fontSize: 32,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -1479,7 +1204,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
               'temperatura atual',
               style: TextStyle(
                 color: textoSecundario,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1531,7 +1256,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: laranja,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1561,11 +1286,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
 
               Text(
                 'Eficiência',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.cardTitle,
               ),
             ],
           ),
@@ -1582,7 +1303,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: amareloClaro,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
               ),
 
@@ -1592,7 +1313,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                   height: 21,
                   decoration: BoxDecoration(
                     color: marrom,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                 ),
               ),
@@ -1616,7 +1337,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
             'aproveitamento',
             style: TextStyle(
               color: textoSecundario,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1629,7 +1350,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 : 'Há espaço para reduzir o consumo.',
             style: const TextStyle(
               color: marrom,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               height: 1.25,
             ),
@@ -1650,19 +1371,19 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   }) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(19),
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         child: Container(
           height: height,
           padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
             color: amareloCard,
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33000000),
+                color: Colors.black12,
                 offset: Offset(0, 3),
                 blurRadius: 4,
               ),

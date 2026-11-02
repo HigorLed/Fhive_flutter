@@ -26,63 +26,48 @@ class TelaAjuda extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ajuda'),
-        backgroundColor: AppColors.surfaceLight,
-        foregroundColor: AppColors.primary,
-      ),
+      appBar: AppBar(title: const Text('Ajuda')),
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(gradient: AppGradients.main),
         child: ListView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
           children: [
             const Text(
               'Como podemos ajudar?',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontFamily: AppFonts.title,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
+              style: AppTextStyles.sectionTitle,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             const Text(
               'Encontre orientações sobre as principais funções do Fhive.',
-              style: TextStyle(color: AppColors.primaryDark),
+              style: AppTextStyles.body,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: AppSpacing.section),
             for (final duvida in _duvidas)
-              Card(
-                color: AppColors.surfaceLight.withValues(alpha: 0.94),
-                elevation: 0,
-                margin: const EdgeInsets.only(bottom: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: ExpansionTile(
-                  iconColor: AppColors.primary,
-                  collapsedIconColor: AppColors.primary,
-                  title: Text(
-                    duvida.$1,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w800,
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Material(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  clipBehavior: Clip.antiAlias,
+                  child: ExpansionTile(
+                    title: Text(duvida.$1, style: AppTextStyles.bodyBold),
+                    childrenPadding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      0,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
                     ),
-                  ),
-                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        duvida.$2,
-                        style: const TextStyle(
-                          color: AppColors.primaryDark,
-                          height: 1.4,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          duvida.$2,
+                          style: AppTextStyles.body.copyWith(height: 1.4),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
           ],

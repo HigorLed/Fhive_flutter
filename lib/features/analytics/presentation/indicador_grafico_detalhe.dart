@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/features/devices/data/dispositivos_api.dart';
 
 enum TipoIndicadorGrafico {
@@ -42,8 +43,8 @@ class _TelaIndicadorGraficoDetalheState
   static const Color creme = AppColors.surfaceLight;
   static const Color amarelo = AppColors.accent;
   static const Color amareloSuave = AppColors.surface;
-  static const Color laranja = Color(0xFFC46B00);
-  static const Color textoSuave = Color(0xFF81500F);
+  static const Color laranja = AppColors.warning;
+  static const Color textoSuave = AppColors.primaryDark;
 
   String periodoEnergia = 'Mensal';
   String periodoHistorico = 'Semanal';
@@ -131,7 +132,7 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: amareloSuave.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.button),
         border: Border.all(color: marrom.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -139,7 +140,7 @@ class _TelaIndicadorGraficoDetalheState
         children: [
           Icon(_carregandoTelemetria ? Icons.sync : Icons.sensors_outlined, color: marrom, size: 19),
           const SizedBox(width: 8),
-          Expanded(child: Text(texto, style: const TextStyle(color: marrom, fontSize: 11.5, height: 1.35))),
+          Expanded(child: Text(texto, style: const TextStyle(color: marrom, fontSize: 12, height: 1.35))),
           if (widget.deviceBackendId != null && widget.deviceBackendId!.isNotEmpty)
             IconButton(
               tooltip: 'Atualizar leituras',
@@ -179,63 +180,33 @@ class _TelaIndicadorGraficoDetalheState
 
   Widget _cabecalhoSuperior() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.pageHorizontal,
+        0,
+      ),
+      child: Row(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-            decoration: BoxDecoration(
-              color: marrom,
-              borderRadius: BorderRadius.circular(AppRadius.largeCard),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x22000000),
-                  offset: Offset(0, 2),
-                  blurRadius: 4,
+          const BotaoVoltar(),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _tituloPagina(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.sectionTitle,
+                ),
+                Text(
+                  '${widget.local} • ${widget.nomeAparelho} • $nomeIndicador',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption,
                 ),
               ],
             ),
-            child: Text(
-              '${widget.local} • ${widget.nomeAparelho} | $nomeIndicador',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              IconButton(
-                tooltip: 'Voltar',
-                onPressed: () => Navigator.of(context).pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: marrom,
-                  size: 29,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  _tituloPagina(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontFamily: AppFonts.title,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 38),
-            ],
           ),
         ],
       ),
@@ -286,7 +257,7 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
           decoration: BoxDecoration(
             color: creme.withValues(alpha: 0.78),
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Row(
             children: [
@@ -320,7 +291,7 @@ class _TelaIndicadorGraficoDetalheState
                                   '${_numero(energia)} kWh',
                                   style: const TextStyle(
                                     color: laranja,
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -335,7 +306,7 @@ class _TelaIndicadorGraficoDetalheState
                       'Consumo de hoje',
                       style: TextStyle(
                         color: textoSuave,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -351,7 +322,7 @@ class _TelaIndicadorGraficoDetalheState
                       icone: Icons.eco_rounded,
                       titulo: 'Energia',
                       valor: widget.isTv ? 'Economizada' : 'Consumo',
-                      cor: const Color(0xFF4E8129),
+                      cor: AppColors.success,
                     ),
                     const SizedBox(height: 8),
                     _seloInformacao(
@@ -372,7 +343,7 @@ class _TelaIndicadorGraficoDetalheState
           textAlign: TextAlign.center,
           style: TextStyle(
             color: marrom,
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -387,7 +358,7 @@ class _TelaIndicadorGraficoDetalheState
         ),
         const SizedBox(height: 5),
         ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           child: Stack(
             children: [
               Container(height: 18, color: AppColors.track),
@@ -397,7 +368,7 @@ class _TelaIndicadorGraficoDetalheState
                   height: 18,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF9C9D),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                 ),
               ),
@@ -411,7 +382,7 @@ class _TelaIndicadorGraficoDetalheState
               '0 kWh',
               style: TextStyle(
                 color: textoSuave,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -419,7 +390,7 @@ class _TelaIndicadorGraficoDetalheState
               '${_numero(limiteDiario)} kWh',
               style: const TextStyle(
                 color: textoSuave,
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -511,8 +482,8 @@ class _TelaIndicadorGraficoDetalheState
       height: 166,
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF3D2100),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.primaryDark,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         children: [
@@ -523,7 +494,7 @@ class _TelaIndicadorGraficoDetalheState
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                   onTap: () => setState(() => periodoEnergia = opcao),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -532,9 +503,9 @@ class _TelaIndicadorGraficoDetalheState
                     ),
                     decoration: BoxDecoration(
                       color: ativo
-                          ? const Color(0xFF71420D)
+                          ? AppColors.primaryDark
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
                     ),
                     child: Text(
                       opcao,
@@ -554,7 +525,7 @@ class _TelaIndicadorGraficoDetalheState
             child: CustomPaint(
               painter: LinhaHistoricoPainter(
                 valores: valores,
-                corLinha: const Color(0xFFFFE1A1),
+                corLinha: AppColors.surfaceWarm,
               ),
               child: const SizedBox.expand(),
             ),
@@ -568,7 +539,7 @@ class _TelaIndicadorGraficoDetalheState
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.surfaceWarm,
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -621,18 +592,14 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           decoration: BoxDecoration(
             color: creme.withValues(alpha: 0.78),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(color: marrom.withValues(alpha: 0.13)),
           ),
           child: Column(
             children: [
               const Text(
                 'Total de Horas',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTextStyles.cardTitle,
               ),
               const SizedBox(height: 3),
               Text(
@@ -651,7 +618,7 @@ class _TelaIndicadorGraficoDetalheState
                 ),
                 decoration: BoxDecoration(
                   color: marrom,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -670,7 +637,7 @@ class _TelaIndicadorGraficoDetalheState
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: AppColors.white,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -706,11 +673,7 @@ class _TelaIndicadorGraficoDetalheState
         Text(
           titulo,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: marrom,
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-          ),
+          style: AppTextStyles.cardTitle,
         ),
         const SizedBox(height: 5),
         ClipRRect(
@@ -759,7 +722,7 @@ class _TelaIndicadorGraficoDetalheState
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: marrom,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.card),
               ),
               child: Text(
                 '${horasPeriodo}h',
@@ -784,7 +747,7 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: amareloSuave,
-            borderRadius: BorderRadius.circular(AppRadius.largeCard),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Column(
             children: [
@@ -809,7 +772,7 @@ class _TelaIndicadorGraficoDetalheState
                           '$pontuacao',
                           style: const TextStyle(
                             color: marrom,
-                            fontSize: 42,
+                            fontSize: 40,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -817,7 +780,7 @@ class _TelaIndicadorGraficoDetalheState
                           'de 100 pontos',
                           style: TextStyle(
                             color: textoSuave,
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -832,7 +795,7 @@ class _TelaIndicadorGraficoDetalheState
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
-                  fontSize: 20,
+                  fontSize: 19,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -894,8 +857,8 @@ class _TelaIndicadorGraficoDetalheState
           height: 300,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF3D2100),
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Column(
             children: [
@@ -915,7 +878,7 @@ class _TelaIndicadorGraficoDetalheState
                             ),
                             decoration: BoxDecoration(
                               color: periodoHistorico == opcao
-                                  ? const Color(0xFF71420D)
+                                  ? AppColors.primaryDark
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(AppRadius.button),
                             ),
@@ -925,7 +888,7 @@ class _TelaIndicadorGraficoDetalheState
                                 color: periodoHistorico == opcao
                                     ? AppColors.white
                                     : AppColors.surfaceWarm,
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -940,7 +903,7 @@ class _TelaIndicadorGraficoDetalheState
                 child: CustomPaint(
                   painter: LinhaHistoricoPainter(
                     valores: valores,
-                    corLinha: const Color(0xFFFFE1A1),
+                    corLinha: AppColors.surfaceWarm,
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -1040,7 +1003,7 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: amareloSuave,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Row(
             children: [
@@ -1066,11 +1029,7 @@ class _TelaIndicadorGraficoDetalheState
                       widget.isTv
                           ? 'Seu aparelho está estável'
                           : 'Temperatura atual',
-                      style: const TextStyle(
-                        color: marrom,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: AppTextStyles.cardTitle,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1079,7 +1038,7 @@ class _TelaIndicadorGraficoDetalheState
                           : temperatura,
                       style: const TextStyle(
                         color: laranja,
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1095,7 +1054,7 @@ class _TelaIndicadorGraficoDetalheState
           style: TextStyle(
             color: marrom,
             fontFamily: AppFonts.title,
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -1107,7 +1066,7 @@ class _TelaIndicadorGraficoDetalheState
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: creme.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(17),
+                borderRadius: BorderRadius.circular(AppRadius.card),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1128,11 +1087,7 @@ class _TelaIndicadorGraficoDetalheState
                       children: [
                         Text(
                           item.$2,
-                          style: const TextStyle(
-                            color: marrom,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: AppTextStyles.bodyBold,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -1169,7 +1124,7 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: amareloSuave,
-            borderRadius: BorderRadius.circular(21),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Column(
             children: [
@@ -1194,7 +1149,7 @@ class _TelaIndicadorGraficoDetalheState
                           '$eficiencia%',
                           style: const TextStyle(
                             color: marrom,
-                            fontSize: 38,
+                            fontSize: 40,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -1217,7 +1172,7 @@ class _TelaIndicadorGraficoDetalheState
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
-                  fontSize: 20,
+                  fontSize: 19,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1283,18 +1238,14 @@ class _TelaIndicadorGraficoDetalheState
               Expanded(
                 child: Text(
                   titulo,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: AppTextStyles.caption,
                 ),
               ),
               Text(
                 status,
                 style: const TextStyle(
                   color: laranja,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1302,7 +1253,7 @@ class _TelaIndicadorGraficoDetalheState
           ),
           const SizedBox(height: 7),
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.chip),
             child: LinearProgressIndicator(
               value: progresso.clamp(0.0, 1.0).toDouble(),
               minHeight: 9,
@@ -1323,7 +1274,7 @@ class _TelaIndicadorGraficoDetalheState
           height: 38,
           decoration: BoxDecoration(
             color: amarelo.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(AppRadius.button),
           ),
           child: Icon(icone, color: marrom, size: 22),
         ),
@@ -1334,16 +1285,12 @@ class _TelaIndicadorGraficoDetalheState
             children: [
               Text(
                 titulo,
-                style: const TextStyle(
-                  color: marrom,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: AppTextStyles.caption,
               ),
               const SizedBox(height: 3),
               Text(
                 subtitulo,
-                style: const TextStyle(color: textoSuave, fontSize: 11),
+                style: const TextStyle(color: textoSuave, fontSize: 12),
               ),
             ],
           ),
@@ -1357,18 +1304,14 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             titulo,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
+            style: AppTextStyles.cardTitle,
           ),
           const SizedBox(height: 14),
           child,
@@ -1382,7 +1325,7 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Row(
         children: [
@@ -1402,11 +1345,7 @@ class _TelaIndicadorGraficoDetalheState
                 ),
                 Text(
                   valor,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: AppTextStyles.cardTitle,
                 ),
               ],
             ),
@@ -1425,7 +1364,7 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: marrom.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -1439,18 +1378,14 @@ class _TelaIndicadorGraficoDetalheState
               children: [
                 Text(
                   titulo,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: AppTextStyles.bodyBold,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   texto,
                   style: const TextStyle(
                     color: textoSuave,
-                    fontSize: 11,
+                    fontSize: 12,
                     height: 1.35,
                   ),
                 ),
@@ -1480,7 +1415,7 @@ class _TelaIndicadorGraficoDetalheState
           texto,
           style: const TextStyle(
             color: marrom,
-            fontSize: 9,
+            fontSize: 10,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -1505,7 +1440,7 @@ class MedidorSemicircularPainter extends CustomPainter {
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round;
     final frente = Paint()
-      ..color = const Color(0xFFD9CDA8)
+      ..color = AppColors.track
       ..style = PaintingStyle.stroke
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round;
@@ -1576,7 +1511,7 @@ class LinhaHistoricoPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(caminho, tintaLinha);
 
-    final tintaPontos = Paint()..color = const Color(0xFFFFF8DF);
+    final tintaPontos = Paint()..color = AppColors.surfaceLight;
     for (final ponto in pontos) {
       canvas.drawCircle(ponto, 2.6, tintaPontos);
     }

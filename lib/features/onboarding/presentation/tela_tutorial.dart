@@ -212,7 +212,7 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
                     style: const TextStyle(
                       color: AppColors.white,
-                      fontSize: 25,
+                      fontSize: 24,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -248,7 +248,7 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(AppRadius.card),
           ),
         ),
 
@@ -286,7 +286,7 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(17),
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
 
       child: Icon(icone, color: AppColors.primary, size: 28),
@@ -311,7 +311,7 @@ class _TelaTutorialState extends State<TelaTutorial> {
                 ? AppColors.accent
                 : AppColors.white.withValues(alpha: 0.30),
 
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.chip),
           ),
         );
       }),

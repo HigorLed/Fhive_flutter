@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
-import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
+import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 
@@ -15,10 +15,8 @@ class TelaRotinas extends StatefulWidget {
 
 class _TelaRotinasState extends State<TelaRotinas> {
   static const Color marrom = AppColors.primary;
-  static const Color creme = AppColors.surface;
 
   String localSelecionado = 'Locais';
-  bool salaAberta = true;
 
   @override
   Widget build(BuildContext context) {
@@ -43,22 +41,24 @@ class _TelaRotinasState extends State<TelaRotinas> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _cabecalho(),
-
-                        const SizedBox(height: 18),
-
-                        _linhaRotinas(),
-
-                        const SizedBox(height: 14),
-
+                        CabecalhoPagina(
+                          titulo: 'Minha casa',
+                          acoes: [
+                            AcaoCabecalho(
+                              icone: Icons.refresh,
+                              tooltip: 'Atualizar rotinas',
+                              onPressed: _carregarRotinas,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.section),
+                        TituloSecao(
+                          titulo: 'Rotinas',
+                          trailing: _seletorLocal(),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         _botaoAdicionarRotina(),
-
-                        const SizedBox(height: 12),
-
-                        _tituloSala(),
-
-                        const SizedBox(height: 10),
-
+                        const SizedBox(height: AppSpacing.cardGap),
                         _listaRotinas(),
                       ],
                     ),
@@ -75,157 +75,33 @@ class _TelaRotinasState extends State<TelaRotinas> {
   }
 
   // ============================================================
-  // CABEÇALHO
+  // SELETOR DE LOCAL E ADICIONAR ROTINA
   // ============================================================
 
-  Widget _cabecalho() {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text('Minha casa', style: AppTextStyles.pageTitle),
-        ),
-
-        IconButton(
-          onPressed: () {
-            mostrarCriarAparelho(context);
-          },
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          icon: const Icon(Icons.add, color: marrom, size: 30),
-        ),
-
-        const SizedBox(width: 12),
-
-        PopupMenuButton<String>(
-          padding: EdgeInsets.zero,
-          icon: const Icon(Icons.more_vert, color: marrom, size: 26),
-          onSelected: (valor) {
-            if (valor == 'atualizar') {
-              _carregarRotinas();
-            }
-
-            if (valor == 'ajuda') {
-              _mostrarAjuda();
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(value: 'atualizar', child: Text('Atualizar')),
-            PopupMenuItem(value: 'ajuda', child: Text('Ajuda')),
+  Widget _seletorLocal() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.chip),
+      onTap: _selecionarLocal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(localSelecionado, style: AppTextStyles.bodyBold),
+            const Icon(Icons.keyboard_arrow_down, size: 22),
           ],
         ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // ROTINAS / LOCAIS
-  // ============================================================
-
-  Widget _linhaRotinas() {
-    return Row(
-      children: [
-        const Expanded(
-          child: Row(
-            children: [
-              Icon(Icons.search, color: marrom, size: 20),
-              SizedBox(width: 5),
-              Text(
-                'Rotinas',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        GestureDetector(
-          onTap: _selecionarLocal,
-          child: Row(
-            children: [
-              Text(
-                localSelecionado,
-                style: const TextStyle(
-                  color: marrom,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 3),
-              const Icon(Icons.keyboard_arrow_down, color: marrom, size: 19),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // ADICIONAR ROTINA
-  // ============================================================
-
-  Widget _botaoAdicionarRotina() {
-    return GestureDetector(
-      onTap: _adicionarRotina,
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              border: Border.all(color: marrom, width: 1.5),
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: const Icon(Icons.add, color: marrom, size: 17),
-          ),
-
-          const SizedBox(width: 7),
-
-          const Text(
-            'Adicionar rotina',
-            style: TextStyle(
-              color: marrom,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  // ============================================================
-  // TÍTULO SALA
-  // ============================================================
-
-  Widget _tituloSala() {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          salaAberta = !salaAberta;
-        });
-      },
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Sala de Estar',
-              style: TextStyle(
-                color: marrom,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-
-          Icon(
-            salaAberta ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            color: marrom,
-            size: 20,
-          ),
-        ],
+  Widget _botaoAdicionarRotina() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _adicionarRotina,
+        icon: const Icon(Icons.add),
+        label: const Text('Adicionar rotina'),
       ),
     );
   }
@@ -235,8 +111,6 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
 
   Widget _listaRotinas() {
-    if (!salaAberta) return const SizedBox();
-
     return ValueListenableBuilder<List<RotinaItem>>(
       valueListenable: RotinasStore.rotinas,
       builder: (context, rotinas, _) {
@@ -251,11 +125,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
               'Nenhuma rotina cadastrada para este local.',
-              style: TextStyle(
-                color: marrom,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.caption,
             ),
           );
         }
@@ -284,8 +154,10 @@ class _TelaRotinasState extends State<TelaRotinas> {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
       decoration: BoxDecoration(
-        color: rotina.ativa ? creme : creme.withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(11),
+        color: rotina.ativa
+            ? AppColors.surfaceLight
+            : AppColors.surfaceLight.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -389,34 +261,26 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
 
   void _selecionarLocal() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: creme,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Selecionar local',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Selecionar local',
+                  style: AppTextStyles.sectionTitle,
                 ),
-              ),
-
-              const SizedBox(height: 10),
-
-              _opcaoLocal('Locais'),
-              for (final local in AparelhosStore.locaisDisponiveis)
-                _opcaoLocal(local),
-            ],
+                const SizedBox(height: AppSpacing.sm),
+                _opcaoLocal('Locais'),
+                for (final local in AparelhosStore.locaisDisponiveis)
+                  _opcaoLocal(local),
+              ],
+            ),
           ),
         );
       },
@@ -427,10 +291,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
     return Material(
       color: Colors.transparent,
       child: ListTile(
-        title: Text(
-          nome,
-          style: const TextStyle(color: marrom, fontWeight: FontWeight.w600),
-        ),
+        title: Text(nome, style: AppTextStyles.bodyBold),
         onTap: () {
           setState(() {
             localSelecionado = nome;
@@ -462,10 +323,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text(
-            'Adicionar rotina',
-            style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-          ),
+          title: const Text('Adicionar rotina'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -519,7 +377,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
           actions: [
             TextButton(
               onPressed: salvando ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar', style: TextStyle(color: marrom)),
+              child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: salvando ? null : () async {
@@ -593,36 +451,6 @@ class _TelaRotinasState extends State<TelaRotinas> {
     }
     _mensagemRotina(
       'A rotina está salva no backend, mas a API ainda não disponibiliza a execução física dos comandos.',
-    );
-  }
-
-  // ============================================================
-  // AJUDA
-  // ============================================================
-
-  void _mostrarAjuda() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            'Rotinas',
-            style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'As rotinas permitem executar várias ações '
-            'dos seus dispositivos de uma só vez.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Fechar', style: TextStyle(color: marrom)),
-            ),
-          ],
-        );
-      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
@@ -30,14 +31,35 @@ class TelaDetalhesAparelho extends StatefulWidget {
     this.icone = Icons.air,
   });
 
+  /// Abre os detalhes/controles de um aparelho cadastrado.
+  static Future<void> abrir(BuildContext context, AparelhoItem aparelho) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TelaDetalhesAparelho(
+          nome: aparelho.nome,
+          id: aparelho.id,
+          backendId: aparelho.backendId,
+          tipo: aparelho.tipo,
+          fabricante: aparelho.fabricante,
+          modelo: aparelho.modelo,
+          local: aparelho.local,
+          conexao: aparelho.conexao,
+          status: aparelho.status,
+          icone: aparelho.icone,
+        ),
+      ),
+    );
+  }
+
   @override
   State<TelaDetalhesAparelho> createState() => _TelaDetalhesAparelhoState();
 }
 
 class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   static const Color marrom = AppColors.primary;
-  static const Color amareloCard = Color(0xFFFFF49F);
-  static const Color amareloBotao = Color(0xFFFFEF73);
+  static const Color amareloCard = AppColors.surface;
+  static const Color amareloBotao = AppColors.surfaceStrong;
 
   bool ligado = false;
   bool modoSono = false;
@@ -54,7 +76,6 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
 
   double temperatura = 22;
   double volume = 35;
-  double brilho = 70;
   double brilhoLampada = 76;
   double temperaturaCor = 50;
 
@@ -94,8 +115,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBCB),
-        borderRadius: BorderRadius.circular(29),
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,13 +135,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Padding(
-            padding: EdgeInsets.all(2),
-            child: Icon(Icons.arrow_back_ios_new, color: marrom, size: 20),
-          ),
-        ),
+        const BotaoVoltar(),
         const SizedBox(width: 9),
         Expanded(
           child: Column(
@@ -143,7 +158,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: marrom.withValues(alpha: 0.72),
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -250,9 +265,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFFFF3A0), Color(0xFFFFE05C)],
+              colors: [AppColors.surface, AppColors.surfaceStrong],
             ),
-            borderRadius: BorderRadius.circular(AppRadius.largeCard),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(color: marrom.withValues(alpha: 0.09)),
           ),
           child: Column(
@@ -264,7 +279,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                     height: 58,
                     decoration: BoxDecoration(
                       color: AppColors.surfaceLight.withValues(alpha: 0.78),
-                      borderRadius: BorderRadius.circular(17),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                     ),
                     child: const Icon(Icons.tv_rounded, color: marrom, size: 35),
                   ),
@@ -277,11 +292,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                           widget.nome,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: marrom,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: AppTextStyles.cardTitle,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -297,9 +308,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
                             color: ligado
-                                ? const Color(0xFFD8F0C1)
+                                ? AppColors.successSoft
                                 : AppColors.surfaceLight.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppRadius.card),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -307,14 +318,14 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                               Icon(
                                 ligado ? Icons.check_circle : Icons.power_settings_new,
                                 size: 13,
-                                color: ligado ? const Color(0xFF3B7629) : marrom,
+                                color: ligado ? AppColors.success : marrom,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 ligado ? 'Ligada' : 'Desligada',
                                 style: const TextStyle(
                                   color: marrom,
-                                  fontSize: 10.5,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -347,14 +358,6 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                   onPressed: () => setState(() => ligado = !ligado),
                   icon: Icon(ligado ? Icons.power_off_rounded : Icons.power_rounded),
                   label: Text(ligado ? 'Desligar TV' : 'Ligar TV'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: marrom,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.button),
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -363,7 +366,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         const SizedBox(height: 18),
         const Text(
           'Controles rápidos',
-          style: TextStyle(color: marrom, fontSize: 15, fontWeight: FontWeight.w900),
+          style: AppTextStyles.cardTitle,
         ),
         const SizedBox(height: 8),
         _linhaSlider(
@@ -380,7 +383,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: amareloCard,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.button),
           ),
           child: Row(
             children: [
@@ -389,7 +392,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               const Expanded(
                 child: Text(
                   'Canal',
-                  style: TextStyle(color: marrom, fontSize: 13, fontWeight: FontWeight.w900),
+                  style: AppTextStyles.bodyBold,
                 ),
               ),
               IconButton.filledTonal(
@@ -400,7 +403,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 9),
-                child: Text('$canalAtual', style: const TextStyle(color: marrom, fontSize: 17, fontWeight: FontWeight.w900)),
+                child: Text('$canalAtual', style: AppTextStyles.cardTitle),
               ),
               IconButton.filledTonal(
                 visualDensity: VisualDensity.compact,
@@ -427,7 +430,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         const SizedBox(height: 12),
         const Text(
           'Modo de imagem',
-          style: TextStyle(color: marrom, fontSize: 14, fontWeight: FontWeight.w900),
+          style: AppTextStyles.bodyBold,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -458,14 +461,14 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         const SizedBox(height: 20),
         const Text(
           'Aplicativos de streaming',
-          style: TextStyle(color: marrom, fontSize: 15, fontWeight: FontWeight.w900),
+          style: AppTextStyles.cardTitle,
         ),
         const SizedBox(height: 10),
         _streamingGrid(),
         const SizedBox(height: 6),
         Text(
           'Os comandos são demonstrativos nesta versão. O controle físico será conectado futuramente ao serviço IoT.',
-          style: TextStyle(color: marrom.withValues(alpha: 0.7), fontSize: 10.5, height: 1.3),
+          style: TextStyle(color: marrom.withValues(alpha: 0.7), fontSize: 10, height: 1.3),
         ),
       ],
     );
@@ -491,7 +494,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
             const Expanded(
               child: Text(
                 'Atalhos rápidos',
-                style: TextStyle(color: marrom, fontSize: 15, fontWeight: FontWeight.w900),
+                style: AppTextStyles.cardTitle,
               ),
             ),
             TextButton.icon(
@@ -512,7 +515,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: amareloCard,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(AppRadius.button),
                   border: Border.all(color: marrom.withValues(alpha: 0.08)),
                 ),
                 child: const Row(
@@ -522,7 +525,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                     Expanded(
                       child: Text(
                         'Crie um atalho para executar seus comandos favoritos em um toque.',
-                        style: TextStyle(color: marrom, fontSize: 11.5, height: 1.3, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: marrom, fontSize: 12, height: 1.3, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -553,7 +556,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                                 atalho.nome,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: marrom, fontSize: 11, fontWeight: FontWeight.w900),
+                                style: AppTextStyles.caption,
                               ),
                             ),
                           ],
@@ -775,11 +778,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
         const SizedBox(height: 13),
         const Text(
           'Pré-configurações',
-          style: TextStyle(
-            color: marrom,
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-          ),
+          style: AppTextStyles.cardTitle,
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -996,11 +995,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           Expanded(
             child: Text(
               titulo,
-              style: const TextStyle(
-                color: marrom,
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-              ),
+              style: AppTextStyles.bodyBold,
             ),
           ),
           Switch.adaptive(
@@ -1009,7 +1004,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
             activeThumbColor: marrom,
             activeTrackColor: amareloBotao,
             inactiveThumbColor: marrom,
-            inactiveTrackColor: const Color(0xFF7E3C03),
+            inactiveTrackColor: AppColors.primaryDark,
           ),
         ],
       ),
@@ -1032,11 +1027,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           flex: 3,
           child: Text(
             titulo,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 14.5,
-              fontWeight: FontWeight.w800,
-            ),
+            style: AppTextStyles.bodyBold,
           ),
         ),
         Expanded(
@@ -1065,11 +1056,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
             textAlign: TextAlign.end,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: marrom,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w900,
-            ),
+            style: AppTextStyles.bodyBold,
           ),
         ),
         const SizedBox(width: 5),
@@ -1086,10 +1073,10 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }) {
     return Material(
       color: ativo ? amareloBotao : amareloCard,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppRadius.button),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.button),
         child: SizedBox(
           height: 82,
           child: Column(
@@ -1102,7 +1089,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: marrom,
-                  fontSize: 10.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.w900,
                   height: 1.1,
                 ),
@@ -1146,7 +1133,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                     texto,
                     style: const TextStyle(
                       color: marrom,
-                      fontSize: 18,
+                      fontSize: 19,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -1237,7 +1224,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               texto,
               style: const TextStyle(
                 color: marrom,
-                fontSize: 11.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
@@ -1253,7 +1240,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: amareloCard,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         children: [
@@ -1267,18 +1254,14 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                   titulo,
                   style: TextStyle(
                     color: marrom.withValues(alpha: 0.70),
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   valor,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: AppTextStyles.bodyBold,
                 ),
               ],
             ),
@@ -1296,11 +1279,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       collapsedIconColor: marrom,
       title: const Text(
         'Informações do aparelho',
-        style: TextStyle(
-          color: marrom,
-          fontSize: 14,
-          fontWeight: FontWeight.w900,
-        ),
+        style: AppTextStyles.bodyBold,
       ),
       children: [
         _linhaInfo('ID', widget.id),
@@ -1318,7 +1297,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       padding: const EdgeInsets.only(bottom: 5),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(color: marrom, fontSize: 11.5, height: 1.25),
+          style: const TextStyle(color: marrom, fontSize: 12, height: 1.25),
           children: [
             TextSpan(
               text: '$titulo: ',
@@ -1446,7 +1425,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                 'Cenas da iluminação',
                 style: TextStyle(
                   color: marrom,
-                  fontSize: 18,
+                  fontSize: 19,
                   fontWeight: FontWeight.w900,
                 ),
               ),
