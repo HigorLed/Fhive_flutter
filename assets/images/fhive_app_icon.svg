@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Fhive — favo de mel</title>
+  <rect width="1024" height="1024" fill="none"/>
+  <polygon
+    points="512,112 860,313 860,711 512,912 164,711 164,313"
+    fill="none"
+    stroke="#964800"
+    stroke-width="44"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+</svg>
