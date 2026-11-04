@@ -2,7 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+<<<<<<< HEAD
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 import 'package:tcc_mobile/features/devices/data/dispositivos_api.dart';
 
 enum TipoIndicadorGrafico {
@@ -43,8 +46,13 @@ class _TelaIndicadorGraficoDetalheState
   static const Color creme = AppColors.surfaceLight;
   static const Color amarelo = AppColors.accent;
   static const Color amareloSuave = AppColors.surface;
+<<<<<<< HEAD
   static const Color laranja = AppColors.warning;
   static const Color textoSuave = AppColors.primaryDark;
+=======
+  static const Color laranja = Color(0xFFC46B00);
+  static const Color textoSuave = Color(0xFF81500F);
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 
   String periodoEnergia = 'Mensal';
   String periodoHistorico = 'Semanal';
@@ -132,7 +140,11 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: amareloSuave.withValues(alpha: 0.88),
+<<<<<<< HEAD
         borderRadius: BorderRadius.circular(AppRadius.button),
+=======
+        borderRadius: BorderRadius.circular(14),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         border: Border.all(color: marrom.withValues(alpha: 0.12)),
       ),
       child: Row(
@@ -140,7 +152,11 @@ class _TelaIndicadorGraficoDetalheState
         children: [
           Icon(_carregandoTelemetria ? Icons.sync : Icons.sensors_outlined, color: marrom, size: 19),
           const SizedBox(width: 8),
+<<<<<<< HEAD
           Expanded(child: Text(texto, style: const TextStyle(color: marrom, fontSize: 12, height: 1.35))),
+=======
+          Expanded(child: Text(texto, style: const TextStyle(color: marrom, fontSize: 11.5, height: 1.35))),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           if (widget.deviceBackendId != null && widget.deviceBackendId!.isNotEmpty)
             IconButton(
               tooltip: 'Atualizar leituras',
@@ -180,6 +196,7 @@ class _TelaIndicadorGraficoDetalheState
 
   Widget _cabecalhoSuperior() {
     return Padding(
+<<<<<<< HEAD
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
         AppSpacing.sm,
@@ -207,6 +224,65 @@ class _TelaIndicadorGraficoDetalheState
                 ),
               ],
             ),
+=======
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+            decoration: BoxDecoration(
+              color: marrom,
+              borderRadius: BorderRadius.circular(AppRadius.largeCard),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x22000000),
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            child: Text(
+              '${widget.local} • ${widget.nomeAparelho} | $nomeIndicador',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Voltar',
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: marrom,
+                  size: 29,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  _tituloPagina(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: marrom,
+                    fontFamily: AppFonts.title,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 38),
+            ],
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
         ],
       ),
@@ -257,7 +333,11 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
           decoration: BoxDecoration(
             color: creme.withValues(alpha: 0.78),
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(19),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Row(
             children: [
@@ -291,7 +371,11 @@ class _TelaIndicadorGraficoDetalheState
                                   '${_numero(energia)} kWh',
                                   style: const TextStyle(
                                     color: laranja,
+<<<<<<< HEAD
                                     fontSize: 16,
+=======
+                                    fontSize: 15,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -306,7 +390,11 @@ class _TelaIndicadorGraficoDetalheState
                       'Consumo de hoje',
                       style: TextStyle(
                         color: textoSuave,
+<<<<<<< HEAD
                         fontSize: 12,
+=======
+                        fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -322,7 +410,11 @@ class _TelaIndicadorGraficoDetalheState
                       icone: Icons.eco_rounded,
                       titulo: 'Energia',
                       valor: widget.isTv ? 'Economizada' : 'Consumo',
+<<<<<<< HEAD
                       cor: AppColors.success,
+=======
+                      cor: const Color(0xFF4E8129),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                     const SizedBox(height: 8),
                     _seloInformacao(
@@ -343,7 +435,11 @@ class _TelaIndicadorGraficoDetalheState
           textAlign: TextAlign.center,
           style: TextStyle(
             color: marrom,
+<<<<<<< HEAD
             fontSize: 19,
+=======
+            fontSize: 18,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -358,7 +454,11 @@ class _TelaIndicadorGraficoDetalheState
         ),
         const SizedBox(height: 5),
         ClipRRect(
+<<<<<<< HEAD
           borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+          borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           child: Stack(
             children: [
               Container(height: 18, color: AppColors.track),
@@ -368,7 +468,11 @@ class _TelaIndicadorGraficoDetalheState
                   height: 18,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF9C9D),
+<<<<<<< HEAD
                     borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+                    borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   ),
                 ),
               ),
@@ -382,7 +486,11 @@ class _TelaIndicadorGraficoDetalheState
               '0 kWh',
               style: TextStyle(
                 color: textoSuave,
+<<<<<<< HEAD
                 fontSize: 10,
+=======
+                fontSize: 9,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -390,7 +498,11 @@ class _TelaIndicadorGraficoDetalheState
               '${_numero(limiteDiario)} kWh',
               style: const TextStyle(
                 color: textoSuave,
+<<<<<<< HEAD
                 fontSize: 10,
+=======
+                fontSize: 9,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -482,8 +594,13 @@ class _TelaIndicadorGraficoDetalheState
       height: 166,
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
+<<<<<<< HEAD
         color: AppColors.primaryDark,
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        color: const Color(0xFF3D2100),
+        borderRadius: BorderRadius.circular(16),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Column(
         children: [
@@ -494,7 +611,11 @@ class _TelaIndicadorGraficoDetalheState
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3),
                 child: InkWell(
+<<<<<<< HEAD
                   borderRadius: BorderRadius.circular(AppRadius.chip),
+=======
+                  borderRadius: BorderRadius.circular(12),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   onTap: () => setState(() => periodoEnergia = opcao),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -503,9 +624,15 @@ class _TelaIndicadorGraficoDetalheState
                     ),
                     decoration: BoxDecoration(
                       color: ativo
+<<<<<<< HEAD
                           ? AppColors.primaryDark
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppRadius.chip),
+=======
+                          ? const Color(0xFF71420D)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                     child: Text(
                       opcao,
@@ -525,7 +652,11 @@ class _TelaIndicadorGraficoDetalheState
             child: CustomPaint(
               painter: LinhaHistoricoPainter(
                 valores: valores,
+<<<<<<< HEAD
                 corLinha: AppColors.surfaceWarm,
+=======
+                corLinha: const Color(0xFFFFE1A1),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
               child: const SizedBox.expand(),
             ),
@@ -539,7 +670,11 @@ class _TelaIndicadorGraficoDetalheState
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.surfaceWarm,
+<<<<<<< HEAD
                         fontSize: 10,
+=======
+                        fontSize: 9,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -592,14 +727,26 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           decoration: BoxDecoration(
             color: creme.withValues(alpha: 0.78),
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             border: Border.all(color: marrom.withValues(alpha: 0.13)),
           ),
           child: Column(
             children: [
               const Text(
                 'Total de Horas',
+<<<<<<< HEAD
                 style: AppTextStyles.cardTitle,
+=======
+                style: TextStyle(
+                  color: marrom,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
               const SizedBox(height: 3),
               Text(
@@ -618,7 +765,11 @@ class _TelaIndicadorGraficoDetalheState
                 ),
                 decoration: BoxDecoration(
                   color: marrom,
+<<<<<<< HEAD
                   borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+                  borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -637,7 +788,11 @@ class _TelaIndicadorGraficoDetalheState
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: AppColors.white,
+<<<<<<< HEAD
                           fontSize: 12,
+=======
+                          fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -673,7 +828,15 @@ class _TelaIndicadorGraficoDetalheState
         Text(
           titulo,
           textAlign: TextAlign.center,
+<<<<<<< HEAD
           style: AppTextStyles.cardTitle,
+=======
+          style: const TextStyle(
+            color: marrom,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+          ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         ),
         const SizedBox(height: 5),
         ClipRRect(
@@ -722,7 +885,11 @@ class _TelaIndicadorGraficoDetalheState
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: marrom,
+<<<<<<< HEAD
                 borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+                borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
               child: Text(
                 '${horasPeriodo}h',
@@ -747,7 +914,11 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: amareloSuave,
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(AppRadius.largeCard),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Column(
             children: [
@@ -772,7 +943,11 @@ class _TelaIndicadorGraficoDetalheState
                           '$pontuacao',
                           style: const TextStyle(
                             color: marrom,
+<<<<<<< HEAD
                             fontSize: 40,
+=======
+                            fontSize: 42,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -780,7 +955,11 @@ class _TelaIndicadorGraficoDetalheState
                           'de 100 pontos',
                           style: TextStyle(
                             color: textoSuave,
+<<<<<<< HEAD
                             fontSize: 12,
+=======
+                            fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -795,7 +974,11 @@ class _TelaIndicadorGraficoDetalheState
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
+<<<<<<< HEAD
                   fontSize: 19,
+=======
+                  fontSize: 20,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -857,8 +1040,13 @@ class _TelaIndicadorGraficoDetalheState
           height: 300,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
+<<<<<<< HEAD
             color: AppColors.primaryDark,
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            color: const Color(0xFF3D2100),
+            borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Column(
             children: [
@@ -878,7 +1066,11 @@ class _TelaIndicadorGraficoDetalheState
                             ),
                             decoration: BoxDecoration(
                               color: periodoHistorico == opcao
+<<<<<<< HEAD
                                   ? AppColors.primaryDark
+=======
+                                  ? const Color(0xFF71420D)
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(AppRadius.button),
                             ),
@@ -888,7 +1080,11 @@ class _TelaIndicadorGraficoDetalheState
                                 color: periodoHistorico == opcao
                                     ? AppColors.white
                                     : AppColors.surfaceWarm,
+<<<<<<< HEAD
                                 fontSize: 12,
+=======
+                                fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -903,7 +1099,11 @@ class _TelaIndicadorGraficoDetalheState
                 child: CustomPaint(
                   painter: LinhaHistoricoPainter(
                     valores: valores,
+<<<<<<< HEAD
                     corLinha: AppColors.surfaceWarm,
+=======
+                    corLinha: const Color(0xFFFFE1A1),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -1003,7 +1203,11 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: amareloSuave,
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Row(
             children: [
@@ -1029,7 +1233,15 @@ class _TelaIndicadorGraficoDetalheState
                       widget.isTv
                           ? 'Seu aparelho está estável'
                           : 'Temperatura atual',
+<<<<<<< HEAD
                       style: AppTextStyles.cardTitle,
+=======
+                      style: const TextStyle(
+                        color: marrom,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1038,7 +1250,11 @@ class _TelaIndicadorGraficoDetalheState
                           : temperatura,
                       style: const TextStyle(
                         color: laranja,
+<<<<<<< HEAD
                         fontSize: 24,
+=======
+                        fontSize: 22,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1054,7 +1270,11 @@ class _TelaIndicadorGraficoDetalheState
           style: TextStyle(
             color: marrom,
             fontFamily: AppFonts.title,
+<<<<<<< HEAD
             fontSize: 19,
+=======
+            fontSize: 18,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -1066,7 +1286,11 @@ class _TelaIndicadorGraficoDetalheState
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: creme.withValues(alpha: 0.85),
+<<<<<<< HEAD
                 borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+                borderRadius: BorderRadius.circular(17),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1087,7 +1311,15 @@ class _TelaIndicadorGraficoDetalheState
                       children: [
                         Text(
                           item.$2,
+<<<<<<< HEAD
                           style: AppTextStyles.bodyBold,
+=======
+                          style: const TextStyle(
+                            color: marrom,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                          ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -1124,7 +1356,11 @@ class _TelaIndicadorGraficoDetalheState
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: amareloSuave,
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(21),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Column(
             children: [
@@ -1149,7 +1385,11 @@ class _TelaIndicadorGraficoDetalheState
                           '$eficiencia%',
                           style: const TextStyle(
                             color: marrom,
+<<<<<<< HEAD
                             fontSize: 40,
+=======
+                            fontSize: 38,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -1172,7 +1412,11 @@ class _TelaIndicadorGraficoDetalheState
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
+<<<<<<< HEAD
                   fontSize: 19,
+=======
+                  fontSize: 20,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1238,14 +1482,26 @@ class _TelaIndicadorGraficoDetalheState
               Expanded(
                 child: Text(
                   titulo,
+<<<<<<< HEAD
                   style: AppTextStyles.caption,
+=======
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
               ),
               Text(
                 status,
                 style: const TextStyle(
                   color: laranja,
+<<<<<<< HEAD
                   fontSize: 12,
+=======
+                  fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -1253,7 +1509,11 @@ class _TelaIndicadorGraficoDetalheState
           ),
           const SizedBox(height: 7),
           ClipRRect(
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.chip),
+=======
+            borderRadius: BorderRadius.circular(12),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             child: LinearProgressIndicator(
               value: progresso.clamp(0.0, 1.0).toDouble(),
               minHeight: 9,
@@ -1274,7 +1534,11 @@ class _TelaIndicadorGraficoDetalheState
           height: 38,
           decoration: BoxDecoration(
             color: amarelo.withValues(alpha: 0.6),
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.button),
+=======
+            borderRadius: BorderRadius.circular(13),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           child: Icon(icone, color: marrom, size: 22),
         ),
@@ -1285,12 +1549,24 @@ class _TelaIndicadorGraficoDetalheState
             children: [
               Text(
                 titulo,
+<<<<<<< HEAD
                 style: AppTextStyles.caption,
+=======
+                style: const TextStyle(
+                  color: marrom,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
               const SizedBox(height: 3),
               Text(
                 subtitulo,
+<<<<<<< HEAD
                 style: const TextStyle(color: textoSuave, fontSize: 12),
+=======
+                style: const TextStyle(color: textoSuave, fontSize: 11),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
             ],
           ),
@@ -1304,14 +1580,26 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.88),
+<<<<<<< HEAD
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        borderRadius: BorderRadius.circular(19),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             titulo,
+<<<<<<< HEAD
             style: AppTextStyles.cardTitle,
+=======
+            style: const TextStyle(
+              color: marrom,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           const SizedBox(height: 14),
           child,
@@ -1325,7 +1613,11 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.88),
+<<<<<<< HEAD
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        borderRadius: BorderRadius.circular(17),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Row(
         children: [
@@ -1345,7 +1637,15 @@ class _TelaIndicadorGraficoDetalheState
                 ),
                 Text(
                   valor,
+<<<<<<< HEAD
                   style: AppTextStyles.cardTitle,
+=======
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
               ],
             ),
@@ -1364,7 +1664,11 @@ class _TelaIndicadorGraficoDetalheState
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: creme.withValues(alpha: 0.72),
+<<<<<<< HEAD
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        borderRadius: BorderRadius.circular(17),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         border: Border.all(color: marrom.withValues(alpha: 0.08)),
       ),
       child: Row(
@@ -1378,14 +1682,26 @@ class _TelaIndicadorGraficoDetalheState
               children: [
                 Text(
                   titulo,
+<<<<<<< HEAD
                   style: AppTextStyles.bodyBold,
+=======
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
                 const SizedBox(height: 4),
                 Text(
                   texto,
                   style: const TextStyle(
                     color: textoSuave,
+<<<<<<< HEAD
                     fontSize: 12,
+=======
+                    fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     height: 1.35,
                   ),
                 ),
@@ -1415,7 +1731,11 @@ class _TelaIndicadorGraficoDetalheState
           texto,
           style: const TextStyle(
             color: marrom,
+<<<<<<< HEAD
             fontSize: 10,
+=======
+            fontSize: 9,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -1440,7 +1760,11 @@ class MedidorSemicircularPainter extends CustomPainter {
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round;
     final frente = Paint()
+<<<<<<< HEAD
       ..color = AppColors.track
+=======
+      ..color = const Color(0xFFD9CDA8)
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ..style = PaintingStyle.stroke
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round;
@@ -1511,7 +1835,11 @@ class LinhaHistoricoPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(caminho, tintaLinha);
 
+<<<<<<< HEAD
     final tintaPontos = Paint()..color = AppColors.surfaceLight;
+=======
+    final tintaPontos = Paint()..color = const Color(0xFFFFF8DF);
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     for (final ponto in pontos) {
       canvas.drawCircle(ponto, 2.6, tintaPontos);
     }

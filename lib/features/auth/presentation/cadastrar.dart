@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+<<<<<<< HEAD
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/widgets/logo_fhive.dart';
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 import 'package:tcc_mobile/shared/state/auth_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
@@ -25,6 +28,22 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
 
   static final RegExp _regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
+<<<<<<< HEAD
+=======
+  static const TextStyle _estiloRotulo = TextStyle(
+    color: AppColors.primary,
+    fontSize: 18,
+    fontFamily: AppFonts.title,
+    fontWeight: FontWeight.w700,
+  );
+
+  static const TextStyle _estiloCampo = TextStyle(
+    color: AppColors.primary,
+    fontFamily: AppFonts.title,
+    fontSize: 15,
+  );
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   @override
   void dispose() {
     nomeController.dispose();
@@ -150,10 +169,47 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
+<<<<<<< HEAD
   Widget _rotulo(String texto) {
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: Text(texto, style: AppTextStyles.bodyBold),
+=======
+  Future<void> cadastrarComGoogle() async => _informarIntegracaoSocial();
+
+  Future<void> cadastrarComFacebook() async => _informarIntegracaoSocial();
+
+  void _informarIntegracaoSocial() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cadastro social'),
+        content: const Text(
+          'O cadastro com Google/Facebook depende das credenciais dos provedores e de um serviço de autenticação. Nenhuma conta externa foi criada.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circulo(double tamanho, Color cor) {
+    return Container(
+      width: tamanho,
+      height: tamanho,
+      decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+    );
+  }
+
+  Widget _rotulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: Text(texto, style: _estiloRotulo),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     );
   }
 
@@ -164,8 +220,19 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
   }) {
     return InputDecoration(
       hintText: hint,
+<<<<<<< HEAD
       prefixIcon: Icon(icone, size: 20),
       suffixIcon: sufixo,
+=======
+      hintStyle: const TextStyle(
+        color: Color(0xAD964800),
+        fontFamily: AppFonts.title,
+        fontSize: 15,
+      ),
+      prefixIcon: Icon(icone, color: AppColors.primary, size: 20),
+      suffixIcon: sufixo,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     );
   }
 
@@ -247,15 +314,25 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
   Color get _corForcaSenha {
     switch (_pontuacaoSenha) {
       case 1:
+<<<<<<< HEAD
         return AppColors.warning;
+=======
+        return const Color(0xFFC07A3A);
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       case 2:
       case 3:
       case 4:
         return AppColors.backgroundBottom;
       case 5:
+<<<<<<< HEAD
         return AppColors.success;
       default:
         return AppColors.track;
+=======
+        return const Color(0xFF6F9650);
+      default:
+        return const Color(0xFFD9C9A8);
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     }
   }
 
@@ -282,8 +359,13 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                     curve: Curves.easeOut,
                     height: 4,
                     decoration: BoxDecoration(
+<<<<<<< HEAD
                       color: preenchida ? cor : AppColors.track,
                       borderRadius: BorderRadius.circular(AppRadius.chip),
+=======
+                      color: preenchida ? cor : const Color(0xFFD9C9A8),
+                      borderRadius: BorderRadius.circular(10),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                   ),
                 ),
@@ -304,6 +386,10 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                           texto,
                           style: TextStyle(
                             color: cor,
+<<<<<<< HEAD
+=======
+                            fontFamily: AppFonts.title,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -315,7 +401,12 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                               'A senha precisa de: ${faltantes.join(' • ')}',
                               style: const TextStyle(
                                 color: AppColors.primary,
+<<<<<<< HEAD
                                 fontSize: 10,
+=======
+                                fontFamily: AppFonts.body,
+                                fontSize: 10.5,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 height: 1.25,
                               ),
                             ),
@@ -325,7 +416,12 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             'Todos os requisitos foram atendidos.',
                             style: TextStyle(
                               color: AppColors.primary,
+<<<<<<< HEAD
                               fontSize: 10,
+=======
+                              fontFamily: AppFonts.body,
+                              fontSize: 10.5,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               height: 1.25,
                             ),
                           ),
@@ -338,13 +434,58 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     );
   }
 
+<<<<<<< HEAD
+=======
+  Widget _botaoSocial({
+    required Widget icone,
+    required String texto,
+    required VoidCallback aoTocar,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed: aoTocar,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xCCFFF9BE),
+          side: const BorderSide(color: Color(0x5F000000)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icone,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                texto,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontFamily: AppFonts.title,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   @override
   Widget build(BuildContext context) {
     final EdgeInsets areaSegura = MediaQuery.paddingOf(context);
 
     return Scaffold(
       body: Container(
+<<<<<<< HEAD
         decoration: const BoxDecoration(gradient: AppGradients.main),
+=======
+        decoration: const BoxDecoration(gradient: AppGradients.auth),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
@@ -352,6 +493,7 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
               child: Stack(
                 children: [
                   // Decorações do fundo — iguais à tela de login.
+<<<<<<< HEAD
                   // Logo no topo, acima do painel do formulário.
                   Positioned(
                     left: 0,
@@ -364,12 +506,35 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                     ),
                   ),
 
+=======
+                  Positioned(
+                    left: -30,
+                    top: 175,
+                    child: _circulo(90, AppColors.highlight),
+                  ),
+                  Positioned(
+                    right: -58,
+                    top: -75,
+                    child: _circulo(160, const Color(0xFFFFFCE4)),
+                  ),
+                  Positioned(
+                    right: -15,
+                    top: 22,
+                    child: _circulo(75, AppColors.highlight),
+                  ),
+
+                  // Painel principal — mesma proporção e estilo da tela de login.
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   Positioned.fill(
                     top: 220,
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: const BoxDecoration(
+<<<<<<< HEAD
                         color: AppColors.surfaceLight,
+=======
+                        color: Color(0xFFFFFEF2),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(AppRadius.bottomSheet),
                           topRight: Radius.circular(AppRadius.bottomSheet),
@@ -388,7 +553,19 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const Center(
+<<<<<<< HEAD
                                 child: Text('Cadastrar', style: AppTextStyles.display),
+=======
+                                child: Text(
+                                  'Cadastrar',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 40,
+                                    fontFamily: AppFonts.title,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               ),
 
                               const SizedBox(height: 40),
@@ -400,6 +577,10 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 controller: nomeController,
                                 keyboardType: TextInputType.name,
                                 textInputAction: TextInputAction.next,
+<<<<<<< HEAD
+=======
+                                style: _estiloCampo,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 decoration: _decoracao(
                                   hint: 'Digite o seu nome',
                                   icone: Icons.person_outline,
@@ -428,6 +609,10 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 controller: emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
+<<<<<<< HEAD
+=======
+                                style: _estiloCampo,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 decoration: _decoracao(
                                   hint: 'Digite o seu email',
                                   icone: Icons.email_outlined,
@@ -457,6 +642,10 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 obscureText: !mostrarSenha,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => cadastrar(),
+<<<<<<< HEAD
+=======
+                                style: _estiloCampo,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 onChanged: (_) {
                                   setState(() {});
                                 },
@@ -544,7 +733,11 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                           activeColor: AppColors.highlight,
                                           checkColor: AppColors.primary,
                                           side: const BorderSide(
+<<<<<<< HEAD
                                             color: AppColors.track,
+=======
+                                            color: Color(0xFFB8A77B),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                           ),
                                         ),
                                       ),
@@ -557,14 +750,24 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                                 text: 'Eu concordo com os ',
                                                 style: TextStyle(
                                                   color: AppColors.primary,
+<<<<<<< HEAD
                                                   fontSize: 14,
+=======
+                                                  fontSize: 13,
+                                                  fontFamily: AppFonts.body,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                                 ),
                                               ),
                                               TextSpan(
                                                 text: 'termos do Site!',
                                                 style: TextStyle(
                                                   color: AppColors.primary,
+<<<<<<< HEAD
                                                   fontSize: 14,
+=======
+                                                  fontSize: 13,
+                                                  fontFamily: AppFonts.body,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                                   fontWeight: FontWeight.w700,
                                                   decoration:
                                                       TextDecoration.underline,
@@ -586,21 +789,146 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                 height: 52,
                                 child: ElevatedButton(
                                   onPressed: carregando ? null : cadastrar,
+<<<<<<< HEAD
+=======
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.highlight,
+                                    disabledBackgroundColor: const Color(
+                                      0xFFE9D94A,
+                                    ),
+                                    foregroundColor: AppColors.primary,
+                                    elevation: 4,
+                                    shadowColor: Colors.black26,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppRadius.bottomSheet),
+                                    ),
+                                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                   child: carregando
                                       ? const SizedBox(
                                           width: 20,
                                           height: 20,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
+<<<<<<< HEAD
                                             color: AppColors.white,
                                           ),
                                         )
                                       : const Text('Cadastrar'),
+=======
+                                            color: AppColors.primary,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Cadastrar',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontFamily: AppFonts.body,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 ),
                               ),
 
                               const SizedBox(height: 22),
 
+<<<<<<< HEAD
+=======
+                              // DIVISÃO
+                              const Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.primary,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: Text(
+                                      'ou',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 14,
+                                        fontFamily: AppFonts.body,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.primary,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 22),
+
+                              // GOOGLE E FACEBOOK
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _botaoSocial(
+                                      texto: 'Google',
+                                      aoTocar: cadastrarComGoogle,
+                                      icone: Container(
+                                        width: 23,
+                                        height: 23,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFCCCCCC),
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'G',
+                                            style: TextStyle(
+                                              color: Color(0xFF4285F4),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _botaoSocial(
+                                      texto: 'Facebook',
+                                      aoTocar: cadastrarComFacebook,
+                                      icone: Container(
+                                        width: 23,
+                                        height: 23,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF1877F2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'f',
+                                            style: TextStyle(
+                                              color: AppColors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 22),
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               // JÁ POSSUI CONTA
                               Wrap(
                                 alignment: WrapAlignment.center,
@@ -610,7 +938,12 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                     'Já possui uma conta? ',
                                     style: TextStyle(
                                       color: AppColors.primary,
+<<<<<<< HEAD
                                       fontSize: 14,
+=======
+                                      fontSize: 13,
+                                      fontFamily: AppFonts.body,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                     ),
                                   ),
                                   InkWell(
@@ -628,7 +961,12 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                                         'Entre agora!',
                                         style: TextStyle(
                                           color: AppColors.primary,
+<<<<<<< HEAD
                                           fontSize: 14,
+=======
+                                          fontSize: 13,
+                                          fontFamily: AppFonts.title,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -647,9 +985,41 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
                   // BOTÃO VOLTAR — mesma posição da tela de login.
                   if (Navigator.canPop(context))
                     Positioned(
+<<<<<<< HEAD
                       left: AppSpacing.sm,
                       top: areaSegura.top + AppSpacing.xs,
                       child: const BotaoVoltar(),
+=======
+                      left: 18,
+                      top: areaSegura.top + 8,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.arrow_back,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'Voltar',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 14,
+                                  fontFamily: AppFonts.title,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                 ],
               ),

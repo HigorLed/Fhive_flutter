@@ -63,7 +63,11 @@ class _TelaContaState extends State<TelaConta> {
       ..showSnackBar(
         SnackBar(
           content: Text(texto),
+<<<<<<< HEAD
           backgroundColor: erro ? AppColors.danger : null,
+=======
+          backgroundColor: erro ? AppColors.danger : AppColors.primary,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         ),
       );
   }
@@ -128,7 +132,18 @@ class _TelaContaState extends State<TelaConta> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       appBar: AppBar(title: const Text('Perfil')),
+=======
+      appBar: AppBar(
+        title: const Text('Perfil'),
+        centerTitle: true,
+        foregroundColor: AppColors.primary,
+        backgroundColor: AppColors.backgroundTop,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(gradient: AppGradients.main),
@@ -144,12 +159,20 @@ class _TelaContaState extends State<TelaConta> {
                 _emailController.text = conta.email;
               }
               return SingleChildScrollView(
+<<<<<<< HEAD
                 padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
+=======
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _cartaoPerfil(conta),
+<<<<<<< HEAD
                     const SizedBox(height: AppSpacing.cardGap),
+=======
+                    const SizedBox(height: 16),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     _cartaoDadosPessoais(conta),
                     const SizedBox(height: 14),
                     _cartaoSeguranca(conta),
@@ -159,7 +182,11 @@ class _TelaContaState extends State<TelaConta> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.primaryDark,
+<<<<<<< HEAD
                         fontSize: 12,
+=======
+                        fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         height: 1.4,
                       ),
                     ),
@@ -179,9 +206,21 @@ class _TelaContaState extends State<TelaConta> {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
+<<<<<<< HEAD
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: AppShadows.soft,
+=======
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            offset: Offset(0, 4),
+            blurRadius: 12,
+          ),
+        ],
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Column(
         children: [
@@ -193,7 +232,11 @@ class _TelaContaState extends State<TelaConta> {
               style: const TextStyle(
                 color: AppColors.primary,
                 fontFamily: AppFonts.title,
+<<<<<<< HEAD
                 fontSize: 32,
+=======
+                fontSize: 27,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -205,7 +248,11 @@ class _TelaContaState extends State<TelaConta> {
             style: const TextStyle(
               color: AppColors.primary,
               fontFamily: AppFonts.title,
+<<<<<<< HEAD
               fontSize: 24,
+=======
+              fontSize: 21,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -213,14 +260,22 @@ class _TelaContaState extends State<TelaConta> {
           Text(
             email,
             textAlign: TextAlign.center,
+<<<<<<< HEAD
             style: const TextStyle(color: AppColors.primaryDark, fontSize: 14),
+=======
+            style: const TextStyle(color: AppColors.primaryDark, fontSize: 13),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.accent.withValues(alpha: 0.56),
+<<<<<<< HEAD
               borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+              borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -233,7 +288,15 @@ class _TelaContaState extends State<TelaConta> {
                 const SizedBox(width: 5),
                 Text(
                   conta == null ? 'Visitante' : 'Conta Fhive',
+<<<<<<< HEAD
                   style: AppTextStyles.caption,
+=======
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
               ],
             ),
@@ -298,6 +361,20 @@ class _TelaContaState extends State<TelaConta> {
                 onPressed: conta == null ? null : _salvarPerfil,
                 icon: const Icon(Icons.save_rounded),
                 label: const Text('Salvar alterações'),
+<<<<<<< HEAD
+=======
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  disabledBackgroundColor: AppColors.primary.withValues(
+                    alpha: 0.25,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
             ),
           ],
@@ -309,8 +386,13 @@ class _TelaContaState extends State<TelaConta> {
   Widget _cartaoSeguranca(ContaLocal? conta) {
     return Container(
       decoration: BoxDecoration(
+<<<<<<< HEAD
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -323,17 +405,33 @@ class _TelaContaState extends State<TelaConta> {
             height: 40,
             decoration: BoxDecoration(
               color: AppColors.accent.withValues(alpha: 0.65),
+<<<<<<< HEAD
               borderRadius: BorderRadius.circular(AppRadius.button),
+=======
+              borderRadius: BorderRadius.circular(13),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             ),
             child: const Icon(Icons.lock_rounded, color: AppColors.primary),
           ),
           title: const Text(
             'Segurança',
+<<<<<<< HEAD
             style: AppTextStyles.cardTitle,
           ),
           subtitle: const Text(
             'Altere sua senha de acesso',
             style: TextStyle(color: AppColors.primaryDark, fontSize: 12),
+=======
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          subtitle: const Text(
+            'Altere sua senha de acesso',
+            style: TextStyle(color: AppColors.primaryDark, fontSize: 11),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
           children: [
             Form(
@@ -444,7 +542,11 @@ class _TelaContaState extends State<TelaConta> {
                 'Use pelo menos 8 caracteres, uma maiúscula, uma minúscula, um número e um caractere especial.',
                 style: TextStyle(
                   color: AppColors.primaryDark,
+<<<<<<< HEAD
                   fontSize: 12,
+=======
+                  fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   height: 1.35,
                 ),
               ),
@@ -456,6 +558,17 @@ class _TelaContaState extends State<TelaConta> {
                 onPressed: conta == null ? null : _alterarSenha,
                 icon: const Icon(Icons.password_rounded),
                 label: const Text('Atualizar senha'),
+<<<<<<< HEAD
+=======
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary, width: 1.2),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
             ),
           ],
@@ -473,8 +586,13 @@ class _TelaContaState extends State<TelaConta> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+<<<<<<< HEAD
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        color: AppColors.surfaceLight.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(20),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +604,11 @@ class _TelaContaState extends State<TelaConta> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.65),
+<<<<<<< HEAD
                   borderRadius: BorderRadius.circular(AppRadius.button),
+=======
+                  borderRadius: BorderRadius.circular(13),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                 ),
                 child: Icon(icone, color: AppColors.primary),
               ),
@@ -497,14 +619,26 @@ class _TelaContaState extends State<TelaConta> {
                   children: [
                     Text(
                       titulo,
+<<<<<<< HEAD
                       style: AppTextStyles.cardTitle,
+=======
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitulo,
                       style: const TextStyle(
                         color: AppColors.primaryDark,
+<<<<<<< HEAD
                         fontSize: 12,
+=======
+                        fontSize: 11,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                       ),
                     ),
                   ],

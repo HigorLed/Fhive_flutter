@@ -4,7 +4,10 @@ import 'package:tcc_mobile/features/devices/presentation/criar_aparelho.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
+<<<<<<< HEAD
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 import 'package:tcc_mobile/features/devices/presentation/aparelho_detalhes.dart';
 
 class TelaAparelhos extends StatefulWidget {
@@ -110,6 +113,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+<<<<<<< HEAD
                         CabecalhoPagina(
                           titulo: 'Minha casa',
                           acoes: [
@@ -117,16 +121,104 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                               icone: Icons.add,
                               tooltip: 'Criar aparelho',
                               onPressed: () => _abrirCriar(context),
+=======
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Minha casa',
+                                style: AppTextStyles.pageTitle,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _abrirCriar(context),
+                              tooltip: 'Criar aparelho',
+                              icon: const Icon(
+                                Icons.add,
+                                color: TelaAparelhos.marrom,
+                                size: 30,
+                              ),
+                            ),
+                            PopupMenuButton<String>(
+                              tooltip: 'Menu',
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: TelaAparelhos.marrom,
+                                size: 26,
+                              ),
+                              onSelected: (acao) {
+                                switch (acao) {
+                                  case 'atualizar':
+                                    setState(() {});
+                                    _mensagemLocal(
+                                      'Lista de aparelhos atualizada.',
+                                    );
+                                    break;
+                                  case 'local':
+                                    _criarLocal();
+                                    break;
+                                  case 'ajuda':
+                                    showDialog<void>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Aparelhos'),
+                                        content: const Text(
+                                          'Toque em um cartão para abrir os controles. Use a estrela para favoritar, os filtros de local para organizar os aparelhos e o botão + para cadastrar um novo dispositivo.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(dialogContext),
+                                            child: const Text('Fechar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    break;
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'atualizar',
+                                  child: Text('Atualizar lista'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'local',
+                                  child: Text('Criar local'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'ajuda',
+                                  child: Text('Ajuda'),
+                                ),
+                              ],
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                             ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.section),
                         Row(
                           children: [
+<<<<<<< HEAD
                             const Expanded(
                               child: Text(
                                 'Todos aparelhos',
                                 style: AppTextStyles.sectionTitle,
+=======
+                            const Icon(
+                              Icons.search,
+                              color: TelaAparelhos.marrom,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 6),
+                            const Expanded(
+                              child: Text(
+                                'Todos aparelhos',
+                                style: TextStyle(
+                                  color: TelaAparelhos.marrom,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               ),
                             ),
                             InkWell(
@@ -165,7 +257,11 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                           ],
                         ),
                         if (_mostrarLocaisDisponiveis) ...[
+<<<<<<< HEAD
                           const SizedBox(height: AppSpacing.md),
+=======
+                          const SizedBox(height: 12),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                           ValueListenableBuilder<List<AparelhoItem>>(
                             valueListenable: AparelhosStore.aparelhos,
                             builder: (context, aparelhosAtuais, _) {
@@ -176,6 +272,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                     (local) => local.toLowerCase() ==
                                         _localFiltro!.toLowerCase(),
                                   );
+<<<<<<< HEAD
                               return CartaoFhive(
                                 cor: AppColors.surface,
                                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -226,12 +323,113 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                       ),
                                     ],
                                   ),
+=======
+                              return Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(13),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.88,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: TelaAparelhos.marrom.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Locais disponíveis',
+                                      style: TextStyle(
+                                        color: TelaAparelhos.marrom,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 9),
+                                    Wrap(
+                                      spacing: 7,
+                                      runSpacing: 7,
+                                      children: [
+                                        ChoiceChip(
+                                          label: const Text('Todos'),
+                                          selected: !filtroDisponivel,
+                                          onSelected: (_) => setState(
+                                            () => _localFiltro = null,
+                                          ),
+                                          selectedColor: AppColors.accent,
+                                          backgroundColor:
+                                              AppColors.surfaceLight,
+                                          labelStyle: const TextStyle(
+                                            color: TelaAparelhos.marrom,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 12,
+                                          ),
+                                          side: BorderSide(
+                                            color: TelaAparelhos.marrom
+                                                .withValues(alpha: 0.16),
+                                          ),
+                                        ),
+                                        for (final local in locaisDisponiveis)
+                                          ChoiceChip(
+                                            label: Text(local),
+                                            selected: filtroDisponivel &&
+                                                _localFiltro!.toLowerCase() ==
+                                                    local.toLowerCase(),
+                                            onSelected: (_) => setState(() {
+                                              _localFiltro = local;
+                                              _locaisAbertos[local] = true;
+                                            }),
+                                            selectedColor: AppColors.accent,
+                                            backgroundColor:
+                                                AppColors.surfaceLight,
+                                            labelStyle: const TextStyle(
+                                              color: TelaAparelhos.marrom,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 12,
+                                            ),
+                                            side: BorderSide(
+                                              color: TelaAparelhos.marrom
+                                                  .withValues(alpha: 0.16),
+                                            ),
+                                          ),
+                                        ActionChip(
+                                          avatar: const Icon(
+                                            Icons.add_location_alt_outlined,
+                                            size: 17,
+                                            color: TelaAparelhos.marrom,
+                                          ),
+                                          label: const Text('Criar local'),
+                                          onPressed: _criarLocal,
+                                          backgroundColor:
+                                              AppColors.surfaceStrong,
+                                          labelStyle: const TextStyle(
+                                            color: TelaAparelhos.marrom,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 12,
+                                          ),
+                                          side: BorderSide(
+                                            color: TelaAparelhos.marrom
+                                                .withValues(alpha: 0.2),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 ),
                               );
                             },
                           ),
                         ],
+<<<<<<< HEAD
                         const SizedBox(height: AppSpacing.section),
+=======
+                        const SizedBox(height: 28),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         ValueListenableBuilder<List<AparelhoItem>>(
                           valueListenable: AparelhosStore.aparelhos,
                           builder: (context, aparelhos, _) {
@@ -266,7 +464,11 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                         .length,
                                   ),
                                   if (_locaisAbertos[local] ?? true) ...[
+<<<<<<< HEAD
                                     const SizedBox(height: AppSpacing.md),
+=======
+                                    const SizedBox(height: 18),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                     _gradeAparelhos(
                                       context,
                                       aparelhos
@@ -278,7 +480,11 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                           .toList(),
                                     )
                                   ],
+<<<<<<< HEAD
                                   const SizedBox(height: AppSpacing.section),
+=======
+                                  const SizedBox(height: 27),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 ],
                                 if (locaisExibidos.isEmpty)
                                   Padding(
@@ -287,7 +493,15 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
                                       filtroDisponivel
                                           ? 'Nenhum aparelho cadastrado neste local.'
                                           : 'Nenhum aparelho cadastrado.',
+<<<<<<< HEAD
                                       style: AppTextStyles.bodyBold,
+=======
+                                      style: const TextStyle(
+                                        color: TelaAparelhos.marrom,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                     ),
                                   ),
                               ],
@@ -320,7 +534,15 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
             Expanded(
               child: Text(
                 local,
+<<<<<<< HEAD
                 style: AppTextStyles.cardTitle,
+=======
+                style: const TextStyle(
+                  color: TelaAparelhos.marrom,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
             ),
             Text(
@@ -345,6 +567,7 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
 
   Widget _gradeAparelhos(BuildContext context, List<AparelhoItem> aparelhos) {
     return Wrap(
+<<<<<<< HEAD
       spacing: AppSpacing.md,
       runSpacing: AppSpacing.md,
       children: aparelhos
@@ -357,6 +580,35 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
               child: _AparelhoCard(
                 aparelho: aparelho,
                 onTap: () => TelaDetalhesAparelho.abrir(context, aparelho),
+=======
+      spacing: 10,
+      runSpacing: 10,
+      children: aparelhos
+          .map(
+            (aparelho) => SizedBox(
+              width: (MediaQuery.sizeOf(context).width - 50) / 2,
+              child: _AparelhoCard(
+                aparelho: aparelho,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TelaDetalhesAparelho(
+                        nome: aparelho.nome,
+                        id: aparelho.id,
+                        backendId: aparelho.backendId,
+                        tipo: aparelho.tipo,
+                        fabricante: aparelho.fabricante,
+                        modelo: aparelho.modelo,
+                        local: aparelho.local,
+                        conexao: aparelho.conexao,
+                        status: aparelho.status,
+                        icone: aparelho.icone,
+                      ),
+                    ),
+                  );
+                },
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
               ),
             ),
           )
@@ -379,8 +631,13 @@ class _AparelhoCard extends StatelessWidget {
         height: 108,
         padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
         decoration: BoxDecoration(
+<<<<<<< HEAD
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.button),
+=======
+          color: const Color(0xFFFFF9C9),
+          borderRadius: BorderRadius.circular(13),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,11 +695,27 @@ class _AparelhoCard extends StatelessWidget {
               aparelho.nome,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+<<<<<<< HEAD
               style: AppTextStyles.cardTitle,
             ),
             Text(
               aparelho.status,
               style: AppTextStyles.caption,
+=======
+              style: const TextStyle(
+                color: TelaAparelhos.marrom,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              aparelho.status,
+              style: const TextStyle(
+                color: TelaAparelhos.marrom,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
             ),
           ],
         ),

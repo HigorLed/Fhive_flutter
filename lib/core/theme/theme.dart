@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+<<<<<<< HEAD
 /// Design system único do Fhive.
 ///
 /// Todas as telas devem usar SOMENTE estes tokens (cores, fontes, raios,
@@ -17,6 +18,15 @@ class AppColors {
   static const Color primary = Color(0xFF964800);
 
   /// Marrom escuro: textos secundários, legendas e superfícies de destaque.
+=======
+/// Design system centralizado do Fhive.
+///
+/// As telas usam estes tokens para manter cores,
+/// tipografia, espaçamentos e formas consistentes.
+class AppColors {
+  static const Color primary = Color(0xFF964800);
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const Color primaryDark = Color(0xFF6D3300);
 
   static const Color accent = Color(0xFFFFDE20);
@@ -27,6 +37,7 @@ class AppColors {
 
   static const Color backgroundBottom = Color(0xFFF4A91A);
 
+<<<<<<< HEAD
   /// Superfície amarelada para itens secundários.
   static const Color surface = Color(0xFFFFF6B5);
 
@@ -43,16 +54,35 @@ class AppColors {
   static const Color surfaceWarm = Color(0xFFFFE8B0);
 
   /// Fundo dos campos de texto.
+=======
+  static const Color surface = Color(0xFFFFF6B5);
+
+  static const Color surfaceSoft = Color(0xFFFFF8CF);
+
+  static const Color surfaceLight = Color(0xFFFFFEF0);
+
+  static const Color surfaceStrong = Color(0xFFFFE86E);
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const Color input = Color(0xFFFFFABE);
 
   static const Color divider = Color(0xFFB87817);
 
+<<<<<<< HEAD
   /// Amarelo vivo para destaques e seleções.
+=======
+  static const Color danger = Color(0xFFE10D00);
+
+  static const Color white = Colors.white;
+
+  /// Amarelo vivo usado em detalhes e seleções das telas de autenticação.
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const Color highlight = Color(0xFFFFF261);
 
   /// Trilha/barra neutra dos gráficos e indicadores.
   static const Color track = Color(0xFFE8DDB8);
 
+<<<<<<< HEAD
   static const Color white = Colors.white;
 
   /// Erro e ações destrutivas.
@@ -74,12 +104,33 @@ class AppFonts {
   static const String title = 'Arvo';
 
   /// Corpo de texto. Também é a fonte padrão do tema.
+=======
+  /// Superfície quente usada nos gráficos e seletores.
+  static const Color surfaceWarm = Color(0xFFFFE8B0);
+
+  /// Marrom escuro da tela de configurações.
+  static const Color primaryDeep = Color(0xFF4A2100);
+
+  /// Marrom dos cartões da tela de configurações.
+  static const Color primaryCard = Color(0xFF663000);
+
+  /// Creme claro usado nos controles da tela de configurações.
+  static const Color cream = Color(0xFFFFFCEB);
+}
+
+class AppFonts {
+  static const String title = 'Arvo';
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const String body = 'Montserrat';
 }
 
 class AppGradients {
+<<<<<<< HEAD
   AppGradients._();
 
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const LinearGradient main = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
@@ -89,6 +140,7 @@ class AppGradients {
       AppColors.backgroundBottom,
     ],
   );
+<<<<<<< HEAD
 }
 
 class AppSpacing {
@@ -104,20 +156,37 @@ class AppSpacing {
 
   static const double xl = 24;
 
+=======
+
+  static const LinearGradient auth = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFFFF06A), Color(0xFFFFD91A), Color(0xFFFFBD00)],
+  );
+}
+
+class AppSpacing {
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const double pageHorizontal = 20;
 
   static const double pageTop = 20;
 
   static const double pageBottom = 20;
 
+<<<<<<< HEAD
   /// Espaço entre blocos/seções de uma página.
   static const double section = 20;
 
   /// Espaço entre cartões.
+=======
+  static const double section = 20;
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const double cardGap = 14;
 }
 
 class AppRadius {
+<<<<<<< HEAD
   AppRadius._();
 
   /// Cartões, painéis e diálogos.
@@ -128,12 +197,20 @@ class AppRadius {
 
   /// Chips e etiquetas pequenas.
   static const double chip = 12;
+=======
+  static const double card = 18;
+
+  static const double largeCard = 22;
+
+  static const double button = 14;
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 
   static const double bottomSheet = 25;
 
   static const double navigation = 28;
 }
 
+<<<<<<< HEAD
 class AppShadows {
   AppShadows._();
 
@@ -159,6 +236,9 @@ class AppTextStyles {
   );
 
   /// Título da página (cabeçalho).
+=======
+class AppTextStyles {
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const TextStyle pageTitle = TextStyle(
     color: AppColors.primary,
     fontSize: 24,
@@ -166,7 +246,10 @@ class AppTextStyles {
     fontWeight: FontWeight.w800,
   );
 
+<<<<<<< HEAD
   /// Título de seção dentro da página.
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const TextStyle sectionTitle = TextStyle(
     color: AppColors.primary,
     fontSize: 19,
@@ -174,6 +257,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w800,
   );
 
+<<<<<<< HEAD
   /// Título de cartão, nome de aparelho, item de lista em destaque.
   static const TextStyle cardTitle = TextStyle(
     color: AppColors.primary,
@@ -182,6 +266,8 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
   );
 
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   static const TextStyle body = TextStyle(
     color: AppColors.primary,
     fontFamily: AppFonts.body,
@@ -194,6 +280,7 @@ class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.w700,
   );
+<<<<<<< HEAD
 
   /// Legendas, subtítulos, status e textos de apoio.
   static const TextStyle caption = TextStyle(
@@ -218,6 +305,8 @@ class AppTextStyles {
     fontSize: 10,
     fontWeight: FontWeight.w600,
   );
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 }
 
 /// Transição suave utilizada entre as telas do aplicativo.
@@ -259,6 +348,7 @@ class SmoothPageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 class AppTheme {
+<<<<<<< HEAD
   AppTheme._();
 
   static ThemeData get data {
@@ -275,11 +365,17 @@ class AppTheme {
       );
     }
 
+=======
+  static ThemeData get data {
+    final base = ThemeData.light(useMaterial3: true);
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.backgroundTop,
 
       colorScheme: base.colorScheme.copyWith(
         primary: AppColors.primary,
+<<<<<<< HEAD
         onPrimary: AppColors.white,
         secondary: AppColors.accent,
         onSecondary: AppColors.primary,
@@ -470,6 +566,50 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.button),
           side: BorderSide(color: AppColors.primary.withValues(alpha: 0.10)),
+=======
+        secondary: AppColors.accent,
+        surface: AppColors.surfaceLight,
+        error: AppColors.danger,
+      ),
+
+      textTheme: base.textTheme.copyWith(
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(
+          fontFamily: AppFonts.body,
+          color: AppColors.primary,
+        ),
+
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(
+          fontFamily: AppFonts.body,
+          color: AppColors.primary,
+        ),
+
+        bodySmall: base.textTheme.bodySmall?.copyWith(
+          fontFamily: AppFonts.body,
+          color: AppColors.primary,
+        ),
+
+        titleLarge: AppTextStyles.sectionTitle,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+
+        fillColor: AppColors.input,
+
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          borderSide: BorderSide.none,
+        ),
+
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          borderSide: BorderSide.none,
+        ),
+
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         ),
       ),
 
@@ -478,7 +618,11 @@ class AppTheme {
         elevation: 10,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
+<<<<<<< HEAD
           borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+          borderRadius: BorderRadius.circular(22),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           side: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.10),
             width: 1,
@@ -499,6 +643,7 @@ class AppTheme {
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       ),
 
+<<<<<<< HEAD
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.primary,
         contentTextStyle: const TextStyle(
@@ -512,11 +657,31 @@ class AppTheme {
         // Mantém a mensagem acima da barra de navegação inferior
         // (68 px) para ela não cobrir os ícones de navegação.
         insetPadding: const EdgeInsets.fromLTRB(18, 0, 18, 80),
+=======
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.primary,
+
+        contentTextStyle: TextStyle(
+          color: Colors.white,
+          fontFamily: AppFonts.body,
+          fontWeight: FontWeight.w600,
+        ),
+
+        behavior: SnackBarBehavior.floating,
+
+        // Mantém a mensagem acima da barra de navegação inferior
+        // (68 px) para ela não cobrir os ícones de navegação.
+        insetPadding: EdgeInsets.fromLTRB(18, 0, 18, 80),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
 
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surfaceLight,
+<<<<<<< HEAD
         surfaceTintColor: Colors.transparent,
+=======
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppRadius.bottomSheet),
@@ -530,9 +695,19 @@ class AppTheme {
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: SmoothPageTransitionsBuilder(),
+<<<<<<< HEAD
           TargetPlatform.iOS: SmoothPageTransitionsBuilder(),
           TargetPlatform.windows: SmoothPageTransitionsBuilder(),
           TargetPlatform.macOS: SmoothPageTransitionsBuilder(),
+=======
+
+          TargetPlatform.iOS: SmoothPageTransitionsBuilder(),
+
+          TargetPlatform.windows: SmoothPageTransitionsBuilder(),
+
+          TargetPlatform.macOS: SmoothPageTransitionsBuilder(),
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           TargetPlatform.linux: SmoothPageTransitionsBuilder(),
         },
       ),

@@ -10,9 +10,13 @@ lib/
 │       └── theme.dart
 ├── shared/
 │   └── widgets/
+<<<<<<< HEAD
 │       ├── barra_navegacao.dart
 │       ├── cabecalho_pagina.dart   (cabeçalho, título de seção, cartão e botão voltar)
 │       └── logo_fhive.dart
+=======
+│       └── barra_navegacao.dart
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 └── features/
     ├── auth/
     │   └── presentation/
@@ -37,6 +41,7 @@ Tela Inicial
 
 A tela inicial é a rota `/inicio`. A Home permanece em `/home`.
 
+<<<<<<< HEAD
 ## Design system
 
 Todo o visual vem de `core/theme/theme.dart`: `AppColors`, `AppTextStyles`,
@@ -46,3 +51,8 @@ tamanhos de fonte ou raios fixos; usem os tokens e os widgets de
 `shared/widgets/cabecalho_pagina.dart`.
 
 As novas telas devem ser criadas dentro de `lib/features/`.
+=======
+## Compatibilidade
+
+A pasta `lib/widget/` permanece como compatibilidade com imports antigos do projeto. As novas telas devem ser criadas dentro de `lib/features/`.
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0

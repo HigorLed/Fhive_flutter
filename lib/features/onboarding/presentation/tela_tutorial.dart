@@ -212,7 +212,11 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
                     style: const TextStyle(
                       color: AppColors.white,
+<<<<<<< HEAD
                       fontSize: 24,
+=======
+                      fontSize: 25,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -248,7 +252,11 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.12),
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+            borderRadius: BorderRadius.circular(30),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
         ),
 
@@ -286,7 +294,11 @@ class _TelaTutorialState extends State<TelaTutorial> {
 
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
+<<<<<<< HEAD
         borderRadius: BorderRadius.circular(AppRadius.card),
+=======
+        borderRadius: BorderRadius.circular(17),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
       ),
 
       child: Icon(icone, color: AppColors.primary, size: 28),
@@ -311,7 +323,11 @@ class _TelaTutorialState extends State<TelaTutorial> {
                 ? AppColors.accent
                 : AppColors.white.withValues(alpha: 0.30),
 
+<<<<<<< HEAD
             borderRadius: BorderRadius.circular(AppRadius.chip),
+=======
+            borderRadius: BorderRadius.circular(10),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
           ),
         );
       }),

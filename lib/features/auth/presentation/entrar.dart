@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+<<<<<<< HEAD
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/widgets/logo_fhive.dart';
+=======
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
 import 'package:tcc_mobile/shared/state/auth_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
@@ -23,6 +26,22 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
 
   static final RegExp _regexEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
+<<<<<<< HEAD
+=======
+  static const TextStyle _estiloRotulo = TextStyle(
+    color: AppColors.primary,
+    fontSize: 18,
+    fontFamily: AppFonts.title,
+    fontWeight: FontWeight.w700,
+  );
+
+  static const TextStyle _estiloCampo = TextStyle(
+    color: AppColors.primary,
+    fontFamily: AppFonts.title,
+    fontSize: 15,
+  );
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   @override
   void dispose() {
     emailController.dispose();
@@ -189,14 +208,50 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
     _mensagem(erroSenha ?? 'Senha redefinida com sucesso. Entre com a nova senha.');
   }
 
+<<<<<<< HEAD
+=======
+  void _informarLoginSocial() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Login social'),
+        content: const Text(
+          'O login com Google/Facebook precisa ser configurado com as credenciais do provedor e um serviço de autenticação. Nenhum login externo foi realizado.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   // =========================================================
   // COMPONENTES
   // =========================================================
 
+<<<<<<< HEAD
   Widget _rotulo(String texto) {
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: Text(texto, style: AppTextStyles.bodyBold),
+=======
+  Widget _circulo(double tamanho, Color cor) {
+    return Container(
+      width: tamanho,
+      height: tamanho,
+      decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+    );
+  }
+
+  Widget _rotulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: Text(texto, style: _estiloRotulo),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
     );
   }
 
@@ -208,18 +263,78 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
     // Cor de fundo e bordas vêm do inputDecorationTheme (core/theme).
     return InputDecoration(
       hintText: hint,
+<<<<<<< HEAD
       prefixIcon: Icon(icone, size: 20),
       suffixIcon: sufixo,
     );
   }
 
+=======
+      hintStyle: const TextStyle(
+        color: Color(0xAD964800),
+        fontFamily: AppFonts.title,
+        fontSize: 15,
+      ),
+      prefixIcon: Icon(icone, color: AppColors.primary, size: 20),
+      suffixIcon: sufixo,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+    );
+  }
+
+  Widget _botaoSocial({
+    required Widget icone,
+    required String texto,
+    required VoidCallback aoTocar,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed: aoTocar,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xCCFFF9BE),
+          side: const BorderSide(color: Color(0x5F000000)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icone,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                texto,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontFamily: AppFonts.title,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // BUILD
+  // =========================================================
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
   @override
   Widget build(BuildContext context) {
     final EdgeInsets areaSegura = MediaQuery.paddingOf(context);
 
     return Scaffold(
       body: Container(
+<<<<<<< HEAD
         decoration: const BoxDecoration(gradient: AppGradients.main),
+=======
+        decoration: const BoxDecoration(gradient: AppGradients.auth),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
         child: Center(
           child: ConstrainedBox(
             // Em telas largas (web/desktop) o layout fica centralizado
@@ -231,6 +346,7 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   // ---------------------------------------------
                   // DECORAÇÕES DO FUNDO
                   // ---------------------------------------------
+<<<<<<< HEAD
                   // Logo no topo, acima do painel do formulário.
                   Positioned(
                     left: 0,
@@ -243,12 +359,39 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                     ),
                   ),
 
+=======
+                  Positioned(
+                    left: -30,
+                    top: 175,
+                    child: _circulo(90, AppColors.highlight),
+                  ),
+
+                  Positioned(
+                    right: -58,
+                    top: -75,
+                    child: _circulo(160, const Color(0xFFFFFCE4)),
+                  ),
+
+                  Positioned(
+                    right: -15,
+                    top: 22,
+                    child: _circulo(75, AppColors.highlight),
+                  ),
+
+                  // ---------------------------------------------
+                  // ÁREA CLARA COM O FORMULÁRIO (rola com o teclado)
+                  // ---------------------------------------------
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                   Positioned.fill(
                     top: 220,
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: const BoxDecoration(
+<<<<<<< HEAD
                         color: AppColors.surfaceLight,
+=======
+                        color: Color(0xFFFFFEF2),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(AppRadius.bottomSheet),
                           topRight: Radius.circular(AppRadius.bottomSheet),
@@ -267,7 +410,19 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const Center(
+<<<<<<< HEAD
                                 child: Text('Entrar', style: AppTextStyles.display),
+=======
+                                child: Text(
+                                  'Entrar',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 40,
+                                    fontFamily: AppFonts.title,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               ),
 
                               const SizedBox(height: 40),
@@ -279,6 +434,10 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                 controller: emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
+<<<<<<< HEAD
+=======
+                                style: _estiloCampo,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 decoration: _decoracao(
                                   hint: 'Digite o seu email',
                                   icone: Icons.email_outlined,
@@ -308,6 +467,10 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                 obscureText: !mostrarSenha,
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => entrar(),
+<<<<<<< HEAD
+=======
+                                style: _estiloCampo,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 decoration: _decoracao(
                                   hint: 'Digite sua senha',
                                   icone: Icons.lock_outline,
@@ -353,7 +516,12 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                       'Esqueci minha senha',
                                       style: TextStyle(
                                         color: AppColors.primary,
+<<<<<<< HEAD
                                         fontSize: 14,
+=======
+                                        fontSize: 13,
+                                        fontFamily: AppFonts.body,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                         fontWeight: FontWeight.w500,
                                         decoration: TextDecoration.underline,
                                       ),
@@ -369,12 +537,130 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                 height: 52,
                                 child: ElevatedButton(
                                   onPressed: carregando ? null : entrar,
+<<<<<<< HEAD
                                   child: const Text('Entrar'),
+=======
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.highlight,
+                                    foregroundColor: AppColors.primary,
+                                    elevation: 4,
+                                    shadowColor: Colors.black26,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppRadius.bottomSheet),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Entrar',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: AppFonts.body,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                 ),
                               ),
 
                               const SizedBox(height: 22),
 
+<<<<<<< HEAD
+=======
+                              // DIVISÃO
+                              const Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.primary,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: Text(
+                                      'ou',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontSize: 14,
+                                        fontFamily: AppFonts.body,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.primary,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 22),
+
+                              // GOOGLE E FACEBOOK
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _botaoSocial(
+                                      texto: 'Google',
+                                      aoTocar: _informarLoginSocial,
+                                      icone: Container(
+                                        width: 23,
+                                        height: 23,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFCCCCCC),
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'G',
+                                            style: TextStyle(
+                                              color: Color(0xFF4285F4),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  Expanded(
+                                    child: _botaoSocial(
+                                      texto: 'Facebook',
+                                      aoTocar: _informarLoginSocial,
+                                      icone: Container(
+                                        width: 23,
+                                        height: 23,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF1877F2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'f',
+                                            style: TextStyle(
+                                              color: AppColors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 22),
+
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                               // CRIAR CONTA
                               Wrap(
                                 alignment: WrapAlignment.center,
@@ -384,7 +670,12 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                     'Não tem uma conta? ',
                                     style: TextStyle(
                                       color: AppColors.primary,
+<<<<<<< HEAD
                                       fontSize: 14,
+=======
+                                      fontSize: 13,
+                                      fontFamily: AppFonts.body,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                     ),
                                   ),
                                   InkWell(
@@ -402,7 +693,12 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                                         'Cadastre-se',
                                         style: TextStyle(
                                           color: AppColors.primary,
+<<<<<<< HEAD
                                           fontSize: 14,
+=======
+                                          fontSize: 13,
+                                          fontFamily: AppFonts.title,
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -423,9 +719,41 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
                   // ---------------------------------------------
                   if (Navigator.canPop(context))
                     Positioned(
+<<<<<<< HEAD
                       left: AppSpacing.sm,
                       top: areaSegura.top + AppSpacing.xs,
                       child: const BotaoVoltar(),
+=======
+                      left: 18,
+                      top: areaSegura.top + 8,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.arrow_back,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'Voltar',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 14,
+                                  fontFamily: AppFonts.title,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+>>>>>>> bad908162c3cad30cc4e0aae7d34347b836cc1d0
                     ),
                 ],
               ),
