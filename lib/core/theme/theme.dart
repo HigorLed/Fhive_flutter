@@ -55,6 +55,15 @@ class AppColors {
 
   static const Color white = Colors.white;
 
+  /// Marrom escuro da tela de configurações.
+  static const Color primaryDeep = Color(0xFF4A2100);
+
+  /// Marrom dos cartões da tela de configurações.
+  static const Color primaryCard = Color(0xFF663000);
+
+  /// Creme claro usado nos controles da tela de configurações.
+  static const Color cream = Color(0xFFFFFCEB);
+
   /// Erro e ações destrutivas.
   static const Color danger = Color(0xFFE10D00);
 
@@ -128,6 +137,9 @@ class AppRadius {
 
   /// Chips e etiquetas pequenas.
   static const double chip = 12;
+
+  /// Painéis grandes (tela de configurações).
+  static const double largeCard = 22;
 
   static const double bottomSheet = 25;
 

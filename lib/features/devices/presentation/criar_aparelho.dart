@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/dialogo_texto.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 
@@ -480,6 +481,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           initialValue: _tipoSelecionado,
           dropdownColor: AppColors.surfaceLight,
           style: const TextStyle(
@@ -534,6 +536,7 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<String>(
+          isExpanded: true,
           key: ValueKey<String>('$_localSelecionado-$_revisaoDropdownLocal'),
           initialValue: _localSelecionado,
           dropdownColor: AppColors.surfaceLight,
@@ -574,35 +577,14 @@ class _TelaCriarAparelhoState extends State<TelaCriarAparelho> {
   }
 
   Future<void> _criarLocalPersonalizado() async {
-    final controller = TextEditingController();
-    final nome = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Criar local'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nome do local',
-            hintText: 'Ex.: Quarto de jogos',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
-          onSubmitted: (valor) => Navigator.of(dialogContext).pop(valor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: const Text('Criar local'),
-          ),
-        ],
-      ),
+    final nome = await pedirTexto(
+      context,
+      titulo: 'Criar local',
+      rotulo: 'Nome do local',
+      dica: 'Ex.: Quarto de jogos',
+      icone: Icons.location_on_outlined,
+      textoConfirmar: 'Criar local',
     );
-    controller.dispose();
 
     if (!mounted || nome == null) return;
     final nomeLimpo = nome.trim();

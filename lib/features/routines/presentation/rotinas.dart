@@ -5,6 +5,7 @@ import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/features/routines/presentation/formulario_rotina.dart';
 
 class TelaRotinas extends StatefulWidget {
   const TelaRotinas({super.key});
@@ -151,14 +152,16 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
 
   Widget _cardRotina(RotinaItem rotina) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
-      decoration: BoxDecoration(
-        color: rotina.ativa
-            ? AppColors.surfaceLight
-            : AppColors.surfaceLight.withValues(alpha: 0.58),
+    return Material(
+      color: rotina.ativa
+          ? AppColors.surfaceLight
+          : AppColors.surfaceLight.withValues(alpha: 0.58),
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.button),
-      ),
+        onTap: () => _editarRotina(rotina),
+        child: Padding(
+      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -201,13 +204,16 @@ class _TelaRotinasState extends State<TelaRotinas> {
             iconSize: 18,
             icon: const Icon(Icons.more_vert, color: marrom, size: 17),
             onSelected: (acao) {
-              if (acao == 'alternar') {
+              if (acao == 'editar') {
+                _editarRotina(rotina);
+              } else if (acao == 'alternar') {
                 _alternarRotina(rotina);
               } else if (acao == 'remover') {
                 _confirmarRemocaoRotina(rotina);
               }
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(value: 'editar', child: Text('Editar rotina')),
               PopupMenuItem(
                 value: 'alternar',
                 child: Text(
@@ -221,6 +227,8 @@ class _TelaRotinasState extends State<TelaRotinas> {
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -307,110 +315,18 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ADICIONAR ROTINA
   // ============================================================
 
-  void _adicionarRotina() {
-    final dispositivos = AparelhosStore.aparelhos.value;
-    if (dispositivos.isEmpty) {
+  Future<void> _adicionarRotina() async {
+    if (AparelhosStore.aparelhos.value.isEmpty) {
       _mensagemRotina('Cadastre um aparelho antes de criar uma rotina.');
       return;
     }
+    final salvou = await TelaFormularioRotina.abrir(context);
+    if (mounted && salvou == true) _mensagemRotina('Rotina salva.');
+  }
 
-    final controller = TextEditingController();
-    var dispositivoSelecionado = dispositivos.first.id;
-    var horarioSelecionado = '07:00';
-    var salvando = false;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Adicionar rotina'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(hintText: 'Nome da rotina'),
-                ),
-                const SizedBox(height: 14),
-                DropdownButtonFormField<String>(
-                  initialValue: dispositivoSelecionado,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Aparelho'),
-                  items: dispositivos.map((dispositivo) => DropdownMenuItem<String>(
-                    value: dispositivo.id,
-                    child: Text(dispositivo.nome, overflow: TextOverflow.ellipsis),
-                  )).toList(),
-                  onChanged: salvando ? null : (valor) {
-                    if (valor != null) setDialogState(() => dispositivoSelecionado = valor);
-                  },
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: salvando ? null : () async {
-                    final horario = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay(
-                        hour: int.parse(horarioSelecionado.split(':')[0]),
-                        minute: int.parse(horarioSelecionado.split(':')[1]),
-                      ),
-                    );
-                    if (horario != null) {
-                      setDialogState(() => horarioSelecionado =
-                          '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}');
-                    }
-                  },
-                  icon: const Icon(Icons.schedule),
-                  label: Text('Horário inicial: $horarioSelecionado'),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'A rotina será salva no backend para todos os dias da semana, com uma ação inicial de ligar o aparelho. A execução física depende do executor de rotinas, ainda não exposto pela API.',
-                  style: TextStyle(fontSize: 12, color: marrom),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: salvando ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: salvando ? null : () async {
-                final nome = controller.text.trim();
-                if (nome.isEmpty) {
-                  _mensagemRotina('Digite um nome para a rotina.');
-                  return;
-                }
-                final dispositivo = dispositivos.firstWhere(
-                  (item) => item.id == dispositivoSelecionado,
-                );
-                setDialogState(() => salvando = true);
-                try {
-                  await RotinasStore.adicionarNoBackend(
-                    nome: nome,
-                    dispositivoId: dispositivo.id,
-                    nomeDispositivo: dispositivo.nome,
-                    local: dispositivo.local,
-                    horario: horarioSelecionado,
-                  );
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                  if (mounted) _mensagemRotina('Rotina "$nome" salva no backend.');
-                } catch (error) {
-                  if (dialogContext.mounted) setDialogState(() => salvando = false);
-                  if (mounted) _mensagemRotina(error.toString());
-                }
-              },
-              child: Text(salvando ? 'Salvando...' : 'Adicionar'),
-            ),
-          ],
-        ),
-      ),
-    ).then((_) => controller.dispose());
+  Future<void> _editarRotina(RotinaItem rotina) async {
+    final salvou = await TelaFormularioRotina.abrir(context, rotina: rotina);
+    if (mounted && salvou == true) _mensagemRotina('Rotina atualizada.');
   }
 
   Future<void> _alternarRotina(RotinaItem rotina) async {

@@ -237,7 +237,10 @@ void main() {
     expect(find.text('Configuração da conexão'), findsNothing);
     expect(find.text('Testar conexão'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Ethernet'));
     await tester.tap(find.text('Ethernet'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Testar conexão'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Testar conexão'));
     await tester.pumpAndSettle();
@@ -297,9 +300,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Ligar/Desligar'), findsOneWidget);
+    expect(find.text('Ligar TV'), findsOneWidget);
     expect(find.text('Volume'), findsOneWidget);
-    expect(find.text('Streamings'), findsOneWidget);
+    expect(find.text('Aplicativos de streaming'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Adicionar aos favoritos'));
     await tester.pumpAndSettle();

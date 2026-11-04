@@ -1,6 +1,58 @@
 import 'package:flutter/foundation.dart';
 import 'package:tcc_mobile/features/routines/data/rotinas_api.dart';
 
+/// Chaves de dia usadas pelo backend, na ordem de exibição (Seg–Dom).
+const List<String> diasDaSemanaApi = <String>[
+  'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo',
+];
+
+const Map<String, String> rotuloDiaSemana = <String, String>{
+  'segunda': 'Seg', 'terca': 'Ter', 'quarta': 'Qua', 'quinta': 'Qui',
+  'sexta': 'Sex', 'sabado': 'Sáb', 'domingo': 'Dom',
+};
+
+/// Tipos de ação aceitos pelo backend.
+const Map<String, String> rotuloTipoAcao = <String, String>{
+  'ligar': 'Ligar',
+  'desligar': 'Desligar',
+  'alterar_estado': 'Alterar estado',
+};
+
+/// Uma ação da rotina: `{ordem, horario, tipo, instrucoes:{nome, descricao}}`.
+class AcaoRotina {
+  final String horario;
+  final String tipo;
+  final String nome;
+  final String descricao;
+
+  const AcaoRotina({
+    required this.horario,
+    this.tipo = 'ligar',
+    this.nome = '',
+    this.descricao = '',
+  });
+
+  AcaoRotina copyWith({String? horario, String? tipo, String? nome, String? descricao}) =>
+      AcaoRotina(
+        horario: horario ?? this.horario,
+        tipo: tipo ?? this.tipo,
+        nome: nome ?? this.nome,
+        descricao: descricao ?? this.descricao,
+      );
+
+  Map<String, dynamic> paraApi(int ordem) => <String, dynamic>{
+        'ordem': ordem,
+        'horario': horario,
+        'tipo': tipo,
+        'instrucoes': <String, dynamic>{
+          'nome': nome.trim(),
+          if (descricao.trim().isNotEmpty) 'descricao': descricao.trim(),
+          if (tipo == 'ligar') 'estado': true,
+          if (tipo == 'desligar') 'estado': false,
+        },
+      };
+}
+
 class RotinaItem {
   /// ID do registro no backend (MongoDB).
   final String id;
@@ -12,6 +64,11 @@ class RotinaItem {
   final DateTime? ultimaExecucao;
   final String dispositivoId;
   final String nomeDispositivo;
+  final String descricao;
+  final String horarioInicial;
+  final String horarioFinal;
+  final List<String> dias;
+  final List<AcaoRotina> acoesDetalhe;
 
   const RotinaItem({
     required this.id,
@@ -23,6 +80,11 @@ class RotinaItem {
     this.ultimaExecucao,
     this.dispositivoId = '',
     this.nomeDispositivo = '',
+    this.descricao = '',
+    this.horarioInicial = '',
+    this.horarioFinal = '',
+    this.dias = const <String>[],
+    this.acoesDetalhe = const <AcaoRotina>[],
   });
 
   RotinaItem copyWith({
@@ -49,6 +111,11 @@ class RotinaItem {
           : (ultimaExecucao ?? this.ultimaExecucao),
       dispositivoId: dispositivoId ?? this.dispositivoId,
       nomeDispositivo: nomeDispositivo ?? this.nomeDispositivo,
+      descricao: descricao,
+      horarioInicial: horarioInicial,
+      horarioFinal: horarioFinal,
+      dias: dias,
+      acoesDetalhe: acoesDetalhe,
     );
   }
 }
@@ -107,6 +174,62 @@ class RotinasStore {
     return criada;
   }
 
+  /// Cria (id == null) ou atualiza (POST/PUT /rotinas) uma rotina completa,
+  /// com o mesmo conteúdo do formulário da versão web.
+  static Future<RotinaItem> salvarNoBackend({
+    String? id,
+    required String nome,
+    required String descricao,
+    required String dispositivoId,
+    required String nomeDispositivo,
+    required String local,
+    required String horarioInicial,
+    required String horarioFinal,
+    required List<String> dias,
+    required List<AcaoRotina> acoes,
+  }) async {
+    final corpo = <String, dynamic>{
+      'nome': nome.trim(),
+      'descricao': descricao.trim().isEmpty ? null : descricao.trim(),
+      'dispositivoId': dispositivoId,
+      'horarioInicial': horarioInicial,
+      'horarioFinal': horarioFinal,
+      'diasSemana': <String, bool>{
+        for (final dia in diasDaSemanaApi) dia: dias.contains(dia),
+      },
+      'acoes': <Map<String, dynamic>>[
+        for (var i = 0; i < acoes.length; i++) acoes[i].paraApi(i + 1),
+      ],
+    };
+    final resposta = id == null
+        ? await RotinasApi.criar(
+            nome: corpo['nome'] as String,
+            dispositivoId: dispositivoId,
+            horarioInicial: horarioInicial,
+            horarioFinal: horarioFinal,
+            descricao: corpo['descricao'] as String?,
+            diasSemana: corpo['diasSemana'] as Map<String, bool>,
+            acoes: corpo['acoes'] as List<Map<String, dynamic>>,
+          )
+        : await RotinasApi.atualizar(id, corpo);
+    final dados = _map(resposta['rotina'] ?? resposta);
+    final salva = _doBackend(<String, dynamic>{
+      ...corpo,
+      ...dados,
+      'dispositivo': <String, dynamic>{
+        'deviceId': dispositivoId,
+        'nome': nomeDispositivo,
+        'local': local,
+      },
+    });
+    if (id == null) {
+      rotinas.value = <RotinaItem>[salva, ...rotinas.value];
+    } else {
+      _substituir(salva);
+    }
+    return salva;
+  }
+
   static Future<void> alternarNoBackend(String id) async {
     final atual = porId(id);
     if (atual == null) return;
@@ -153,7 +276,23 @@ class RotinasStore {
         .map((entry) => entry.key)
         .join(', ');
     final horario = '${dados['horarioInicial'] ?? 'Sem horário'}';
+    final detalhes = acoesApi.whereType<Map>().map((acao) {
+      final instrucoes = _map(acao['instrucoes']);
+      return AcaoRotina(
+        horario: '${acao['horario'] ?? ''}',
+        tipo: '${acao['tipo'] ?? 'ligar'}',
+        nome: '${instrucoes['nome'] ?? ''}',
+        descricao: '${instrucoes['descricao'] ?? ''}',
+      );
+    }).toList(growable: false);
     return RotinaItem(
+      descricao: '${dados['descricao'] ?? ''}',
+      horarioInicial: '${dados['horarioInicial'] ?? ''}',
+      horarioFinal: '${dados['horarioFinal'] ?? ''}',
+      dias: List<String>.unmodifiable(dias.entries
+          .where((entry) => entry.value == true)
+          .map((entry) => entry.key)),
+      acoesDetalhe: List<AcaoRotina>.unmodifiable(detalhes),
       id: '${dados['id'] ?? ''}',
       nome: '${dados['nome'] ?? 'Rotina'}',
       local: '${dispositivo['local'] ?? 'Locais'}',

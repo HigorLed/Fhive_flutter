@@ -103,47 +103,12 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
     }
   }
 
-  Future<String?> _pedirCodigoConfirmacao() async {
-    final codigoController = TextEditingController();
-    final key = GlobalKey<FormState>();
-    final codigo = await showDialog<String>(
+  Future<String?> _pedirCodigoConfirmacao() {
+    return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirme seu e-mail'),
-        content: Form(
-          key: key,
-          child: TextFormField(
-            controller: codigoController,
-            autofocus: true,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Código de confirmação',
-              helperText: 'Digite o código enviado para seu e-mail.',
-            ),
-            validator: (valor) => (valor == null || valor.trim().isEmpty)
-                ? 'Informe o código recebido.'
-                : null,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (key.currentState!.validate()) {
-                Navigator.pop(dialogContext, codigoController.text.trim());
-              }
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
+      builder: (_) => const _DialogoCodigoConfirmacao(),
     );
-    codigoController.dispose();
-    return codigo;
   }
 
   void _mensagem(String texto) {
@@ -657,6 +622,57 @@ class _TelaDeCadastroState extends State<TelaDeCadastro> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DialogoCodigoConfirmacao extends StatefulWidget {
+  const _DialogoCodigoConfirmacao();
+
+  @override
+  State<_DialogoCodigoConfirmacao> createState() => _DialogoCodigoConfirmacaoState();
+}
+
+class _DialogoCodigoConfirmacaoState extends State<_DialogoCodigoConfirmacao> {
+  final TextEditingController _codigo = TextEditingController();
+  final GlobalKey<FormState> _form = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _codigo.dispose();
+    super.dispose();
+  }
+
+  void _confirmar() {
+    if (_form.currentState?.validate() ?? false) {
+      Navigator.of(context).pop(_codigo.text.trim());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Confirme seu e-mail'),
+      content: Form(
+        key: _form,
+        child: TextFormField(
+          controller: _codigo,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Código de confirmação',
+            helperText: 'Digite o código enviado para seu e-mail.',
+          ),
+          onFieldSubmitted: (_) => _confirmar(),
+          validator: (valor) => (valor == null || valor.trim().isEmpty)
+              ? 'Informe o código recebido.'
+              : null,
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+        ElevatedButton(onPressed: _confirmar, child: const Text('Confirmar')),
+      ],
     );
   }
 }

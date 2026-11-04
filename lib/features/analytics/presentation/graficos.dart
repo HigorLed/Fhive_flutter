@@ -328,13 +328,8 @@ class _TelaGraficosState extends State<TelaGraficos> {
   void _selecionarLocal() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.bottomSheet)),
-        ),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -747,7 +742,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   Widget _cardResumo() {
     return Container(
       width: double.infinity,
-      height: 150,
+      constraints: const BoxConstraints(minHeight: 150),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: AppColors.surfaceStrong,

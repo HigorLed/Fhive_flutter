@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/shared/widgets/dialogo_texto.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
@@ -111,22 +112,24 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Widget _painelPrincipal() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
-      decoration: BoxDecoration(
+      child: Material(
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _cabecalhoAparelho(),
-          const SizedBox(height: 14),
-          _conteudoPorTipo(),
-          const SizedBox(height: 18),
-          _rodapeIdentificacao(),
-        ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _cabecalhoAparelho(),
+              const SizedBox(height: 14),
+              _conteudoPorTipo(),
+              const SizedBox(height: 18),
+              _rodapeIdentificacao(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -574,69 +577,10 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Future<void> _adicionarAtalhoTV() async {
-    final nomeController = TextEditingController();
-    const comandos = <String, IconData>{
-      'Ligar TV': Icons.power_settings_new_rounded,
-      'Desligar TV': Icons.power_off_rounded,
-      'Aumentar volume': Icons.volume_up_rounded,
-      'Diminuir volume': Icons.volume_down_rounded,
-      'Silenciar': Icons.volume_off_rounded,
-      'Canal +': Icons.add_circle_outline_rounded,
-      'Canal -': Icons.remove_circle_outline_rounded,
-      'Modo Cinema': Icons.movie_outlined,
-      'Modo Jogo': Icons.sports_esports_outlined,
-    };
-    var comandoSelecionado = 'Ligar TV';
     final dados = await showDialog<(String, String)?>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Adicionar atalho'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomeController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do atalho',
-                  hintText: 'Ex.: Noite de cinema',
-                  prefixIcon: Icon(Icons.bolt_rounded),
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: comandoSelecionado,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Comando'),
-                items: comandos.keys.map((comando) => DropdownMenuItem<String>(
-                  value: comando,
-                  child: Text(comando, overflow: TextOverflow.ellipsis),
-                )).toList(),
-                onChanged: (valor) {
-                  if (valor != null) setDialogState(() => comandoSelecionado = valor);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                (nomeController.text.trim(), comandoSelecionado),
-              ),
-              child: const Text('Adicionar'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const _DialogoAtalhoTV(),
     );
-    nomeController.dispose();
     if (!mounted || dados == null) return;
     if (dados.$1.isEmpty) {
       _mensagem('Informe um nome para o atalho.');
@@ -1311,31 +1255,11 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Future<void> _adicionarPreConfiguracao() async {
-    final controller = TextEditingController();
-    final nome = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Nova pré-configuração'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Nome'),
-          onSubmitted: (valor) => Navigator.pop(dialogContext, valor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Adicionar'),
-          ),
-        ],
-      ),
+    final nome = await pedirTexto(
+      context,
+      titulo: 'Nova pré-configuração',
+      rotulo: 'Nome',
     );
-    controller.dispose();
     if (!mounted || nome == null) return;
     final limpo = nome.trim();
     if (limpo.isEmpty) {
@@ -1365,31 +1289,11 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Future<void> _adicionarServicoStreaming() async {
-    final controller = TextEditingController();
-    final nome = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Adicionar streaming'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Nome do serviço'),
-          onSubmitted: (valor) => Navigator.pop(dialogContext, valor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Adicionar'),
-          ),
-        ],
-      ),
+    final nome = await pedirTexto(
+      context,
+      titulo: 'Adicionar streaming',
+      rotulo: 'Nome do serviço',
     );
-    controller.dispose();
     if (!mounted || nome == null) return;
     final limpo = nome.trim();
     if (limpo.isEmpty) {
@@ -1546,5 +1450,82 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(mensagem)));
+  }
+}
+
+const Map<String, IconData> _comandosAtalhoTV = <String, IconData>{
+  'Ligar TV': Icons.power_settings_new_rounded,
+  'Desligar TV': Icons.power_off_rounded,
+  'Aumentar volume': Icons.volume_up_rounded,
+  'Diminuir volume': Icons.volume_down_rounded,
+  'Silenciar': Icons.volume_off_rounded,
+  'Canal +': Icons.add_circle_outline_rounded,
+  'Canal -': Icons.remove_circle_outline_rounded,
+  'Modo Cinema': Icons.movie_outlined,
+  'Modo Jogo': Icons.sports_esports_outlined,
+};
+
+class _DialogoAtalhoTV extends StatefulWidget {
+  const _DialogoAtalhoTV();
+
+  @override
+  State<_DialogoAtalhoTV> createState() => _DialogoAtalhoTVState();
+}
+
+class _DialogoAtalhoTVState extends State<_DialogoAtalhoTV> {
+  final TextEditingController _nome = TextEditingController();
+  String _comando = 'Ligar TV';
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Adicionar atalho'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nome,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Nome do atalho',
+              hintText: 'Ex.: Noite de cinema',
+              prefixIcon: Icon(Icons.bolt_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _comando,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Comando'),
+            items: _comandosAtalhoTV.keys
+                .map((c) => DropdownMenuItem<String>(
+                      value: c,
+                      child: Text(c, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (valor) {
+              if (valor != null) setState(() => _comando = valor);
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop((_nome.text.trim(), _comando)),
+          child: const Text('Adicionar'),
+        ),
+      ],
+    );
   }
 }

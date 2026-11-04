@@ -307,11 +307,10 @@ class _TelaContaState extends State<TelaConta> {
   }
 
   Widget _cartaoSeguranca(ContaLocal? conta) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
+    return Material(
+      color: AppColors.surfaceLight,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(

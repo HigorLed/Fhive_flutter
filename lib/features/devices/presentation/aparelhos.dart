@@ -32,35 +32,10 @@ class _TelaAparelhosState extends State<TelaAparelhos> {
   }
 
   Future<void> _criarLocal() async {
-    final controller = TextEditingController();
     final nome = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Criar local'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nome do local',
-            hintText: 'Ex.: Quarto de jogos',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
-          onSubmitted: (valor) => Navigator.of(dialogContext).pop(valor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: const Text('Criar local'),
-          ),
-        ],
-      ),
+      builder: (_) => const _DialogoCriarLocal(),
     );
-    controller.dispose();
 
     if (!mounted || nome == null) return;
     final nomeLimpo = nome.trim();
@@ -447,6 +422,52 @@ class _AparelhoCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Diálogo que possui e descarta o próprio controller (evita "used after dispose").
+class _DialogoCriarLocal extends StatefulWidget {
+  const _DialogoCriarLocal();
+
+  @override
+  State<_DialogoCriarLocal> createState() => _DialogoCriarLocalState();
+}
+
+class _DialogoCriarLocalState extends State<_DialogoCriarLocal> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Criar local'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(
+          labelText: 'Nome do local',
+          hintText: 'Ex.: Quarto de jogos',
+          prefixIcon: Icon(Icons.location_on_outlined),
+        ),
+        onSubmitted: (valor) => Navigator.of(context).pop(valor),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Criar local'),
+        ),
+      ],
     );
   }
 }
