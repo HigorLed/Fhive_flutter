@@ -10,7 +10,7 @@ Trabalho de Conclusão de Curso (TCC)
 
 ![Flutter](https://img.shields.io/badge/Flutter-Material%203-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-%5E3.12.2-0175C2?logo=dart&logoColor=white)
-![Plataformas](https://img.shields.io/badge/plataformas-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Desktop-8A5A00)
+![Plataformas](https://img.shields.io/badge/plataformas-Android%20%7C%20iOS%20%7C%20-8A5A00)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-F4A91A)
 
 </div>
