@@ -590,7 +590,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
       aparelhoId: widget.id,
       nome: dados.$1,
       comando: dados.$2,
-      icone: comandos[dados.$2] ?? Icons.bolt_rounded,
+      icone: _comandosAtalhoTV[dados.$2] ?? Icons.bolt_rounded,
     );
     if (!adicionado) {
       _mensagem('Já existe um atalho com esse nome ou o aparelho não está cadastrado.');

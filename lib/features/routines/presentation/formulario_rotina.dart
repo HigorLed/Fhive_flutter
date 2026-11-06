@@ -22,9 +22,8 @@ class TelaFormularioRotina extends StatefulWidget {
 }
 
 class _AcaoForm {
-  _AcaoForm({String horario = '08:00', this.tipo = 'ligar', String nome = '', String descricao = ''})
-      : horario = horario,
-        nome = TextEditingController(text: nome),
+  _AcaoForm({this.horario = '08:00', this.tipo = 'ligar', String nome = '', String descricao = ''})
+      : nome = TextEditingController(text: nome),
         descricao = TextEditingController(text: descricao);
 
   String horario;
