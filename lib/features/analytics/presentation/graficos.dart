@@ -23,9 +23,9 @@ class TelaGraficos extends StatefulWidget {
 class _TelaGraficosState extends State<TelaGraficos> {
   static const Color marrom = AppColors.primary;
   static const Color fundoCard = AppColors.surface;
-  static const Color fundoCardExterno = AppColors.surfaceStrong;
 
-  String localSelecionado = 'Sala de Estar';
+  /// Áreas recolhidas/expandidas. Chave: '<seção>|<área em minúsculas>'.
+  final Map<String, bool> _areasAbertas = <String, bool>{};
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +52,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
                       children: [
                         const CabecalhoPagina(titulo: 'Minha casa'),
                         const SizedBox(height: AppSpacing.section),
-                        const TituloSecao(titulo: 'Gráficos disponíveis'),
-                        const SizedBox(height: AppSpacing.md),
-                        _seletorLocal(),
-                        const SizedBox(height: AppSpacing.md),
-                        _resumoDoLocal(),
-                        const SizedBox(height: AppSpacing.md),
-                        _cartoesGraficosDisponiveis(context),
-                        const SizedBox(height: AppSpacing.section),
-                        const TituloSecao(titulo: 'Gráficos indisponíveis'),
-                        const SizedBox(height: AppSpacing.md),
-                        _cartoesGraficosIndisponiveis(context),
+                        _conteudoGraficos(context),
                       ],
                     ),
                   ),
@@ -77,228 +67,179 @@ class _TelaGraficosState extends State<TelaGraficos> {
     );
   }
 
-  Widget _resumoDoLocal() {
-    return ValueListenableBuilder<List<AparelhoItem>>(
-      valueListenable: AparelhosStore.aparelhos,
-      builder: (context, aparelhos, _) {
-        final doLocal = aparelhos.where(
-          (aparelho) =>
-              aparelho.local.trim().toLowerCase() ==
-              localSelecionado.trim().toLowerCase(),
-        ).toList();
-        final disponiveis = doLocal.where(_temGraficoDisponivel).length;
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLight.withValues(alpha: 0.72),
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.10),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                ),
-                child: const Icon(Icons.meeting_room_outlined, color: marrom),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localSelecionado,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodyBold,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${doLocal.length} aparelho(s) • $disponiveis com gráficos',
-                      style: TextStyle(
-                        color: marrom.withValues(alpha: 0.76),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                doLocal.isEmpty ? Icons.devices_other_outlined : Icons.analytics_outlined,
-                color: marrom,
-                size: 22,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _seletorLocal() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.chip),
-        onTap: _selecionarLocal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(localSelecionado, style: AppTextStyles.cardTitle),
-              const Icon(Icons.keyboard_arrow_down, size: 22),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   bool _temGraficoDisponivel(AparelhoItem aparelho) {
     final tipo = aparelho.tipo.trim().toLowerCase();
     return tipo == 'tv' || tipo == 'ar condicionado';
   }
 
-  Widget _cartoesGraficosDisponiveis(BuildContext context) {
+  Widget _conteudoGraficos(BuildContext context) {
     return ValueListenableBuilder<List<AparelhoItem>>(
       valueListenable: AparelhosStore.aparelhos,
       builder: (context, aparelhos, _) {
-        final disponiveis = aparelhos
-            .where(
-              (aparelho) =>
-                  aparelho.local.trim().toLowerCase() ==
-                      localSelecionado.trim().toLowerCase() &&
-                  _temGraficoDisponivel(aparelho),
-            )
+        final disponiveis = aparelhos.where(_temGraficoDisponivel).toList();
+        final indisponiveis = aparelhos
+            .where((aparelho) => !_temGraficoDisponivel(aparelho))
             .toList();
 
-        if (disponiveis.isEmpty) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: fundoCardExterno,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-            ),
-            child: const Text(
-              'Nenhum aparelho com gráficos disponíveis neste local.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: marrom, fontWeight: FontWeight.w700),
-            ),
-          );
-        }
-
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: fundoCardExterno,
-            borderRadius: BorderRadius.circular(AppRadius.card),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final largura = (constraints.maxWidth - 10) / 2;
-              return Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: disponiveis.map((aparelho) {
-                  return SizedBox(
-                    width: largura,
-                    child: GestureDetector(
-                      onTap: () => _abrirGraficosDoAparelho(aparelho),
-                      child: _cardAparelho(
-                        nome: aparelho.nome,
-                        subtitulo: 'Disponível',
-                        icone: aparelho.icone,
-                        metrica: aparelho.tipo.trim().toLowerCase() == 'tv'
-                            ? '12,5 kWh'
-                            : '28,4 kWh',
-                        mostrarMiniGrafico: true,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const TituloSecao(titulo: 'Gráficos disponíveis'),
+            const SizedBox(height: AppSpacing.md),
+            if (disponiveis.isEmpty)
+              const Text(
+                'Nenhum aparelho com gráficos disponíveis.',
+                style: AppTextStyles.bodyBold,
+              )
+            else
+              _gruposPorArea(
+                context,
+                secao: 'disponiveis',
+                aparelhos: disponiveis,
+                construirCard: (aparelho) => GestureDetector(
+                  onTap: () => _abrirGraficosDoAparelho(aparelho),
+                  child: _cardAparelho(
+                    nome: aparelho.nome,
+                    subtitulo: 'Disponível',
+                    icone: aparelho.icone,
+                    metrica: aparelho.tipo.trim().toLowerCase() == 'tv'
+                        ? '12,5 kWh'
+                        : '28,4 kWh',
+                    mostrarMiniGrafico: true,
+                  ),
+                ),
+              ),
+            if (indisponiveis.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.section),
+              const TituloSecao(titulo: 'Gráficos indisponíveis'),
+              const SizedBox(height: AppSpacing.md),
+              _gruposPorArea(
+                context,
+                secao: 'indisponiveis',
+                aparelhos: indisponiveis,
+                construirCard: (aparelho) => GestureDetector(
+                  onTap: () => _mensagemGraficoIndisponivel(
+                    'Os gráficos de "${aparelho.nome}" serão liberados quando houver telemetria e suporte para esse tipo de aparelho.',
+                  ),
+                  child: _cardAparelho(
+                    nome: aparelho.nome,
+                    subtitulo: 'Aguardando dados',
+                    icone: aparelho.icone,
+                  ),
+                ),
+              ),
+            ],
+          ],
         );
       },
     );
   }
 
-  Widget _cartoesGraficosIndisponiveis(BuildContext context) {
-    return ValueListenableBuilder<List<AparelhoItem>>(
-      valueListenable: AparelhosStore.aparelhos,
-      builder: (context, aparelhos, _) {
-        final indisponiveis = aparelhos
-            .where(
-              (aparelho) =>
-                  aparelho.local.trim().toLowerCase() ==
-                      localSelecionado.trim().toLowerCase() &&
-                  !_temGraficoDisponivel(aparelho),
-            )
-            .toList();
+  /// Agrupa os aparelhos por área, no mesmo formato da tela de aparelhos:
+  /// título da área com a quantidade e uma seta para recolher/expandir.
+  Widget _gruposPorArea(
+    BuildContext context, {
+    required String secao,
+    required List<AparelhoItem> aparelhos,
+    required Widget Function(AparelhoItem aparelho) construirCard,
+  }) {
+    // Mantém a ordem de AparelhosStore.locaisComAparelhos, mas só com as
+    // áreas que têm aparelhos desta seção.
+    final areas = AparelhosStore.locaisComAparelhos.where((area) {
+      return aparelhos.any(
+        (aparelho) =>
+            aparelho.local.trim().toLowerCase() == area.trim().toLowerCase(),
+      );
+    }).toList();
 
-        if (indisponiveis.isEmpty) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight.withValues(alpha: 0.58),
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.08),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.check_circle_outline_rounded, color: marrom, size: 22),
-                SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    'Todos os aparelhos deste local estão representados acima.',
-                    style: TextStyle(
-                      color: marrom,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      height: 1.3,
-                    ),
+    final larguraCard =
+        (MediaQuery.sizeOf(context).width -
+            2 * AppSpacing.pageHorizontal -
+            AppSpacing.md) /
+        2;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < areas.length; i++) ...[
+          Builder(
+            builder: (context) {
+              final area = areas[i];
+              final chave = '$secao|${area.trim().toLowerCase()}';
+              final aberta = _areasAbertas[chave] ?? true;
+              final daArea = aparelhos
+                  .where(
+                    (aparelho) =>
+                        aparelho.local.trim().toLowerCase() ==
+                        area.trim().toLowerCase(),
+                  )
+                  .toList();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _cabecalhoArea(
+                    area,
+                    daArea.length,
+                    aberta,
+                    () => setState(() => _areasAbertas[chave] = !aberta),
                   ),
-                ),
-              ],
-            ),
-          );
-        }
+                  if (aberta) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.md,
+                      children: daArea
+                          .map(
+                            (aparelho) => SizedBox(
+                              width: larguraCard,
+                              child: construirCard(aparelho),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+          if (i < areas.length - 1) const SizedBox(height: AppSpacing.section),
+        ],
+      ],
+    );
+  }
 
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: indisponiveis.map((aparelho) {
-            return SizedBox(
-              width: (MediaQuery.sizeOf(context).width - 64) / 2,
-              child: GestureDetector(
-                onTap: () => _mensagemGraficoIndisponivel(
-                  'Os gráficos de "${aparelho.nome}" serão liberados quando houver telemetria e suporte para esse tipo de aparelho.',
-                ),
-                child: _cardAparelho(
-                  nome: aparelho.nome,
-                  subtitulo: 'Aguardando dados',
-                  icone: aparelho.icone,
-                ),
+  Widget _cabecalhoArea(
+    String area,
+    int quantidade,
+    bool aberta,
+    VoidCallback aoTocar,
+  ) {
+    return InkWell(
+      onTap: aoTocar,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Expanded(child: Text(area, style: AppTextStyles.cardTitle)),
+            Text(
+              '$quantidade',
+              style: TextStyle(
+                color: marrom.withValues(alpha: 0.72),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
-            );
-          }).toList(),
-        );
-      },
+            ),
+            const SizedBox(width: 3),
+            Icon(
+              aberta ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: marrom,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -320,44 +261,6 @@ class _TelaGraficosState extends State<TelaGraficos> {
           local: aparelho.local,
           status: aparelho.status,
           deviceBackendId: aparelho.backendId,
-        ),
-      ),
-    );
-  }
-
-  void _selecionarLocal() {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Selecionar local',
-                style: TextStyle(
-                  color: marrom,
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              for (final local in AparelhosStore.locaisDisponiveis)
-                ListTile(
-                  dense: true,
-                  title: Text(local, style: const TextStyle(color: marrom)),
-                  trailing: local == localSelecionado
-                      ? const Icon(Icons.check, color: marrom)
-                      : null,
-                  onTap: () {
-                    setState(() => localSelecionado = local);
-                    Navigator.pop(sheetContext);
-                  },
-                ),
-            ],
-          ),
         ),
       ),
     );

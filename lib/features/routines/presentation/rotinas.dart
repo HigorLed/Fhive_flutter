@@ -15,8 +15,6 @@ class TelaRotinas extends StatefulWidget {
 }
 
 class _TelaRotinasState extends State<TelaRotinas> {
-  static const Color marrom = AppColors.primary;
-
   String localSelecionado = 'Locais';
 
   @override
@@ -59,7 +57,7 @@ class _TelaRotinasState extends State<TelaRotinas> {
                         ),
                         const SizedBox(height: AppSpacing.md),
                         _botaoAdicionarRotina(),
-                        const SizedBox(height: AppSpacing.cardGap),
+                        const SizedBox(height: AppSpacing.section),
                         _listaRotinas(),
                       ],
                     ),
@@ -80,17 +78,28 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
 
   Widget _seletorLocal() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.chip),
-      onTap: _selecionarLocal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(localSelecionado, style: AppTextStyles.bodyBold),
-            const Icon(Icons.keyboard_arrow_down, size: 22),
-          ],
+    final borda = BorderRadius.circular(AppRadius.chip);
+    return Material(
+      color: AppColors.surfaceLight,
+      borderRadius: borda,
+      child: InkWell(
+        borderRadius: borda,
+        onTap: _selecionarLocal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.place_outlined, size: 16),
+              const SizedBox(width: AppSpacing.xs),
+              Text(localSelecionado, style: AppTextStyles.bodyBold),
+              const SizedBox(width: AppSpacing.xs),
+              const Icon(Icons.keyboard_arrow_down, size: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -99,9 +108,9 @@ class _TelaRotinasState extends State<TelaRotinas> {
   Widget _botaoAdicionarRotina() {
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton.icon(
+      child: ElevatedButton.icon(
         onPressed: _adicionarRotina,
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Adicionar rotina'),
       ),
     );
@@ -121,29 +130,52 @@ class _TelaRotinasState extends State<TelaRotinas> {
               rotina.local == localSelecionado;
         }).toList();
 
-        if (filtradas.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'Nenhuma rotina cadastrada para este local.',
+        if (filtradas.isEmpty) return _estadoVazio();
+
+        final ativas = filtradas.where((r) => r.ativa).length;
+        final total = filtradas.length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$total ${total == 1 ? 'rotina' : 'rotinas'} · '
+              '$ativas ${ativas == 1 ? 'ativa' : 'ativas'}',
               style: AppTextStyles.caption,
             ),
-          );
-        }
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: filtradas.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            mainAxisExtent: 54,
-          ),
-          itemBuilder: (context, index) => _cardRotina(filtradas[index]),
+            const SizedBox(height: AppSpacing.md),
+            for (final rotina in filtradas) ...[
+              _cardRotina(rotina),
+              const SizedBox(height: AppSpacing.cardGap),
+            ],
+          ],
         );
       },
+    );
+  }
+
+  Widget _estadoVazio() {
+    return CartaoFhive(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          children: [
+            const Icon(Icons.event_repeat_outlined, size: 36),
+            const SizedBox(height: AppSpacing.md),
+            const Text('Nenhuma rotina por aqui', style: AppTextStyles.cardTitle),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Nenhuma rotina cadastrada para este local.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -151,84 +183,225 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // CARD ROTINA
   // ============================================================
 
+  String _textoDias(List<String> dias) {
+    if (dias.isEmpty) return '';
+    if (dias.length == 7) return 'Todos os dias';
+    final ordenados = diasDaSemanaApi.where(dias.contains).toList();
+    final lista = ordenados.isEmpty ? dias : ordenados;
+    return lista.map((d) => rotuloDiaSemana[d] ?? d).join(', ');
+  }
+
   Widget _cardRotina(RotinaItem rotina) {
-    return Material(
-      color: rotina.ativa
-          ? AppColors.surfaceLight
-          : AppColors.surfaceLight.withValues(alpha: 0.58),
-      borderRadius: BorderRadius.circular(AppRadius.button),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.button),
+    final ativa = rotina.ativa;
+    final subtitulo = <String>[
+      if (rotina.nomeDispositivo.isNotEmpty) rotina.nomeDispositivo,
+      if (rotina.local.isNotEmpty && rotina.local != 'Locais') rotina.local,
+    ].join(' · ');
+    final dias = _textoDias(rotina.dias);
+
+    return Opacity(
+      opacity: ativa ? 1 : 0.7,
+      child: CartaoFhive(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.xs,
+          AppSpacing.md,
+        ),
         onTap: () => _editarRotina(rotina),
-        child: Padding(
-      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: ativa ? AppColors.accent : AppColors.track,
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  child: const Icon(Icons.schedule_rounded, size: 24),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        rotina.nome,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.cardTitle,
+                      ),
+                      if (subtitulo.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitulo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _botaoExecutar(rotina),
+                _menuRotina(rotina),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.sm),
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _chipStatus(ativa),
+                  if (rotina.horario.isNotEmpty)
+                    _chipInfo(Icons.access_time_rounded, rotina.horario),
+                  if (dias.isNotEmpty)
+                    _chipInfo(Icons.calendar_today_outlined, dias),
+                  if (rotina.acoes.isNotEmpty)
+                    _chipInfo(
+                      Icons.bolt_outlined,
+                      '${rotina.acoes.length} '
+                      '${rotina.acoes.length == 1 ? 'ação' : 'ações'}',
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _botaoExecutar(RotinaItem rotina) {
+    return Tooltip(
+      message: rotina.ativa ? 'Executar rotina' : 'Rotina desativada',
+      child: Material(
+        color: AppColors.primary,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => _executarRotina(rotina.id),
+          child: const SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(
+              Icons.play_arrow_rounded,
+              color: AppColors.white,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuRotina(RotinaItem rotina) {
+    return PopupMenuButton<String>(
+      tooltip: 'Opções da rotina',
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.more_vert_rounded, size: 22),
+      onSelected: (acao) {
+        if (acao == 'editar') {
+          _editarRotina(rotina);
+        } else if (acao == 'alternar') {
+          _alternarRotina(rotina);
+        } else if (acao == 'remover') {
+          _confirmarRemocaoRotina(rotina);
+        }
+      },
+      itemBuilder: (_) => [
+        _itemMenu('editar', Icons.edit_outlined, 'Editar rotina'),
+        _itemMenu(
+          'alternar',
+          rotina.ativa
+              ? Icons.pause_circle_outline_rounded
+              : Icons.check_circle_outline_rounded,
+          rotina.ativa ? 'Desativar rotina' : 'Ativar rotina',
+        ),
+        _itemMenu(
+          'remover',
+          Icons.delete_outline_rounded,
+          'Remover rotina',
+          cor: AppColors.danger,
+        ),
+      ],
+    );
+  }
+
+  PopupMenuItem<String> _itemMenu(
+    String valor,
+    IconData icone,
+    String texto, {
+    Color cor = AppColors.primary,
+  }) {
+    return PopupMenuItem<String>(
+      value: valor,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Text(
-              rotina.nome,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: rotina.ativa ? marrom : marrom.withValues(alpha: 0.55),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          Icon(icone, size: 20, color: cor),
+          const SizedBox(width: AppSpacing.md),
+          Text(texto, style: AppTextStyles.body.copyWith(color: cor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _chipStatus(bool ativa) {
+    final cor = ativa ? AppColors.success : AppColors.primaryDark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: ativa ? AppColors.successSoft : AppColors.track,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 2),
-          GestureDetector(
-            onTap: () => _executarRotina(rotina.id),
-            child: Tooltip(
-              message: rotina.ativa ? 'Executar rotina' : 'Rotina desativada',
-              child: Container(
-                width: 21,
-                height: 21,
-                decoration: BoxDecoration(
-                  color: rotina.ativa ? marrom : Colors.black38,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: AppColors.white,
-                  size: 15,
-                ),
-              ),
+          const SizedBox(width: 6),
+          Text(
+            ativa ? 'Ativa' : 'Desativada',
+            style: AppTextStyles.caption.copyWith(
+              color: cor,
+              fontWeight: FontWeight.w700,
             ),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Opções da rotina',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 26, minHeight: 28),
-            iconSize: 18,
-            icon: const Icon(Icons.more_vert, color: marrom, size: 17),
-            onSelected: (acao) {
-              if (acao == 'editar') {
-                _editarRotina(rotina);
-              } else if (acao == 'alternar') {
-                _alternarRotina(rotina);
-              } else if (acao == 'remover') {
-                _confirmarRemocaoRotina(rotina);
-              }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'editar', child: Text('Editar rotina')),
-              PopupMenuItem(
-                value: 'alternar',
-                child: Text(
-                  rotina.ativa ? 'Desativar rotina' : 'Ativar rotina',
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'remover',
-                child: Text('Remover rotina'),
-              ),
-            ],
           ),
         ],
       ),
-        ),
+    );
+  }
+
+  Widget _chipInfo(IconData icone, String texto) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icone, size: 14),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              texto,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(color: AppColors.primary),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -299,7 +472,11 @@ class _TelaRotinasState extends State<TelaRotinas> {
     return Material(
       color: Colors.transparent,
       child: ListTile(
+        contentPadding: EdgeInsets.zero,
         title: Text(nome, style: AppTextStyles.bodyBold),
+        trailing: nome == localSelecionado
+            ? const Icon(Icons.check_rounded)
+            : null,
         onTap: () {
           setState(() {
             localSelecionado = nome;

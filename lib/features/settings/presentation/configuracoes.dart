@@ -239,14 +239,7 @@ class _TelaConfiguracoesState extends State<TelaConfiguracoes> {
                             subtitulo:
                                 'Veja orientações sobre as funções do Fhive',
                             onTap: () => Navigator.pushNamed(context, '/ajuda'),
-                          ),
-                          separador(),
-                          itemMenu(
-                            titulo: 'Entrar',
-                            subtitulo: 'Entre com sua conta Fhive cadastrada no backend',
-                            onTap: () =>
-                                Navigator.pushNamed(context, '/entrar'),
-                          ),
+                          ),                          
                         ],
                       ),
 

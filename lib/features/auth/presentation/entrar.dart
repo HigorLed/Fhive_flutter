@@ -5,6 +5,7 @@ import 'package:tcc_mobile/shared/widgets/logo_fhive.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
+import 'package:tcc_mobile/features/auth/presentation/tela_de_recuperar_senha.dart';
 
 class TelaDeLogin extends StatefulWidget {
   const TelaDeLogin({super.key});
@@ -76,48 +77,29 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
     }
   }
 
+  // =========================================================
+  // RECUPERAR SENHA
+  // =========================================================
+
+  /// Abre a tela de recuperação (rota '/recuperar-senha') levando o e-mail
+  /// já digitado. A tela devolve `true` quando a senha foi redefinida.
   Future<void> _recuperarSenha() async {
-    final emailConfirmado = await showDialog<String>(
-      context: context,
-      builder: (_) => _DialogoEmailRecuperacao(emailInicial: emailController.text.trim()),
-    );
-    if (!mounted || emailConfirmado == null) return;
-
-    try {
-      final erroSolicitacao = await AuthStore.solicitarRecuperacao(email: emailConfirmado);
-      if (!mounted) return;
-      if (erroSolicitacao != null) {
-        _mensagem(erroSolicitacao);
-        return;
-      }
-      _mensagem('Se o e-mail estiver cadastrado, o código de recuperação será enviado.');
-
-      final dados = await showDialog<Map<String, String>>(
-        context: context,
-        builder: (_) => const _DialogoNovaSenha(),
-      );
-      if (!mounted || dados == null) return;
-
-      final erroCodigo = await AuthStore.verificarCodigoRecuperacao(
-        email: emailConfirmado,
-        codigo: dados['codigo'] ?? '',
-      );
-      if (!mounted) return;
-      if (erroCodigo != null) {
-        _mensagem(erroCodigo);
-        return;
-      }
-      final erroSenha = await AuthStore.redefinirSenha(
-        email: emailConfirmado,
-        codigo: dados['codigo'] ?? '',
-        novaSenha: dados['senha'] ?? '',
-      );
-      if (!mounted) return;
-      _mensagem(erroSenha ?? 'Senha redefinida com sucesso. Entre com a nova senha.');
-    } catch (_) {
-      if (mounted) _mensagem('Não foi possível concluir a recuperação. Tente novamente.');
-    }
+  final redefinida = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      settings: RouteSettings(
+        name: '/recuperar-senha',
+        arguments: emailController.text.trim(),
+      ),
+      builder: (_) => const TelaDeRecuperarSenha(),
+    ),
+  );
+  if (!mounted) return;
+  if (redefinida == true) {
+    senhaController.clear();
+    _mensagem('Senha redefinida com sucesso. Entre com a nova senha.');
   }
+}
 
   // =========================================================
   // COMPONENTES
@@ -363,135 +345,6 @@ class _TelaDeLoginState extends State<TelaDeLogin> {
           ),
         ),
       ),
-    );
-  }
-}
-
-final RegExp _regexEmailRecuperacao = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
-/// Diálogo que possui e descarta o próprio controller (evita "used after dispose").
-class _DialogoEmailRecuperacao extends StatefulWidget {
-  const _DialogoEmailRecuperacao({required this.emailInicial});
-  final String emailInicial;
-
-  @override
-  State<_DialogoEmailRecuperacao> createState() => _DialogoEmailRecuperacaoState();
-}
-
-class _DialogoEmailRecuperacaoState extends State<_DialogoEmailRecuperacao> {
-  late final TextEditingController _email = TextEditingController(text: widget.emailInicial);
-  final GlobalKey<FormState> _form = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  void _enviar() {
-    if (_form.currentState?.validate() ?? false) {
-      Navigator.of(context).pop(_email.text.trim());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Recuperar senha'),
-      content: Form(
-        key: _form,
-        child: TextFormField(
-          controller: _email,
-          keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(labelText: 'E-mail da conta'),
-          onFieldSubmitted: (_) => _enviar(),
-          validator: (valor) => (valor == null || !_regexEmailRecuperacao.hasMatch(valor.trim()))
-              ? 'Digite um e-mail válido.'
-              : null,
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        ElevatedButton(onPressed: _enviar, child: const Text('Enviar código')),
-      ],
-    );
-  }
-}
-
-class _DialogoNovaSenha extends StatefulWidget {
-  const _DialogoNovaSenha();
-
-  @override
-  State<_DialogoNovaSenha> createState() => _DialogoNovaSenhaState();
-}
-
-class _DialogoNovaSenhaState extends State<_DialogoNovaSenha> {
-  final TextEditingController _codigo = TextEditingController();
-  final TextEditingController _novaSenha = TextEditingController();
-  final GlobalKey<FormState> _form = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _codigo.dispose();
-    _novaSenha.dispose();
-    super.dispose();
-  }
-
-  String? _validarSenha(String? valor) {
-    final senha = valor ?? '';
-    if (senha.length < 8 ||
-        !RegExp(r'[a-z]').hasMatch(senha) ||
-        !RegExp(r'[A-Z]').hasMatch(senha) ||
-        !RegExp(r'\d').hasMatch(senha) ||
-        !RegExp(r'[^A-Za-z0-9\s]').hasMatch(senha)) {
-      return 'A senha não atende aos requisitos.';
-    }
-    return null;
-  }
-
-  void _redefinir() {
-    if (!(_form.currentState?.validate() ?? false)) return;
-    Navigator.of(context).pop(<String, String>{
-      'codigo': _codigo.text.trim(),
-      'senha': _novaSenha.text,
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Confirmar recuperação'),
-      content: Form(
-        key: _form,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _codigo,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Código recebido por e-mail'),
-                validator: (valor) =>
-                    (valor == null || valor.trim().isEmpty) ? 'Informe o código.' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _novaSenha,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nova senha',
-                  helperText: '8+ caracteres, maiúscula, minúscula, número e símbolo.',
-                ),
-                validator: _validarSenha,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        ElevatedButton(onPressed: _redefinir, child: const Text('Redefinir')),
-      ],
     );
   }
 }

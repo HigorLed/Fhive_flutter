@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
+import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
 /// Formulário de criação/edição de rotina, equivalente ao da versão web:
@@ -189,110 +190,329 @@ class _TelaFormularioRotinaState extends State<TelaFormularioRotina> {
     setState(() => _acoes.add(_AcaoForm(horario: _acoes.isEmpty ? _horarioInicial : _acoes.last.horario)));
   }
 
+  static const Map<String, IconData> _iconeTipo = <String, IconData>{
+    'ligar': Icons.power_settings_new_rounded,
+    'desligar': Icons.power_off_outlined,
+    'alterar_estado': Icons.swap_horiz_rounded,
+  };
+
+  Future<void> _editarHorarioInicial() async {
+    final h = await _escolherHorario(_horarioInicial);
+    if (h != null && mounted) setState(() => _horarioInicial = h);
+  }
+
+  Future<void> _editarHorarioFinal() async {
+    final h = await _escolherHorario(_horarioFinal);
+    if (h != null && mounted) setState(() => _horarioFinal = h);
+  }
+
   @override
   Widget build(BuildContext context) {
     final aparelhos = AparelhosStore.aparelhos.value;
     return Scaffold(
       appBar: AppBar(title: Text(_editando ? 'Editar rotina' : 'Nova rotina')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
-          children: [
-            TextField(
-              controller: _nome,
-              enabled: !_salvando,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Nome da rotina'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _descricao,
-              enabled: !_salvando,
-              maxLines: 2,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Descrição (opcional)'),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _dispositivoId,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Aparelho'),
-              items: aparelhos
-                  .map((a) => DropdownMenuItem<String>(
-                        value: a.id,
-                        child: Text(a.nome, overflow: TextOverflow.ellipsis),
-                      ))
-                  .toList(),
-              onChanged: _salvando ? null : (v) => setState(() => _dispositivoId = v),
-            ),
-            const SizedBox(height: 16),
-            const Text('Dias da semana', style: AppTextStyles.bodyBold),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final dia in diasDaSemanaApi)
-                  FilterChip(
-                    label: Text(rotuloDiaSemana[dia]!),
-                    selected: _dias.contains(dia),
-                    onSelected: _salvando
-                        ? null
-                        : (marcado) => setState(() {
-                              marcado ? _dias.add(dia) : _dias.remove(dia);
-                            }),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppGradients.main),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.sm,
+                    AppSpacing.pageHorizontal,
+                    AppSpacing.pageBottom,
                   ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _salvando
-                        ? null
-                        : () async {
-                            final h = await _escolherHorario(_horarioInicial);
-                            if (h != null && mounted) setState(() => _horarioInicial = h);
-                          },
-                    icon: const Icon(Icons.schedule),
-                    label: Text('Início: $_horarioInicial'),
-                  ),
+                  children: [
+                    _secaoInformacoes(aparelhos),
+                    const SizedBox(height: AppSpacing.cardGap),
+                    _secaoQuando(),
+                    const SizedBox(height: AppSpacing.section),
+                    _secaoAcoes(),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _salvando
-                        ? null
-                        : () async {
-                            final h = await _escolherHorario(_horarioFinal);
-                            if (h != null && mounted) setState(() => _horarioFinal = h);
-                          },
-                    icon: const Icon(Icons.schedule),
-                    label: Text('Fim: $_horarioFinal'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Text('Ações', style: AppTextStyles.bodyBold),
-            const SizedBox(height: 8),
-            for (var i = 0; i < _acoes.length; i++) _cartaoAcao(i),
-            TextButton.icon(
-              onPressed: _salvando ? null : _adicionarAcao,
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar ação'),
-            ),
-            if (_erro != null) ...[
-              const SizedBox(height: 8),
-              Text(_erro!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ),
+              _barraSalvar(),
             ],
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _salvando ? null : _salvar,
-              child: Text(_salvando ? 'Salvando...' : (_editando ? 'Salvar alterações' : 'Criar rotina')),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SEÇÕES
+  // ============================================================
+
+  Widget _tituloCartao(IconData icone, String titulo) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(AppRadius.chip),
+          ),
+          child: Icon(icone, size: 18),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(child: Text(titulo, style: AppTextStyles.cardTitle)),
+      ],
+    );
+  }
+
+  Widget _secaoInformacoes(List<AparelhoItem> aparelhos) {
+    return CartaoFhive(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _tituloCartao(Icons.edit_note_rounded, 'Informações'),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _nome,
+            enabled: !_salvando,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Nome da rotina',
+              prefixIcon: Icon(Icons.title_rounded),
             ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _descricao,
+            enabled: !_salvando,
+            minLines: 2,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Descrição (opcional)',
+              alignLabelWithHint: true,
+              prefixIcon: Icon(Icons.notes_rounded),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          DropdownButtonFormField<String>(
+            initialValue: _dispositivoId,
+            isExpanded: true,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            dropdownColor: AppColors.surfaceLight,
+            decoration: const InputDecoration(
+              labelText: 'Aparelho',
+              prefixIcon: Icon(Icons.devices_other_rounded),
+            ),
+            items: aparelhos
+                .map((a) => DropdownMenuItem<String>(
+                      value: a.id,
+                      child: Text(a.nome, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: _salvando ? null : (v) => setState(() => _dispositivoId = v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _secaoQuando() {
+    return CartaoFhive(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _tituloCartao(Icons.event_repeat_rounded, 'Quando executar'),
+          const SizedBox(height: AppSpacing.lg),
+          const Text('Dias da semana', style: AppTextStyles.caption),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              for (var i = 0; i < diasDaSemanaApi.length; i++) ...[
+                if (i > 0) const SizedBox(width: AppSpacing.xs),
+                Expanded(child: _chipDia(diasDaSemanaApi[i])),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const Text('Janela de horário', style: AppTextStyles.caption),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: _tileHorario(
+                  rotulo: 'Início',
+                  valor: _horarioInicial,
+                  onTap: _salvando ? null : _editarHorarioInicial,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Icon(Icons.arrow_forward_rounded, size: 20),
+              ),
+              Expanded(
+                child: _tileHorario(
+                  rotulo: 'Fim',
+                  valor: _horarioFinal,
+                  onTap: _salvando ? null : _editarHorarioFinal,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _secaoAcoes() {
+    final total = _acoes.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TituloSecao(
+          titulo: 'Ações',
+          trailing: Text(
+            '$total ${total == 1 ? 'ação' : 'ações'}',
+            style: AppTextStyles.caption,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (var i = 0; i < _acoes.length; i++) ...[
+          _cartaoAcao(i),
+          const SizedBox(height: AppSpacing.cardGap),
+        ],
+        OutlinedButton.icon(
+          onPressed: _salvando ? null : _adicionarAcao,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Adicionar ação'),
+        ),
+      ],
+    );
+  }
+
+  Widget _barraSalvar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageHorizontal,
+        AppSpacing.sm,
+        AppSpacing.pageHorizontal,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_erro != null) ...[
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      size: 20, color: AppColors.danger),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      _erro!,
+                      style: AppTextStyles.caption.copyWith(color: AppColors.danger),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
           ],
+          FilledButton(
+            onPressed: _salvando ? null : _salvar,
+            child: _salvando
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: AppColors.white,
+                    ),
+                  )
+                : Text(_editando ? 'Salvar alterações' : 'Criar rotina'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // COMPONENTES
+  // ============================================================
+
+  Widget _chipDia(String dia) {
+    final marcado = _dias.contains(dia);
+    final borda = BorderRadius.circular(AppRadius.chip);
+    return Material(
+      color: marcado ? AppColors.primary : AppColors.surface,
+      borderRadius: borda,
+      child: InkWell(
+        borderRadius: borda,
+        onTap: _salvando
+            ? null
+            : () => setState(() {
+                  marcado ? _dias.remove(dia) : _dias.add(dia);
+                }),
+        child: SizedBox(
+          height: 42,
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                rotuloDiaSemana[dia]!,
+                style: AppTextStyles.caption.copyWith(
+                  color: marcado ? AppColors.white : AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tileHorario({
+    required String rotulo,
+    required String valor,
+    required VoidCallback? onTap,
+  }) {
+    final borda = BorderRadius.circular(AppRadius.button);
+    return Material(
+      color: AppColors.input,
+      borderRadius: borda,
+      child: InkWell(
+        borderRadius: borda,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.schedule_rounded, size: 22),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(rotulo, style: AppTextStyles.caption),
+                    Text(valor, style: AppTextStyles.sectionTitle),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -300,70 +520,103 @@ class _TelaFormularioRotinaState extends State<TelaFormularioRotina> {
 
   Widget _cartaoAcao(int i) {
     final acao = _acoes[i];
-    return Card(
+    return CartaoFhive(
       key: ObjectKey(acao),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Text('Ação ${i + 1}', style: AppTextStyles.bodyBold),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Subir',
-                  onPressed: _salvando || i == 0 ? null : () => _mover(i, -1),
-                  icon: const Icon(Icons.arrow_upward),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
                 ),
-                IconButton(
-                  tooltip: 'Descer',
-                  onPressed: _salvando || i == _acoes.length - 1 ? null : () => _mover(i, 1),
-                  icon: const Icon(Icons.arrow_downward),
+                child: Text(
+                  '${i + 1}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                IconButton(
-                  tooltip: 'Remover ação',
-                  onPressed: _salvando ? null : () => _remover(i),
-                  icon: const Icon(Icons.delete_outline),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              const Expanded(child: Text('Ação', style: AppTextStyles.cardTitle)),
+              IconButton(
+                tooltip: 'Subir',
+                visualDensity: VisualDensity.compact,
+                onPressed: _salvando || i == 0 ? null : () => _mover(i, -1),
+                icon: const Icon(Icons.arrow_upward_rounded, size: 22),
+              ),
+              IconButton(
+                tooltip: 'Descer',
+                visualDensity: VisualDensity.compact,
+                onPressed:
+                    _salvando || i == _acoes.length - 1 ? null : () => _mover(i, 1),
+                icon: const Icon(Icons.arrow_downward_rounded, size: 22),
+              ),
+              IconButton(
+                tooltip: 'Remover ação',
+                visualDensity: VisualDensity.compact,
+                onPressed: _salvando ? null : () => _remover(i),
+                icon: const Icon(Icons.delete_outline_rounded,
+                    size: 22, color: AppColors.danger),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: acao.nome,
+            enabled: !_salvando,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Nome da ação',
+              prefixIcon: Icon(Icons.bolt_rounded),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: acao.descricao,
+            enabled: !_salvando,
+            decoration: const InputDecoration(
+              labelText: 'Instrução (opcional)',
+              prefixIcon: Icon(Icons.notes_rounded),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const Text('Tipo de ação', style: AppTextStyles.caption),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              for (final e in rotuloTipoAcao.entries)
+                ChoiceChip(
+                  avatar: Icon(_iconeTipo[e.key] ?? Icons.tune_rounded, size: 16),
+                  label: Text(e.value),
+                  selected: acao.tipo == e.key,
+                  showCheckmark: false,
+                  backgroundColor: AppColors.surface,
+                  onSelected:
+                      _salvando ? null : (_) => setState(() => acao.tipo = e.key),
                 ),
-              ],
-            ),
-            TextField(
-              controller: acao.nome,
-              enabled: !_salvando,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Nome da ação'),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: acao.descricao,
-              enabled: !_salvando,
-              decoration: const InputDecoration(labelText: 'Instrução (opcional)'),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: acao.tipo,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Tipo'),
-              items: rotuloTipoAcao.entries
-                  .map((e) => DropdownMenuItem<String>(value: e.key, child: Text(e.value)))
-                  .toList(),
-              onChanged: _salvando ? null : (v) => setState(() => acao.tipo = v ?? acao.tipo),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: _salvando
-                  ? null
-                  : () async {
-                      final h = await _escolherHorario(acao.horario);
-                      if (h != null && mounted) setState(() => acao.horario = h);
-                    },
-              icon: const Icon(Icons.schedule),
-              label: Text('Horário: ${acao.horario}'),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _tileHorario(
+            rotulo: 'Horário da ação',
+            valor: acao.horario,
+            onTap: _salvando
+                ? null
+                : () async {
+                    final h = await _escolherHorario(acao.horario);
+                    if (h != null && mounted) setState(() => acao.horario = h);
+                  },
+          ),
+        ],
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
 import 'package:tcc_mobile/main.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
+import 'package:tcc_mobile/shared/state/onboarding_store.dart';
 import 'package:tcc_mobile/shared/state/preferencias_store.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 
@@ -170,6 +171,12 @@ void main() {
     RotinasStore.reset();
     AuthStore.reset();
     PreferenciasStore.reset();
+    // Os testes abaixo partem de uma conta que já recebeu o convite do
+    // tutorial; os testes do convite chamam OnboardingStore.reset() antes.
+    OnboardingStore.reset();
+    OnboardingStore.marcarPerguntado(
+      const ContaLocal(id: 'user-1', nome: 'Usuário de Teste', email: emailTeste),
+    );
   });
 
   testWidgets('O aplicativo abre na tela inicial de autenticação', (
@@ -190,6 +197,55 @@ void main() {
     expect(find.text('Favoritos'), findsOneWidget);
   });
 
+  testWidgets('Primeiro login oferece o tutorial e "Agora não" não repete', (
+    tester,
+  ) async {
+    OnboardingStore.reset();
+    await tester.pumpWidget(const FhiveApp());
+    await tester.pumpAndSettle();
+    await entrarComDadosValidos(tester);
+
+    expect(find.text('Bem-vindo ao Fhive!'), findsOneWidget);
+    await tester.tap(find.text('Agora não'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bem-vindo ao Fhive!'), findsNothing);
+    expect(find.text('Minha casa'), findsOneWidget);
+
+    // Trocar de aba recria a Início, mas o convite não volta.
+    await tester.tap(find.byIcon(Icons.devices));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Início'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bem-vindo ao Fhive!'), findsNothing);
+  });
+
+  testWidgets('"Ver tutorial" abre o guia e percorre todas as páginas', (
+    tester,
+  ) async {
+    OnboardingStore.reset();
+    await tester.pumpWidget(const FhiveApp());
+    await tester.pumpAndSettle();
+    await entrarComDadosValidos(tester);
+
+    await tester.tap(find.text('Ver tutorial'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bem-vindo ao Fhive'), findsOneWidget);
+    expect(find.text('1 de 7'), findsOneWidget);
+    expect(find.text('Como se movimentar'), findsOneWidget);
+
+    for (var i = 0; i < 6; i++) {
+      await tester.tap(find.text('Avançar'));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('7 de 7'), findsOneWidget);
+    expect(find.text('Conta e ajuda'), findsOneWidget);
+
+    await tester.tap(find.text('Finalizar'));
+    await tester.pumpAndSettle();
+    expect(find.text('7 de 7'), findsNothing);
+    expect(find.text('Minha casa'), findsOneWidget);
+  });
+
   testWidgets('A barra inferior navega pelas telas principais', (tester) async {
     await tester.pumpWidget(const FhiveApp());
     await tester.pumpAndSettle();
@@ -202,7 +258,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.pie_chart));
     await tester.pumpAndSettle();
-    expect(find.text('Gráficos disponíveis'), findsOneWidget);
+    expect(find.text('Gráficos por cômodo'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.light_mode_outlined));
     await tester.pumpAndSettle();
@@ -211,6 +267,56 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
     expect(find.text('Configurações do Fhive'), findsOneWidget);
+  });
+
+  testWidgets('Gráficos lista todos os cômodos que têm algum gráfico', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const FhiveApp());
+    await tester.pumpAndSettle();
+    await entrarComDadosValidos(tester);
+
+    AparelhosStore.adicionar(
+      const AparelhoItem(
+        nome: 'TV do quarto',
+        id: 'FH-TV-QUARTO-001',
+        tipo: 'TV',
+        fabricante: 'Fhive',
+        modelo: 'Cristal',
+        status: 'Online',
+        icone: Icons.tv,
+        wifi: true,
+        local: 'Quarto',
+        conexao: 'Wi-Fi',
+      ),
+    );
+    // Lâmpada não tem gráficos: a cozinha não deve aparecer.
+    AparelhosStore.adicionar(
+      const AparelhoItem(
+        nome: 'Lâmpada cozinha',
+        id: 'FH-LAMP-COZ-001',
+        tipo: 'Lâmpada',
+        fabricante: 'Fhive',
+        modelo: 'Smart Light',
+        status: 'Offline',
+        icone: Icons.lightbulb_outline,
+        wifi: true,
+        local: 'Cozinha',
+        conexao: 'Wi-Fi',
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.pie_chart));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sala de Estar'), findsOneWidget);
+    expect(find.text('Quarto'), findsOneWidget);
+    expect(find.text('Cozinha'), findsNothing);
+    expect(find.text('TV - Cristal'), findsOneWidget);
+    expect(find.text('TV do quarto'), findsOneWidget);
+    expect(find.text('Lâmpada cozinha'), findsNothing);
+    expect(find.text('Gráficos indisponíveis'), findsNothing);
+    expect(find.text('Aguardando dados'), findsNothing);
   });
 
   testWidgets('Cadastro IoT percorre as quatro etapas e adiciona o aparelho', (
@@ -332,14 +438,20 @@ void main() {
 
     await tester.tap(find.text('Energia'));
     await tester.pumpAndSettle();
-    expect(find.text('Gasto diário'), findsOneWidget);
+    expect(find.text('Gasto Diário'), findsOneWidget);
     expect(find.text('Limite de energia').first, findsOneWidget);
     await tester.tap(find.byTooltip('Voltar'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Uso'));
     await tester.pumpAndSettle();
-    expect(find.text('Distribuição do uso'), findsOneWidget);
+    expect(find.text('Total do Dia: 12h'), findsOneWidget);
+    expect(find.text('Manhã'), findsOneWidget);
+    expect(find.text('Tarde'), findsOneWidget);
+    expect(find.text('Noite'), findsOneWidget);
+    await tester.ensureVisible(find.byTooltip('Mais detalhes'));
+    await tester.tap(find.byTooltip('Mais detalhes'));
+    await tester.pumpAndSettle();
     expect(find.text('Total de Horas'), findsOneWidget);
     await tester.tap(find.byTooltip('Voltar'));
     await tester.pumpAndSettle();
