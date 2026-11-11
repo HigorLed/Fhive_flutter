@@ -3,6 +3,7 @@ import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
+import 'package:tcc_mobile/shared/widgets/seletor_locais.dart';
 import 'package:tcc_mobile/shared/state/rotinas_store.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/features/routines/presentation/formulario_rotina.dart';
@@ -16,6 +17,7 @@ class TelaRotinas extends StatefulWidget {
 
 class _TelaRotinasState extends State<TelaRotinas> {
   String localSelecionado = 'Locais';
+  bool _mostrarLocais = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +55,28 @@ class _TelaRotinasState extends State<TelaRotinas> {
                         const SizedBox(height: AppSpacing.section),
                         TituloSecao(
                           titulo: 'Rotinas',
-                          trailing: _seletorLocal(),
+                          trailing: AlternadorLocais(
+                            aberto: _mostrarLocais,
+                            aoTocar: () => setState(
+                              () => _mostrarLocais = !_mostrarLocais,
+                            ),
+                          ),
                         ),
+                        if (_mostrarLocais) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          ValueListenableBuilder<List<AparelhoItem>>(
+                            valueListenable: AparelhosStore.aparelhos,
+                            builder: (context, aparelhos, child) => PainelLocais(
+                              locais: AparelhosStore.locaisDisponiveis,
+                              selecionado: localSelecionado == 'Locais'
+                                  ? null
+                                  : localSelecionado,
+                              aoSelecionar: (local) => setState(
+                                () => localSelecionado = local ?? 'Locais',
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.md),
                         _botaoAdicionarRotina(),
                         const SizedBox(height: AppSpacing.section),
@@ -76,34 +98,6 @@ class _TelaRotinasState extends State<TelaRotinas> {
   // ============================================================
   // SELETOR DE LOCAL E ADICIONAR ROTINA
   // ============================================================
-
-  Widget _seletorLocal() {
-    final borda = BorderRadius.circular(AppRadius.chip);
-    return Material(
-      color: AppColors.surfaceLight,
-      borderRadius: borda,
-      child: InkWell(
-        borderRadius: borda,
-        onTap: _selecionarLocal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.place_outlined, size: 16),
-              const SizedBox(width: AppSpacing.xs),
-              Text(localSelecionado, style: AppTextStyles.bodyBold),
-              const SizedBox(width: AppSpacing.xs),
-              const Icon(Icons.keyboard_arrow_down, size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _botaoAdicionarRotina() {
     return SizedBox(
@@ -127,7 +121,8 @@ class _TelaRotinasState extends State<TelaRotinas> {
         final filtradas = rotinas.where((rotina) {
           return localSelecionado == 'Locais' ||
               rotina.local == 'Locais' ||
-              rotina.local == localSelecionado;
+              rotina.local.trim().toLowerCase() ==
+                  localSelecionado.trim().toLowerCase();
         }).toList();
 
         if (filtradas.isEmpty) return _estadoVazio();
@@ -435,74 +430,6 @@ class _TelaRotinasState extends State<TelaRotinas> {
     } catch (error) {
       if (mounted) _mensagemRotina(error.toString());
     }
-  }
-
-  // ============================================================
-  // SELECIONAR LOCAL
-  // ============================================================
-
-  void _selecionarLocal() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pageHorizontal,
-              AppSpacing.pageHorizontal,
-              AppSpacing.pageHorizontal,
-              0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Selecionar local',
-                  style: AppTextStyles.sectionTitle,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    children: [
-                      _opcaoLocal('Locais'),
-                      for (final local in AparelhosStore.locaisDisponiveis)
-                        _opcaoLocal(local),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _opcaoLocal(String nome) {
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(nome, style: AppTextStyles.bodyBold),
-        trailing: nome == localSelecionado
-            ? const Icon(Icons.check_rounded)
-            : null,
-        onTap: () {
-          setState(() {
-            localSelecionado = nome;
-          });
-
-          Navigator.pop(context);
-        },
-      ),
-    );
   }
 
   // ============================================================

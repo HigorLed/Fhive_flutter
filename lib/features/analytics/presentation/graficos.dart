@@ -6,6 +6,7 @@ import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
+import 'package:tcc_mobile/shared/widgets/seletor_locais.dart';
 
 enum TipoAparelho { tv, arCondicionado }
 
@@ -26,6 +27,9 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
   /// Áreas recolhidas/expandidas. Chave: '<seção>|<área em minúsculas>'.
   final Map<String, bool> _areasAbertas = <String, bool>{};
+
+  bool _mostrarLocais = false;
+  String? _localFiltro;
 
   @override
   Widget build(BuildContext context) {
@@ -76,15 +80,35 @@ class _TelaGraficosState extends State<TelaGraficos> {
     return ValueListenableBuilder<List<AparelhoItem>>(
       valueListenable: AparelhosStore.aparelhos,
       builder: (context, aparelhos, _) {
-        final disponiveis = aparelhos.where(_temGraficoDisponivel).toList();
-        final indisponiveis = aparelhos
+        final filtro = _localFiltro?.trim().toLowerCase();
+        final doLocal = filtro == null
+            ? aparelhos
+            : aparelhos
+                  .where((a) => a.local.trim().toLowerCase() == filtro)
+                  .toList();
+        final disponiveis = doLocal.where(_temGraficoDisponivel).toList();
+        final indisponiveis = doLocal
             .where((aparelho) => !_temGraficoDisponivel(aparelho))
             .toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const TituloSecao(titulo: 'Gráficos disponíveis'),
+            TituloSecao(
+              titulo: 'Gráficos disponíveis',
+              trailing: AlternadorLocais(
+                aberto: _mostrarLocais,
+                aoTocar: () => setState(() => _mostrarLocais = !_mostrarLocais),
+              ),
+            ),
+            if (_mostrarLocais) ...[
+              const SizedBox(height: AppSpacing.md),
+              PainelLocais(
+                locais: AparelhosStore.locaisComAparelhos,
+                selecionado: _localFiltro,
+                aoSelecionar: (local) => setState(() => _localFiltro = local),
+              ),
+            ],
             const SizedBox(height: AppSpacing.md),
             if (disponiveis.isEmpty)
               const Text(
