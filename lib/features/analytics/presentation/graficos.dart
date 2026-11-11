@@ -22,7 +22,7 @@ class TelaGraficos extends StatefulWidget {
 
 class _TelaGraficosState extends State<TelaGraficos> {
   static const Color marrom = AppColors.primary;
-  static const Color fundoCard = AppColors.surface;
+  static const Color fundoCard = AppColors.white;
 
   /// Áreas recolhidas/expandidas. Chave: '<seção>|<área em minúsculas>'.
   final Map<String, bool> _areasAbertas = <String, bool>{};
@@ -381,7 +381,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   static const Color laranja = AppColors.warning;
   static const Color textoSecundario = AppColors.primaryDark;
   static const Color amareloClaro = AppColors.surface;
-  static const Color amareloCard = AppColors.surfaceStrong;
+  static const Color amareloCard = AppColors.white;
 
   String periodoSelecionado = '7 dias';
 
@@ -648,7 +648,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
       constraints: const BoxConstraints(minHeight: 150),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: AppColors.surfaceStrong,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(AppRadius.card),
         boxShadow: const [
           BoxShadow(

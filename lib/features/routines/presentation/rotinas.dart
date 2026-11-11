@@ -444,10 +444,19 @@ class _TelaRotinasState extends State<TelaRotinas> {
   void _selecionarLocal() {
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageHorizontal,
+              AppSpacing.pageHorizontal,
+              AppSpacing.pageHorizontal,
+              0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,9 +466,17 @@ class _TelaRotinasState extends State<TelaRotinas> {
                   style: AppTextStyles.sectionTitle,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _opcaoLocal('Locais'),
-                for (final local in AparelhosStore.locaisDisponiveis)
-                  _opcaoLocal(local),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    children: [
+                      _opcaoLocal('Locais'),
+                      for (final local in AparelhosStore.locaisDisponiveis)
+                        _opcaoLocal(local),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

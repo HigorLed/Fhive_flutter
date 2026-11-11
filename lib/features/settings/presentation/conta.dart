@@ -315,6 +315,7 @@ class _TelaContaState extends State<TelaConta> {
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           key: const PageStorageKey<String>('perfil-seguranca'),
+          maintainState: true,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
           leading: Container(
@@ -343,7 +344,6 @@ class _TelaContaState extends State<TelaConta> {
                     controller: _senhaAtualController,
                     enabled: conta != null,
                     obscureText: !_mostrarSenhaAtual,
-                    autofillHints: const [AutofillHints.password],
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       labelText: 'Senha atual',

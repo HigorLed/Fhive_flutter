@@ -40,9 +40,9 @@ class TelaIndicadorGraficoDetalhe extends StatefulWidget {
 class _TelaIndicadorGraficoDetalheState
     extends State<TelaIndicadorGraficoDetalhe> {
   static const Color marrom = AppColors.primary;
-  static const Color fundoCartao = AppColors.surface;
+  static const Color fundoCartao = AppColors.white;
   static const Color amarelo = AppColors.accent;
-  static const Color amareloSuave = AppColors.surface;
+  static const Color amareloSuave = AppColors.white;
   static const Color laranja = AppColors.warning;
   static const Color textoSuave = AppColors.primaryDark;
 
