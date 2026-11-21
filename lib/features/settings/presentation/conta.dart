@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
 import 'package:tcc_mobile/shared/state/auth_store.dart';
 
@@ -23,6 +25,8 @@ class _TelaContaState extends State<TelaConta> {
   bool _mostrarNovaSenha = false;
   bool _mostrarConfirmarSenha = false;
   final _formSegurancaKey = GlobalKey<FormState>();
+  final ImagePicker _seletorImagem = ImagePicker();
+  bool _alterandoFoto = false;
 
   @override
   void didChangeDependencies() {
@@ -86,6 +90,91 @@ class _TelaContaState extends State<TelaConta> {
     _emailController.text = contaAtualizada?.email ?? '';
     FocusScope.of(context).unfocus();
     _mensagem('Perfil atualizado com sucesso.');
+  }
+
+  Future<void> _selecionarFotoPerfil() async {
+    if (_alterandoFoto) return;
+    final conta = AuthStore.usuarioAtual.value;
+    if (conta == null) {
+      _mensagem('Entre na sua conta para alterar a foto.', erro: true);
+      return;
+    }
+
+    try {
+      final arquivo = await _seletorImagem.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 78,
+        requestFullMetadata: false,
+      );
+      if (arquivo == null || !mounted) return;
+
+      final bytes = await arquivo.readAsBytes();
+      const limiteBytes = 2 * 1024 * 1024;
+      if (bytes.length > limiteBytes) {
+        _mensagem(
+          'A imagem ainda ficou maior que 2 MB. Escolha outra foto.',
+          erro: true,
+        );
+        return;
+      }
+
+      final extensao = arquivo.name.toLowerCase().split('.').last;
+      final mime = arquivo.mimeType ?? switch (extensao) {
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        _ => 'image/jpeg',
+      };
+      final fotoEmBase64 = 'data:$mime;base64,${base64Encode(bytes)}';
+
+      setState(() => _alterandoFoto = true);
+      final resultado = await AuthStore.atualizarPerfil(
+        nome: _nomeController.text.trim().isEmpty
+            ? conta.nome
+            : _nomeController.text.trim(),
+        email: _emailController.text.trim().isEmpty
+            ? conta.email
+            : _emailController.text.trim(),
+        fotoPerfil: fotoEmBase64,
+      );
+
+      if (!mounted) return;
+      if (resultado != null) {
+        _mensagem(resultado, erro: true);
+      } else {
+        _mensagem('Foto de perfil atualizada com sucesso.');
+      }
+    } catch (erro) {
+      if (mounted) {
+        _mensagem(
+          'Não foi possível selecionar ou enviar a foto. Tente novamente.',
+          erro: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _alterandoFoto = false);
+    }
+  }
+
+  ImageProvider? _imagemPerfil(ContaLocal? conta) {
+    final foto = conta?.fotoPerfil?.trim();
+    if (foto == null || foto.isEmpty) return null;
+
+    try {
+      if (foto.startsWith('data:')) {
+        final separador = foto.indexOf(',');
+        if (separador < 0) return null;
+        return MemoryImage(base64Decode(foto.substring(separador + 1)));
+      }
+      if (foto.startsWith('https://') || foto.startsWith('http://')) {
+        return NetworkImage(foto);
+      }
+      return MemoryImage(base64Decode(foto));
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _alterarSenha() async {
@@ -176,6 +265,7 @@ class _TelaContaState extends State<TelaConta> {
   Widget _cartaoPerfil(ContaLocal? conta) {
     final nome = conta?.nome ?? 'Visitante';
     final email = conta?.email ?? 'Nenhuma conta conectada';
+    final imagemPerfil = _imagemPerfil(conta);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
@@ -185,16 +275,73 @@ class _TelaContaState extends State<TelaConta> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 43,
-            backgroundColor: AppColors.accent,
-            child: Text(
-              _iniciais(nome),
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontFamily: AppFonts.title,
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
+          Semantics(
+            button: true,
+            label: 'Alterar foto de perfil',
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: conta == null || _alterandoFoto
+                  ? null
+                  : _selecionarFotoPerfil,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 43,
+                    backgroundColor: AppColors.accent,
+                    backgroundImage: imagemPerfil,
+                    child: imagemPerfil == null
+                        ? Text(
+                            _iniciais(nome),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontFamily: AppFonts.title,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 27,
+                      height: 27,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surfaceLight,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: AppColors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                  if (_alterandoFoto)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0x88000000),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

@@ -458,22 +458,50 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           }).toList(),
         ),
         const SizedBox(height: 18),
-        _atalhosRapidosTV(),
-        const SizedBox(height: 18),
+        _painelAtalhosEStreamingTV(),
+        const SizedBox(height: 14),
         _linkTitulo('Ver gráficos deste aparelho', _abrirGraficos),
-        const SizedBox(height: 20),
-        const Text(
-          'Aplicativos de streaming',
-          style: AppTextStyles.cardTitle,
-        ),
-        const SizedBox(height: 10),
-        _streamingGrid(),
-        const SizedBox(height: 6),
-        Text(
-          'Os comandos são demonstrativos nesta versão. O controle físico será conectado futuramente ao serviço IoT.',
-          style: TextStyle(color: marrom.withValues(alpha: 0.7), fontSize: 10, height: 1.3),
-        ),
       ],
+    );
+  }
+
+  Widget _painelAtalhosEStreamingTV() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: amareloCard,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: marrom.withValues(alpha: 0.10)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _atalhosRapidosTV(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(
+              height: 1,
+              color: marrom.withValues(alpha: 0.12),
+            ),
+          ),
+          const Text(
+            'Aplicativos de streaming',
+            style: AppTextStyles.cardTitle,
+          ),
+          const SizedBox(height: 10),
+          _streamingGrid(),
+          const SizedBox(height: 8),
+          Text(
+            'Os comandos são demonstrativos nesta versão. O controle físico será conectado futuramente ao serviço IoT.',
+            style: TextStyle(
+              color: marrom.withValues(alpha: 0.7),
+              fontSize: 10,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -513,22 +541,21 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           builder: (context, todosAtalhos, _) {
             final atalhos = todosAtalhos.where((item) => item.aparelhoId == widget.id).toList();
             if (atalhos.isEmpty) {
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: amareloCard,
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                  border: Border.all(color: marrom.withValues(alpha: 0.08)),
-                ),
-                child: const Row(
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Row(
                   children: [
                     Icon(Icons.bolt_rounded, color: marrom, size: 25),
                     SizedBox(width: 9),
                     Expanded(
                       child: Text(
                         'Crie um atalho para executar seus comandos favoritos em um toque.',
-                        style: TextStyle(color: marrom, fontSize: 12, height: 1.3, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: marrom,
+                          fontSize: 12,
+                          height: 1.3,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -1088,16 +1115,38 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Widget _linkTitulo(String texto, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        texto,
-        style: const TextStyle(
-          color: marrom,
-          fontSize: 16,
-          fontWeight: FontWeight.w900,
-          decoration: TextDecoration.underline,
-          decorationThickness: 1.3,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            border: Border.all(color: marrom.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  texto,
+                  style: const TextStyle(
+                    color: marrom,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.open_in_new_rounded,
+                color: marrom.withValues(alpha: 0.78),
+                size: 18,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1383,6 +1432,19 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           local: widget.local,
           status: widget.status,
           deviceBackendId: widget.backendId,
+          aparelhoSelecionado: AparelhoItem(
+            nome: widget.nome,
+            id: widget.id,
+            backendId: widget.backendId,
+            tipo: widget.tipo,
+            fabricante: widget.fabricante,
+            modelo: widget.modelo,
+            status: widget.status,
+            icone: widget.icone,
+            wifi: widget.conexao.toLowerCase().contains('wi-fi'),
+            local: widget.local,
+            conexao: widget.conexao,
+          ),
         ),
       ),
     );

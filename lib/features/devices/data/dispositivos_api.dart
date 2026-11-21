@@ -42,8 +42,12 @@ class DispositivosApi {
     return resposta.map(_map).toList(growable: false);
   }
 
+  /// O backend recebido não possui DELETE /dispositivos/:id.
+  /// Retorna uma mensagem clara em vez de enviar uma chamada que resultaria em 404.
   static Future<void> excluir(String id) async {
-    await ApiClient.delete('/dispositivos/${Uri.encodeComponent(id)}');
+    throw const ApiException(
+      'A API atual do backend ainda não disponibiliza a exclusão de dispositivos.',
+    );
   }
 
   static Map<String, dynamic> _map(dynamic value) {

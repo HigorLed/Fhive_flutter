@@ -18,18 +18,22 @@ enum TipoIndicadorGrafico {
 /// os demais valores continuam demonstrativos enquanto o hardware não os enviar.
 class TelaIndicadorGraficoDetalhe extends StatefulWidget {
   final bool isTv;
+  final bool isGenerico;
   final String nomeAparelho;
   final String local;
   final TipoIndicadorGrafico indicador;
   final String? deviceBackendId;
+  final Map<String, dynamic>? graficoModelo;
 
   const TelaIndicadorGraficoDetalhe({
     super.key,
     required this.isTv,
+    this.isGenerico = false,
     required this.nomeAparelho,
     this.local = 'Sala de Estar',
     required this.indicador,
     this.deviceBackendId,
+    this.graficoModelo,
   });
 
   @override
@@ -48,6 +52,7 @@ class _TelaIndicadorGraficoDetalheState
 
   String periodoEnergia = 'Mensal';
   String periodoHistorico = 'Semanal';
+  bool _mostrarEnergiaEconomizada = false;
   List<Map<String, dynamic>> _telemetrias = <Map<String, dynamic>>[];
 
   Map<String, dynamic>? get _ultimaTelemetria =>
@@ -56,18 +61,26 @@ class _TelaIndicadorGraficoDetalheState
   double get energia {
     final consumoWh = _ultimaTelemetria?['consumoAcumulado'];
     if (consumoWh is num) return consumoWh.toDouble() / 1000;
-    return widget.isTv ? 12.5 : 28.4;
+    return widget.isTv ? 12.5 : widget.isGenerico ? 18.0 : 28.4;
   }
 
-  double get limiteDiario => widget.isTv ? 15.0 : 35.0;
-  int get horas => widget.isTv ? 12 : 18;
-  int get horasManha => widget.isTv ? 5 : 7;
-  int get horasTarde => widget.isTv ? 3 : 5;
-  int get horasNoite => widget.isTv ? 4 : 6;
+  double get limiteDiario => widget.isTv ? 15.0 : widget.isGenerico ? 20.0 : 35.0;
+
+  // Indicadores de economia ainda demonstrativos: o backend não fornece
+  // uma linha de base para calcular energia realmente economizada.
+  double get energiaEconomizadaDemonstrativa => widget.isTv ? 2.8 : widget.isGenerico ? 2.0 : 4.6;
+  double get metaEconomiaDiaria => widget.isTv ? 5.0 : widget.isGenerico ? 3.0 : 8.0;
+
+  int get horas => widget.isTv ? 12 : widget.isGenerico ? 8 : 18;
+  int get horasManha => widget.isTv ? 5 : widget.isGenerico ? 3 : 7;
+  int get horasTarde => widget.isTv ? 3 : widget.isGenerico ? 2 : 5;
+  int get horasNoite => widget.isTv ? 4 : widget.isGenerico ? 3 : 6;
   int get totalHoras => horasManha + horasTarde + horasNoite;
-  int get pontuacao => widget.isTv ? 76 : 82;
-  int get eficiencia => widget.isTv ? 82 : 72;
-  String get temperatura => widget.isTv ? '72%' : '23°C';
+  // Comparativo demonstrativo até existir uma série diária no backend.
+  int get horasAmaisOntem => widget.isTv ? 2 : widget.isGenerico ? 1 : 3;
+  int get pontuacao => widget.isTv ? 76 : widget.isGenerico ? 80 : 82;
+  int get eficiencia => widget.isTv ? 82 : widget.isGenerico ? 75 : 72;
+  String get temperatura => widget.isGenerico ? '—' : widget.isTv ? '72%' : '23°C';
 
   String get nomeIndicador {
     switch (widget.indicador) {
@@ -80,7 +93,7 @@ class _TelaIndicadorGraficoDetalheState
       case TipoIndicadorGrafico.historico:
         return 'Histórico de uso';
       case TipoIndicadorGrafico.recomendacoes:
-        return widget.isTv ? 'Recomendações' : 'Temperatura';
+        return widget.isTv ? 'Recomendações' : widget.isGenerico ? 'Dados do aparelho' : 'Temperatura';
       case TipoIndicadorGrafico.eficiencia:
         return 'Eficiência energética';
     }
@@ -89,7 +102,52 @@ class _TelaIndicadorGraficoDetalheState
   @override
   void initState() {
     super.initState();
-    _carregarTelemetria();
+    if (widget.graficoModelo != null) {
+      _telemetrias = <Map<String, dynamic>>[widget.graficoModelo!];
+      periodoEnergia = 'Por minuto';
+      periodoHistorico = 'Por minuto';
+    } else {
+      _carregarTelemetria();
+    }
+  }
+
+  List<Map<String, dynamic>> get _leiturasModelo {
+    final lista = widget.graficoModelo?['leituras'];
+    if (lista is! List) return <Map<String, dynamic>>[];
+    return lista.whereType<Map>().map((item) => item.map(
+      (key, value) => MapEntry('$key', value),
+    )).toList(growable: false);
+  }
+
+  List<double> get _serieModeloKwh => _leiturasModelo
+      .map((item) => item['energy_wh'])
+      .whereType<num>()
+      .map((item) => item.toDouble() / 1000)
+      .toList(growable: false);
+
+  List<double> _amostrarModelo(List<double> origem, {int limite = 7}) {
+    if (origem.length <= limite) return origem;
+    return List<double>.generate(limite, (indice) {
+      final posicao = (indice * (origem.length - 1) / (limite - 1)).round();
+      return origem[posicao];
+    }, growable: false);
+  }
+
+  List<double> _normalizarModelo(List<double> origem) {
+    if (origem.isEmpty) return <double>[];
+    final maximo = origem.reduce((a, b) => a > b ? a : b);
+    if (maximo <= 0) return List<double>.filled(origem.length, 0.0);
+    return origem.map((valor) => (valor / maximo).clamp(0.0, 1.0).toDouble()).toList(growable: false);
+  }
+
+  List<String> _etiquetasModelo(int quantidade) {
+    if (quantidade <= 0) return <String>[];
+    if (quantidade == 1) return <String>['1m'];
+    final intervalo = (widget.graficoModelo?['intervaloLeituraMinutos'] as num?)?.toInt() ?? 1;
+    return List<String>.generate(quantidade, (indice) {
+      final amostra = (indice * (_leiturasModelo.length - 1) / (quantidade - 1)).round() + 1;
+      return '${amostra * intervalo}m';
+    }, growable: false);
   }
 
   /// Busca a telemetria em segundo plano. Se falhar, a tela segue com os
@@ -134,7 +192,7 @@ class _TelaIndicadorGraficoDetalheState
       case TipoIndicadorGrafico.historico:
         return 'Uso ao longo do tempo';
       case TipoIndicadorGrafico.recomendacoes:
-        return widget.isTv ? 'Dicas para economizar' : 'Condição atual';
+        return widget.isTv ? 'Dicas para economizar' : widget.isGenerico ? 'Leituras do aparelho' : 'Condição atual';
       case TipoIndicadorGrafico.eficiencia:
         return 'Índice de eficiência';
     }
@@ -157,28 +215,78 @@ class _TelaIndicadorGraficoDetalheState
     }
   }
 
-  // Página de energia, seguindo o Figma: medidor em anel, selos, limite e gráfico.
+  // Página de energia com dois indicadores selecionáveis:
+  // limite de consumo (rosa) e energia economizada (verde).
   Widget _paginaEnergia() {
-    final fracao = (energia / limiteDiario).clamp(0.0, 1.0).toDouble();
+    final valorExibido = _mostrarEnergiaEconomizada
+        ? energiaEconomizadaDemonstrativa
+        : energia;
+    final limiteExibido = _mostrarEnergiaEconomizada
+        ? metaEconomiaDiaria
+        : limiteDiario;
+    final corIndicador = _mostrarEnergiaEconomizada
+        ? AppColors.success
+        : _rosaEnergia;
+    final corMedidor = _mostrarEnergiaEconomizada
+        ? AppColors.success
+        : AppColors.accent;
+    final tituloIndicador = _mostrarEnergiaEconomizada
+        ? 'Energia economizada'
+        : 'Limite de energia';
+    final textoValor = _mostrarEnergiaEconomizada
+        ? '${_numero(valorExibido)} kWh economizados'
+        : '${_numero(valorExibido)} kWh usados';
+    final textoLegenda = _mostrarEnergiaEconomizada
+        ? 'Energia economizada'
+        : 'Energia usada';
+    final textoReferencia = _mostrarEnergiaEconomizada
+        ? 'Meta de economia'
+        : 'Limite de energia';
+
+    final fracao = (valorExibido / limiteExibido)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    // Mantém uma pequena parte visível quando o valor é muito baixo.
+    final fracaoVisivel = valorExibido > 0
+        ? math.max(fracao, 0.018).toDouble()
+        : 0.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Expanded(flex: 5, child: Center(child: _medidor(fracao))),
+            Expanded(
+              flex: 5,
+              child: Center(
+                child: _medidor(
+                  fracao,
+                  valor: valorExibido,
+                  corProgresso: corMedidor,
+                ),
+              ),
+            ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               flex: 4,
               child: Column(
                 children: [
-                  _seloInformacao(
+                  _botaoOpcaoEnergia(
                     emblema: r'R$',
                     texto: 'Energia\nEconomizada',
+                    selecionado: _mostrarEnergiaEconomizada,
+                    aoTocar: () => setState(
+                      () => _mostrarEnergiaEconomizada = true,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  _seloInformacao(
+                  _botaoOpcaoEnergia(
                     icone: Icons.bolt_rounded,
                     texto: 'Limite de\nenergia',
+                    selecionado: !_mostrarEnergiaEconomizada,
+                    aoTocar: () => setState(
+                      () => _mostrarEnergiaEconomizada = false,
+                    ),
                   ),
                 ],
               ),
@@ -186,14 +294,14 @@ class _TelaIndicadorGraficoDetalheState
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
-        const Text(
-          'Limite de energia',
+        Text(
+          tituloIndicador,
           textAlign: TextAlign.center,
           style: AppTextStyles.sectionTitle,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          '${_numero(energia)} kWh usados',
+          textoValor,
           style: AppTextStyles.caption.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -201,14 +309,14 @@ class _TelaIndicadorGraficoDetalheState
           borderRadius: BorderRadius.circular(AppRadius.card),
           child: Stack(
             children: [
-              Container(height: 18, color: AppColors.track),
+              Container(height: 22, color: AppColors.track),
               FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor: fracao,
+                widthFactor: fracaoVisivel,
                 child: Container(
-                  height: 18,
+                  height: 22,
                   decoration: BoxDecoration(
-                    color: _rosaEnergia,
+                    color: corIndicador,
                     borderRadius: BorderRadius.circular(AppRadius.card),
                   ),
                 ),
@@ -222,7 +330,7 @@ class _TelaIndicadorGraficoDetalheState
           children: [
             Text('0 kWh', style: AppTextStyles.chartLabel),
             Text(
-              '${_numero(limiteDiario)} kWh',
+              '${_numero(limiteExibido)} kWh',
               style: AppTextStyles.chartLabel,
             ),
           ],
@@ -231,20 +339,37 @@ class _TelaIndicadorGraficoDetalheState
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _legenda(_rosaEnergia, 'Energia usada'),
+            _legenda(corIndicador, textoLegenda),
             const SizedBox(width: AppSpacing.lg),
-            _legenda(AppColors.track, 'Limite de energia'),
+            _legenda(AppColors.track, textoReferencia),
           ],
         ),
+        if (_mostrarEnergiaEconomizada) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Valor demonstrativo: a economia real depende da comparação com uma referência de consumo.',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.chartLabel.copyWith(
+              color: AppColors.primaryDark,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.xl),
         _graficoEnergia(),
         const SizedBox(height: AppSpacing.md),
         _cartaoDica(
           icone: Icons.lightbulb_outline_rounded,
-          titulo: 'Dica para economizar',
-          texto: widget.isTv
-              ? 'Desligue a TV completamente quando não estiver usando para reduzir o consumo em espera.'
-              : 'Ajustar a temperatura em 1°C pode ajudar a reduzir o gasto do ar-condicionado.',
+          titulo: _mostrarEnergiaEconomizada
+              ? 'Sobre a energia economizada'
+              : 'Dica para economizar',
+          texto: _mostrarEnergiaEconomizada
+              ? 'Este valor é demonstrativo. Para calcular a economia real, o FHIVE precisará comparar o consumo medido com uma referência do mesmo aparelho e período.'
+              : widget.isTv
+                  ? 'Desligue a TV completamente quando não estiver usando para reduzir o consumo em espera.'
+                  : widget.isGenerico
+                      ? 'Observe a variação das leituras simuladas e compare a potência e a energia ao longo da sessão.'
+                      : 'Ajustar a temperatura em 1°C pode ajudar a reduzir o gasto do ar-condicionado.',
         ),
       ],
     );
@@ -252,7 +377,11 @@ class _TelaIndicadorGraficoDetalheState
 
   static const Color _rosaEnergia = Color(0xFFFF9C9D);
 
-  Widget _medidor(double fracao) {
+  Widget _medidor(
+    double fracao, {
+    required double valor,
+    required Color corProgresso,
+  }) {
     return SizedBox(
       width: 150,
       height: 150,
@@ -261,14 +390,17 @@ class _TelaIndicadorGraficoDetalheState
         children: [
           CustomPaint(
             size: const Size(150, 150),
-            painter: MedidorAnelPainter(progresso: fracao),
+            painter: MedidorAnelPainter(
+              progresso: fracao,
+              corProgresso: corProgresso,
+            ),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.bolt_rounded, color: laranja, size: 34),
               Text(
-                '${_numero(energia)} kWh',
+                '${_numero(valor)} kWh',
                 style: AppTextStyles.cardTitle.copyWith(
                   color: laranja,
                   fontWeight: FontWeight.w900,
@@ -281,71 +413,118 @@ class _TelaIndicadorGraficoDetalheState
     );
   }
 
-  Widget _seloInformacao({
+  Widget _botaoOpcaoEnergia({
     IconData? icone,
     String? emblema,
     required String texto,
+    required bool selecionado,
+    required VoidCallback aoTocar,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceStrong,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppRadius.button),
+      child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.button),
-      ),
-      child: Row(
-        children: [
-          if (emblema != null)
-            Container(
-              width: 26,
-              height: 26,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: amarelo,
-                borderRadius: BorderRadius.circular(AppRadius.chip / 2),
-              ),
-              child: Text(
-                emblema,
-                style: AppTextStyles.chartLabel.copyWith(
-                  color: marrom,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            )
-          else
-            Icon(icone, color: laranja, size: 24),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              texto,
-              style: AppTextStyles.chartLabel.copyWith(
-                color: marrom,
-                fontWeight: FontWeight.w800,
-                height: 1.2,
-              ),
+        onTap: aoTocar,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          decoration: BoxDecoration(
+            color: selecionado ? AppColors.surfaceStrong : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            border: Border.all(
+              color: selecionado ? AppColors.surfaceStrong : AppColors.track,
+              width: 1,
             ),
           ),
-        ],
+          child: Row(
+            children: [
+              if (emblema != null)
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: selecionado ? AppColors.accent : AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.chip / 2),
+                  ),
+                  child: Text(
+                    emblema,
+                    style: AppTextStyles.chartLabel.copyWith(
+                      color: marrom,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                )
+              else
+                Icon(icone, color: marrom, size: 24),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  texto,
+                  style: AppTextStyles.chartLabel.copyWith(
+                    color: marrom,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _graficoEnergia() {
-    final valores = periodoEnergia == 'Semanal'
-        ? <double>[0.25, 0.42, 0.40, 0.64, 0.72, 0.53, 0.38]
-        : periodoEnergia == 'Mensal'
-        ? <double>[0.36, 0.55, 0.45, 0.71, 0.62, 0.79, 0.56]
-        : <double>[0.52, 0.38, 0.66, 0.48, 0.77, 0.61, 0.84];
+    if (widget.graficoModelo != null && !_mostrarEnergiaEconomizada) {
+      final serie = _serieModeloKwh;
+      final amostrada = _amostrarModelo(serie);
+      final maximo = amostrada.isEmpty
+          ? 0.001
+          : amostrada.reduce((a, b) => a > b ? a : b) * 1.15;
+      return _cartaoGraficoLinha(
+        periodo: 'Por minuto',
+        opcoes: const <String>['Por minuto'],
+        aoMudar: (_) {},
+        valores: _normalizarModelo(amostrada),
+        etiquetas: _etiquetasModelo(amostrada.length),
+        corLinha: AppColors.surfaceWarm,
+        maximoEixoY: maximo,
+      );
+    }
+
+    final valores = _mostrarEnergiaEconomizada
+        ? periodoEnergia == 'Semanal'
+            ? <double>[0.30, 0.46, 0.38, 0.58, 0.63, 0.52, 0.68]
+            : periodoEnergia == 'Mensal'
+                ? <double>[0.36, 0.48, 0.43, 0.64, 0.58, 0.73, 0.66]
+                : <double>[0.48, 0.39, 0.57, 0.53, 0.69, 0.64, 0.78]
+        : periodoEnergia == 'Semanal'
+            ? <double>[0.25, 0.42, 0.40, 0.64, 0.72, 0.53, 0.38]
+            : periodoEnergia == 'Mensal'
+                ? <double>[0.36, 0.55, 0.45, 0.71, 0.62, 0.79, 0.56]
+                : <double>[0.52, 0.38, 0.66, 0.48, 0.77, 0.61, 0.84];
     final etiquetas = periodoEnergia == 'Semanal'
         ? <String>['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
         : periodoEnergia == 'Mensal'
-        ? <String>['1', '5', '10', '15', '20', '25', '30']
-        : <String>['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
+            ? <String>['1', '5', '10', '15', '20', '25', '30']
+            : <String>['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'];
+    final maximo = _mostrarEnergiaEconomizada
+        ? metaEconomiaDiaria
+        : limiteDiario;
+
     return _cartaoGraficoLinha(
       periodo: periodoEnergia,
       aoMudar: (opcao) => setState(() => periodoEnergia = opcao),
       valores: valores,
       etiquetas: etiquetas,
+      // O gráfico histórico permanece branco/creme nos dois modos.
+      // O verde é reservado apenas ao indicador de energia economizada.
+      corLinha: AppColors.surfaceWarm,
+      // Semanal e Mensal mostram valores diários; Geral apresenta o mês.
+      maximoEixoY: periodoEnergia == 'Geral' ? maximo * 30 : maximo,
     );
   }
 
@@ -357,8 +536,10 @@ class _TelaIndicadorGraficoDetalheState
     required List<double> valores,
     required List<String> etiquetas,
     double altura = 190,
+    double? maximoEixoY,
+    Color corLinha = AppColors.surfaceWarm,
+    List<String> opcoes = const <String>['Semanal', 'Mensal', 'Geral'],
   }) {
-    const opcoes = ['Semanal', 'Mensal', 'Geral'];
     return Container(
       height: altura,
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
@@ -403,29 +584,79 @@ class _TelaIndicadorGraficoDetalheState
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Expanded(
-            child: CustomPaint(
-              painter: LinhaHistoricoPainter(
-                valores: valores,
-                corLinha: AppColors.surfaceWarm,
+          if (maximoEixoY != null)
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(left: 2, bottom: 2),
+                child: Text(
+                  'kWh',
+                  style: TextStyle(
+                    color: AppColors.surfaceWarm,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              child: const SizedBox.expand(),
+            ),
+          Expanded(
+            child: Row(
+              children: [
+                if (maximoEixoY != null)
+                  SizedBox(
+                    width: 39,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: List<Widget>.generate(5, (indice) {
+                        final fator = 1 - (indice / 4);
+                        final valor = maximoEixoY * fator;
+                        return Text(
+                          _numero(valor),
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            color: AppColors.surfaceWarm,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                if (maximoEixoY != null) const SizedBox(width: 5),
+                Expanded(
+                  child: CustomPaint(
+                    painter: LinhaHistoricoPainter(
+                      valores: valores,
+                      corLinha: corLinha,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              for (final etiqueta in etiquetas)
-                Expanded(
-                  child: Text(
-                    etiqueta,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.chartLabel.copyWith(
-                      color: AppColors.surfaceWarm,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+              if (maximoEixoY != null) const SizedBox(width: 44),
+              Expanded(
+                child: Row(
+                  children: [
+                    for (final etiqueta in etiquetas)
+                      Expanded(
+                        child: Text(
+                          etiqueta,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.chartLabel.copyWith(
+                            color: AppColors.surfaceWarm,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+              ),
             ],
           ),
         ],
@@ -438,78 +669,87 @@ class _TelaIndicadorGraficoDetalheState
   // ================================================================
 
   Widget _paginaHoras() {
-    final maxHoras = math
-        .max(horasManha, math.max(horasTarde, horasNoite))
-        .toDouble();
+    // Cada faixa representa até 8 horas, totalizando 24h no dia.
+    const limiteHorasPeriodo = 8;
+
+    // O conteúdo usa sua altura natural. A folha externa já possui
+    // SingleChildScrollView, então telas menores rolam sem overflow interno.
     return _molduraOrnamental(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _barraPeriodo(
             titulo: 'Manhã',
             horasPeriodo: horasManha,
-            total: maxHoras,
-            corFundo: const Color(0xFFFFF59D),
-            corPreenchimento: const Color(0xFFFFEE00),
+            total: limiteHorasPeriodo.toDouble(),
+            // Amarelo-ouro de manhã, com contraste maior que o amarelo neon.
+            corFundo: const Color(0xFFFFE7A1),
+            corPreenchimento: const Color(0xFFFFB52E),
             periodo: PeriodoDiaGrafico.manha,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 10),
           _barraPeriodo(
             titulo: 'Tarde',
             horasPeriodo: horasTarde,
-            total: maxHoras,
+            total: limiteHorasPeriodo.toDouble(),
             corFundo: const Color(0xFFFFCC80),
             corPreenchimento: const Color(0xFFFF8F1F),
             periodo: PeriodoDiaGrafico.tarde,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 10),
           _barraPeriodo(
             titulo: 'Noite',
             horasPeriodo: horasNoite,
-            total: maxHoras,
+            total: limiteHorasPeriodo.toDouble(),
             corFundo: const Color(0xFFC5A8FF),
             corPreenchimento: const Color(0xFF7B2FF7),
             periodo: PeriodoDiaGrafico.noite,
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Center(
-            child: Text(
-              'Total de Horas: ${totalHoras}h',
-              style: AppTextStyles.cardTitle,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: BoxDecoration(
-                color: marrom,
-                borderRadius: BorderRadius.circular(AppRadius.card),
+          const SizedBox(height: 14),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Text(
+                  'Total de Horas: ${totalHoras}h',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.sectionTitle,
+                ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.keyboard_arrow_up_rounded,
-                    color: AppColors.white,
-                    size: 20,
+              const SizedBox(height: 7),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
                   ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      widget.isTv
-                          ? 'Mais 2 horas do que ontem'
-                          : 'Uso elevado em relação a ontem',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.caption.copyWith(
+                  decoration: BoxDecoration(
+                    color: marrom,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.keyboard_arrow_up_rounded,
                         color: AppColors.white,
-                        fontWeight: FontWeight.w800,
+                        size: 18,
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${horasAmaisOntem}h a mais que ontem',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -519,12 +759,12 @@ class _TelaIndicadorGraficoDetalheState
   /// Moldura dupla marrom ao redor do conteúdo, como no Figma.
   Widget _molduraOrnamental({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         border: Border.all(color: marrom, width: 1.6),
       ),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
         decoration: BoxDecoration(
           border: Border.all(color: marrom.withValues(alpha: 0.7), width: 1),
         ),
@@ -541,55 +781,76 @@ class _TelaIndicadorGraficoDetalheState
     required Color corPreenchimento,
     required PeriodoDiaGrafico periodo,
   }) {
-    final fracao = (horasPeriodo / total).clamp(0.25, 1.0).toDouble();
+    final fracao = (horasPeriodo / total).clamp(0.0, 1.0).toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           titulo,
           textAlign: TextAlign.center,
-          style: AppTextStyles.cardTitle,
+          style: AppTextStyles.sectionTitle.copyWith(fontSize: 17),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: 1),
+        Text(
+          '$horasPeriodo h usadas • Limite: ${total.toInt()} h',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.caption.copyWith(fontSize: 10),
+        ),
+        const SizedBox(height: 4),
         LayoutBuilder(
           builder: (context, constraints) {
-            const ladoBalao = 34.0;
+            const ladoBalao = 30.0;
             final larguraPreenchida = constraints.maxWidth * fracao;
-            final esquerdaBalao = (larguraPreenchida - ladoBalao - 3)
+            final esquerdaBalao = (larguraPreenchida - ladoBalao - 2)
                 .clamp(0.0, constraints.maxWidth - ladoBalao)
                 .toDouble();
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  child: Container(
-                    height: 30,
-                    color: corFundo,
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: fracao,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: corPreenchimento,
-                          borderRadius: BorderRadius.circular(AppRadius.card),
+                  child: SizedBox(
+                    height: 36,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: ColoredBox(color: corFundo)),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: fracao,
+                            heightFactor: 1,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              child: ColoredBox(
+                                color: corPreenchimento,
+                                // A pintura recebe somente a largura preenchida,
+                                // nunca a parte vazia da trilha.
+                                child: CustomPaint(
+                                  painter: DecoracaoPeriodoPainter(
+                                    periodo: periodo,
+                                  ),
+                                  child: const SizedBox.expand(),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                        child: CustomPaint(
-                          painter: DecoracaoPeriodoPainter(periodo: periodo),
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
                 SizedBox(
-                  height: 46,
+                  height: 30,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Positioned(
                         left: esquerdaBalao,
-                        top: 5,
+                        top: 0,
                         child: _balaoHoras('${horasPeriodo}h', ladoBalao),
                       ),
                     ],
@@ -688,7 +949,7 @@ class _TelaIndicadorGraficoDetalheState
               ),
               const SizedBox(height: 12),
               Text(
-                widget.isTv ? 'Muito bom!' : 'Excelente!',
+                widget.isTv ? 'Muito bom!' : widget.isGenerico ? 'Cenário simulado' : 'Excelente!',
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
@@ -713,14 +974,14 @@ class _TelaIndicadorGraficoDetalheState
               _linhaIndicador(
                 Icons.bolt_rounded,
                 'Consumo de energia',
-                widget.isTv ? 'Bom' : 'Atenção',
-                widget.isTv ? 0.8 : 0.63,
+                widget.isTv ? 'Bom' : widget.isGenerico ? 'Simulado' : 'Atenção',
+                widget.isTv ? 0.8 : widget.isGenerico ? 0.75 : 0.63,
               ),
               _linhaIndicador(
                 Icons.schedule_rounded,
                 'Tempo de uso',
-                widget.isTv ? 'Estável' : 'Elevado',
-                widget.isTv ? 0.76 : 0.56,
+                widget.isTv ? 'Estável' : widget.isGenerico ? 'Simulado' : 'Elevado',
+                widget.isTv ? 0.76 : widget.isGenerico ? 0.75 : 0.56,
               ),
               _linhaIndicador(
                 Icons.speed_rounded,
@@ -736,6 +997,46 @@ class _TelaIndicadorGraficoDetalheState
   }
 
   Widget _paginaHistorico() {
+    if (widget.graficoModelo != null) {
+      final serie = _serieModeloKwh;
+      final amostrada = _amostrarModelo(serie);
+      final maximo = amostrada.isEmpty
+          ? 0.001
+          : amostrada.reduce((a, b) => a > b ? a : b) * 1.15;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _cartaoGraficoLinha(
+            periodo: 'Por minuto',
+            opcoes: const <String>['Por minuto'],
+            aoMudar: (_) {},
+            valores: _normalizarModelo(amostrada),
+            etiquetas: _etiquetasModelo(amostrada.length),
+            altura: 260,
+            maximoEixoY: maximo,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _resumoMini('Leituras', '${_leiturasModelo.length}', Icons.timeline_rounded),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _resumoMini('Energia', '${_numero(energia)} kWh', Icons.bolt_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _cartaoDica(
+            icone: Icons.science_outlined,
+            titulo: 'Gráfico modelo',
+            texto: 'Cada ponto representa energia simulada consumida em um minuto. Os valores não são medições reais do aparelho.',
+          ),
+        ],
+      );
+    }
+
     final valores = periodoHistorico == 'Semanal'
         ? <double>[0.24, 0.55, 0.43, 0.65, 0.48, 0.82, 0.68]
         : periodoHistorico == 'Mensal'
@@ -806,23 +1107,41 @@ class _TelaIndicadorGraficoDetalheState
               'Uma rotina de desligamento evita que o aparelho permaneça ligado sem necessidade.',
             ),
           ]
-        : <(IconData, String, String)>[
-            (
-              Icons.thermostat_rounded,
-              'Mantenha uma faixa confortável',
-              'A configuração atual é de 23°C, próxima de uma faixa eficiente para muitos ambientes.',
-            ),
-            (
-              Icons.air_rounded,
-              'Limpe os filtros',
-              'Filtros limpos ajudam a manter o fluxo de ar e o desempenho do aparelho.',
-            ),
-            (
-              Icons.home_rounded,
-              'Feche portas e janelas',
-              'Reduzir a troca de calor ajuda o ambiente a chegar à temperatura desejada.',
-            ),
-          ];
+        : widget.isGenerico
+            ? <(IconData, String, String)>[
+                (
+                  Icons.bolt_rounded,
+                  'Observe a potência',
+                  'Compare as variações de potência entre as leituras simuladas.',
+                ),
+                (
+                  Icons.electric_meter_rounded,
+                  'Acompanhe a energia',
+                  'O consumo acumulado é calculado pela soma da energia de cada minuto.',
+                ),
+                (
+                  Icons.science_outlined,
+                  'Lembre-se da simulação',
+                  'Os valores foram gerados para testes e não são medições do aparelho físico.',
+                ),
+              ]
+            : <(IconData, String, String)>[
+                (
+                  Icons.thermostat_rounded,
+                  'Mantenha uma faixa confortável',
+                  'A configuração atual é de 23°C, próxima de uma faixa eficiente para muitos ambientes.',
+                ),
+                (
+                  Icons.air_rounded,
+                  'Limpe os filtros',
+                  'Filtros limpos ajudam a manter o fluxo de ar e o desempenho do aparelho.',
+                ),
+                (
+                  Icons.home_rounded,
+                  'Feche portas e janelas',
+                  'Reduzir a troca de calor ajuda o ambiente a chegar à temperatura desejada.',
+                ),
+              ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -842,7 +1161,7 @@ class _TelaIndicadorGraficoDetalheState
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Icon(
-                  widget.isTv ? Icons.tv_rounded : Icons.thermostat_rounded,
+                  widget.isTv ? Icons.tv_rounded : widget.isGenerico ? Icons.devices_other_rounded : Icons.thermostat_rounded,
                   color: marrom,
                   size: 34,
                 ),
@@ -855,14 +1174,18 @@ class _TelaIndicadorGraficoDetalheState
                     Text(
                       widget.isTv
                           ? 'Seu aparelho está estável'
-                          : 'Temperatura atual',
+                          : widget.isGenerico
+                              ? 'Sessão de dados simulados'
+                              : 'Temperatura atual',
                       style: AppTextStyles.cardTitle,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.isTv
                           ? 'Pequenos hábitos podem melhorar a economia.'
-                          : temperatura,
+                          : widget.isGenerico
+                              ? 'Leituras artificiais geradas a cada minuto.'
+                              : temperatura,
                       style: const TextStyle(
                         color: laranja,
                         fontSize: 24,
@@ -992,7 +1315,7 @@ class _TelaIndicadorGraficoDetalheState
               ),
               const SizedBox(height: 14),
               Text(
-                widget.isTv ? 'Bom aproveitamento' : 'Pode melhorar',
+                widget.isTv ? 'Bom aproveitamento' : widget.isGenerico ? 'Dados de teste' : 'Pode melhorar',
                 style: const TextStyle(
                   color: marrom,
                   fontFamily: AppFonts.title,
@@ -1004,7 +1327,9 @@ class _TelaIndicadorGraficoDetalheState
               Text(
                 widget.isTv
                     ? 'O aparelho tem um índice positivo no cenário demonstrativo.'
-                    : 'Alguns ajustes de temperatura e tempo podem aumentar o aproveitamento.',
+                    : widget.isGenerico
+                        ? 'Este índice é demonstrativo e não representa uma avaliação técnica do equipamento.'
+                        : 'Alguns ajustes de temperatura e tempo podem aumentar o aproveitamento.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: textoSuave,
@@ -1230,14 +1555,19 @@ class _TelaIndicadorGraficoDetalheState
     );
   }
 
-  String _numero(double valor) => valor.toStringAsFixed(1).replaceAll('.', ',');
+  String _numero(double valor) =>
+      (valor.abs() < 0.1 ? valor.toStringAsFixed(4) : valor.toStringAsFixed(1)).replaceAll('.', ',');
 }
 
 /// Medidor em anel (270°) usado na tela de energia.
 class MedidorAnelPainter extends CustomPainter {
   final double progresso;
+  final Color corProgresso;
 
-  const MedidorAnelPainter({required this.progresso});
+  const MedidorAnelPainter({
+    required this.progresso,
+    this.corProgresso = AppColors.accent,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1258,7 +1588,7 @@ class MedidorAnelPainter extends CustomPainter {
     final valor = progresso.clamp(0.0, 1.0).toDouble();
     if (valor > 0) {
       final frente = Paint()
-        ..color = AppColors.accent
+        ..color = corProgresso
         ..style = PaintingStyle.stroke
         ..strokeWidth = espessura
         ..strokeCap = StrokeCap.round;
@@ -1280,7 +1610,8 @@ class MedidorAnelPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MedidorAnelPainter oldDelegate) =>
-      oldDelegate.progresso != progresso;
+      oldDelegate.progresso != progresso ||
+      oldDelegate.corProgresso != corProgresso;
 }
 
 /// Períodos do dia usados na tela de horas usadas.
@@ -1298,43 +1629,48 @@ class DecoracaoPeriodoPainter extends CustomPainter {
     switch (periodo) {
       case PeriodoDiaGrafico.manha:
         _pontos(canvas, size, const <(double, double, double)>[
-          (0.08, 0.30, 2.0),
-          (0.18, 0.68, 1.5),
-          (0.30, 0.25, 1.8),
-          (0.42, 0.70, 2.2),
-          (0.55, 0.35, 1.5),
-          (0.68, 0.64, 2.0),
-          (0.80, 0.28, 1.6),
-          (0.92, 0.60, 1.8),
+          (0.05, 0.30, 2.0),
+          (0.17, 0.68, 1.5),
+          (0.29, 0.25, 1.8),
+          (0.41, 0.70, 2.2),
+          (0.53, 0.35, 1.5),
+          (0.65, 0.64, 2.0),
+          (0.77, 0.28, 1.6),
+          (0.96, 0.60, 1.8),
         ], 0.9);
       case PeriodoDiaGrafico.tarde:
-        final tinta = Paint()..color = AppColors.white.withValues(alpha: 0.6);
+        final tinta = Paint()..color = AppColors.white.withValues(alpha: 0.62);
         const predios = <(double, double, double)>[
-          (10, 8, 12),
-          (20, 7, 18),
-          (29, 9, 14),
-          (40, 7, 22),
-          (49, 9, 16),
-          (60, 7, 12),
-          (69, 9, 20),
+          (0.04, 0.045, 0.42),
+          (0.15, 0.045, 0.68),
+          (0.26, 0.045, 0.50),
+          (0.37, 0.045, 0.82),
+          (0.48, 0.045, 0.62),
+          (0.59, 0.045, 0.46),
+          (0.70, 0.045, 0.72),
+          (0.81, 0.045, 0.56),
+          (0.92, 0.045, 0.76),
         ];
-        for (final (x, largura, altura) in predios) {
-          if (x + largura > size.width - 8) continue;
+        for (final (fx, larguraRelativa, alturaRelativa) in predios) {
+          final x = size.width * fx;
+          final largura = math.max(3.0, size.width * larguraRelativa).toDouble();
+          final altura = size.height * alturaRelativa;
+          if (x + largura > size.width - 3) continue;
           canvas.drawRect(
-            Rect.fromLTWH(x, size.height - altura - 4, largura, altura),
+            Rect.fromLTWH(x, size.height - altura - 3, largura, altura),
             tinta,
           );
         }
       case PeriodoDiaGrafico.noite:
         _pontos(canvas, size, const <(double, double, double)>[
-          (0.07, 0.35, 1.4),
-          (0.15, 0.70, 1.8),
-          (0.26, 0.28, 1.2),
-          (0.38, 0.62, 1.6),
-          (0.47, 0.30, 1.4),
-          (0.60, 0.72, 1.2),
-          (0.72, 0.34, 1.8),
-          (0.85, 0.66, 1.4),
+          (0.05, 0.35, 1.4),
+          (0.17, 0.70, 1.8),
+          (0.29, 0.28, 1.2),
+          (0.41, 0.62, 1.6),
+          (0.53, 0.30, 1.4),
+          (0.65, 0.72, 1.2),
+          (0.77, 0.34, 1.8),
+          (0.94, 0.66, 1.4),
         ], 0.85);
         _lua(canvas, size);
     }
@@ -1407,7 +1743,7 @@ class LinhaHistoricoPainter extends CustomPainter {
     final linhaGrade = Paint()
       ..color = corLinha.withValues(alpha: 0.18)
       ..strokeWidth = 0.7;
-    for (var i = 1; i < 4; i++) {
+    for (var i = 0; i <= 4; i++) {
       final y = size.height * i / 4;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), linhaGrade);
     }

@@ -918,7 +918,7 @@ Se o erro mudar, compartilhe a nova mensagem completa. A alteração corrige a i
 - Adicionado cliente HTTP central em `lib/core/network/api_client.dart`, com URL configurável por `FHIVE_API_BASE_URL`, cabeçalho Bearer, timeout e mensagens de falha.
 - Dispositivos e rotinas agora são carregados do backend; criação/exclusão de aparelhos e operações de rotina usam os endpoints REST existentes. As listas começam vazias e não inserem aparelhos ou rotinas fictícios.
 - O app consulta telemetria pelo ID interno MongoDB e diferencia leituras reais de valores demonstrativos.
-- Acrescentada a camada de serviço de equipes, pronta para uso quando houver interface correspondente.
+- Nota histórica: uma camada de serviço de equipes chegou a existir em versões anteriores do Mobile. Na versão atual ela foi removida, pois equipes, integrantes e cargos são exclusivas do site.
 - O token e os caches de conta são limpos ao sair. Favoritos, atalhos e preferências continuam locais.
 - Padronizada a senha forte nos fluxos de cadastro, alteração e recuperação: mínimo de 8 caracteres, maiúscula, minúscula, número e símbolo, validado tanto no mobile como nos controllers do backend.
 - Limitações assumidas: ainda não há API para enviar comandos físicos aos aparelhos ou executar rotinas sob demanda; a integração MQTT de comando deverá ser definida no backend. Cadastro/recuperação exigem SMTP válido.

@@ -120,7 +120,7 @@ O projeto segue a organização **feature-first**: cada funcionalidade possui su
 
 - **Cliente HTTP único** (`ApiClient`): centraliza URL base, cabeçalho `Authorization: Bearer`, *timeout* de 20 s, decodificação de JSON e conversão de erros HTTP em mensagens legíveis (`ApiException`). Um `401` limpa o token e informa que a sessão expirou.
 - **Estado compartilhado com `ValueNotifier`** (`shared/state`): `AuthStore`, `AparelhosStore`, `RotinasStore` e `PreferenciasStore`, sem dependência de pacotes externos de gerenciamento de estado.
-- **Camada `data` por feature:** `AuthApi`, `DispositivosApi`, `RotinasApi` e `EquipesApi` isolam os endpoints das telas.
+- **Camada `data` por feature:** `AuthApi`, `DispositivosApi`, `RotinasApi` e `IaApi` isolam os endpoints consumidos pelo aplicativo. Gestão de equipes, integrantes e cargos é exclusiva do site e não faz parte do Mobile.
 - **Design system único** em `core/theme/theme.dart`: nenhuma tela declara cores, raios ou tamanhos de fonte fixos.
 
 ## 5. Tecnologias
@@ -156,7 +156,7 @@ O projeto segue a organização **feature-first**: cada funcionalidade possui su
 │       ├── devices/                      # aparelhos, criar_aparelho, aparelho_detalhes  +  data/dispositivos_api
 │       ├── analytics/                    # graficos, indicador_grafico_detalhe
 │       ├── routines/                     # rotinas, formulario_rotina  +  data/rotinas_api
-│       ├── teams/                        # data/equipes_api (sem tela ainda)
+│       ├── ai/                           # data/ia_api (chat, estimativa e análise)
 │       └── settings/                     # configuracoes, conta, ajuda
 ├── test/                                 # widget_test.dart, navegacao_por_deslize_test.dart
 ├── assets/images/                        # logo.svg, fhive_app_icon.png, fhive_app_icon.svg
@@ -280,14 +280,13 @@ Substitua `192.168.0.10` pelo IP do computador na rede local. O celular e o comp
 | | `POST /usuarios/verificar-codigo-recuperacao` | Validar código |
 | | `POST /usuarios/redefinir-senha` | Definir nova senha |
 | **Dispositivos** | `GET /dispositivos` | Listar |
-| | `POST /dispositivos` | Cadastrar (`nome`, `tipo`, `deviceId`, `local`, `fabricante`, `modelo`, `conexao`) |
+| | `POST /dispositivos` | Cadastrar (o controller atual persiste `nome` e `tipo` e gera `deviceId` no servidor) |
 | | `GET /dispositivos/:id` | Consultar |
 | | `GET /dispositivos/:id/telemetrias` | Leituras de telemetria |
-| | `DELETE /dispositivos/:id` | Excluir |
 | **Rotinas** | `GET /rotinas` · `POST /rotinas` | Listar e criar |
 | | `GET /rotinas/:id` · `PUT /rotinas/:id` | Consultar e atualizar (inclui ativar/desativar) |
 | | `DELETE /rotinas/:id` | Excluir |
-| **Equipes** | `GET /equipes` · `POST /equipes` · `DELETE /equipes/:id` | Camada de API pronta, **sem tela** |
+| **IA** | `POST /ia/perguntar` · `POST /ia/estimar-consumo` · `POST /ia/dispositivos/:id/analisar-anomalias` | Chat, estimativa e análise das telemetrias |
 
 O `deviceId` (identificador do hardware) é mantido separado do `id` interno do registro no MongoDB.
 
@@ -326,7 +325,7 @@ O projeto é um **protótipo funcional integrado ao backend**. Limitações conh
 - **Gráficos:** consultam telemetria real quando existe. Sem leituras MQTT, parte dos indicadores é **demonstrativa** e sinalizada na tela.
 - **Dados locais:** favoritos, atalhos, preferências e locais personalizados ficam em memória e não são sincronizados com o servidor.
 - **Login social:** os botões Google/Facebook não estão integrados a nenhum serviço de autenticação.
-- **Equipes:** existe a camada de API, mas não há tela.
+- **Equipes, integrantes e cargos:** são funcionalidades exclusivas do site; não há serviços nem telas correspondentes no Mobile.
 - **Dependências:** `flutter pub get` reporta pacotes com versões mais recentes incompatíveis com as restrições atuais; revise com `flutter pub outdated` antes de atualizar.
 
 ## 12. Roadmap
@@ -335,7 +334,6 @@ O projeto é um **protótipo funcional integrado ao backend**. Limitações conh
 - [ ] Endpoint e fluxo de **comando** a dispositivos via MQTT.
 - [ ] Execução de rotinas sob demanda e agendamento no backend.
 - [ ] Telemetria em tempo real nos gráficos, removendo os dados demonstrativos.
-- [ ] Tela de equipes (membros e compartilhamento de casa).
 - [ ] Persistência de favoritos e preferências no servidor.
 - [ ] Login social (Google).
 - [ ] Notificações push.
@@ -378,3 +376,14 @@ _[Licença do projeto]_
 <div align="center">
 Feito com 💛 como Trabalho de Conclusão de Curso.
 </div>
+
+
+## Integração Gemini e acesso Dicas — versão Mobile
+
+- A tela **Configurações → Ajuda** mantém Perguntas frequentes e inclui Chat IA e Ferramentas.
+- A tela de gráficos de um aparelho possui a barra **Dicas**. Ela abre o Chat IA com os dados cadastrais conhecidos do aparelho selecionado.
+- As ferramentas consomem `/ia/estimar-consumo` e `/ia/dispositivos/:id/analisar-anomalias`. O endpoint de chat recebe informações cadastrais; ele não consulta telemetrias. Para interpretação das leituras, use a ferramenta de análise.
+- A chave `GEMINI_API_KEY` permanece somente no `.env` do Node.js. Não adicionar essa chave ao Flutter.
+- Rotas de equipes, integrantes, cargos e rotinas de equipe pertencem ao site e foram removidas do pacote Mobile.
+- O backend atual não possui endpoints para editar ou excluir dispositivos, nem para enviar comandos físicos aos aparelhos. O app informa a limitação de exclusão, e os controles físicos continuam demonstrativos.
+- O controller de criação de dispositivos salva atualmente apenas `nome` e `tipo`, gera o `deviceId` no servidor e não persiste `local`, `fabricante`, `modelo` e `conexao`, embora o formulário Mobile envie esses campos.

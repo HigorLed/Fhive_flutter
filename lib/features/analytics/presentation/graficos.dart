@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_mobile/core/network/api_client.dart' show ApiException;
 import 'package:tcc_mobile/shared/widgets/navegacao_por_deslize.dart';
 import 'package:tcc_mobile/features/analytics/presentation/indicador_grafico_detalhe.dart';
+import 'package:tcc_mobile/features/analytics/data/graficos_modelo_api.dart';
+import 'package:tcc_mobile/features/settings/presentation/ajuda.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 
 import 'package:tcc_mobile/core/theme/theme.dart';
@@ -8,7 +11,7 @@ import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/shared/widgets/seletor_locais.dart';
 
-enum TipoAparelho { tv, arCondicionado }
+enum TipoAparelho { tv, arCondicionado, outro }
 
 // ================================================================
 // TELA PRINCIPAL DE GRÁFICOS
@@ -30,6 +33,33 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
   bool _mostrarLocais = false;
   String? _localFiltro;
+  bool _carregandoModelos = false;
+  List<Map<String, dynamic>> _graficosModelo = <Map<String, dynamic>>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarGraficosModelo();
+  }
+
+  Future<void> _carregarGraficosModelo() async {
+    if (mounted) setState(() => _carregandoModelos = true);
+    try {
+      if (AparelhosStore.aparelhos.value.isEmpty) {
+        await AparelhosStore.carregarDoBackend();
+      }
+      final modelos = await GraficosModeloApi.listar();
+      if (!mounted) return;
+      setState(() => _graficosModelo = modelos);
+    } catch (erro) {
+      if (!mounted) return;
+      _mensagemGraficoIndisponivel(
+        erro is ApiException ? erro.message : 'Não foi possível carregar os gráficos modelo.',
+      );
+    } finally {
+      if (mounted) setState(() => _carregandoModelos = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +183,92 @@ class _TelaGraficosState extends State<TelaGraficos> {
                 ),
               ),
             ],
+            const SizedBox(height: AppSpacing.section),
+            TituloSecao(
+              titulo: 'Gráficos modelo',
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Atualizar gráficos modelo',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _carregandoModelos ? null : _carregarGraficosModelo,
+                    icon: const Icon(Icons.refresh_rounded, color: marrom),
+                  ),
+                  IconButton.filled(
+                    tooltip: 'Criar gráfico modelo',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _abrirCriacaoGraficoModelo,
+                    icon: const Icon(Icons.add_rounded),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              'Dados artificiais para visualizar gráficos e testar a análise do Gemini. Não são leituras reais do aparelho.',
+              style: AppTextStyles.caption,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (_carregandoModelos)
+              const Center(child: CircularProgressIndicator())
+            else if (_graficosModelo.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                ),
+                child: const Text(
+                  'Nenhum gráfico modelo criado. Toque no + para escolher um aparelho e gerar dados de teste.',
+                  style: AppTextStyles.body,
+                ),
+              )
+            else
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
+                children: _graficosModelo.map((grafico) {
+                  final dispositivo = grafico['dispositivo'] is Map
+                      ? (grafico['dispositivo'] as Map)
+                      : const <String, dynamic>{};
+                  final dispositivoId = '${dispositivo['id'] ?? grafico['dispositivoId'] ?? ''}';
+                  final aparelhoEncontrado = AparelhosStore.aparelhos.value.where(
+                    (item) => item.backendId == dispositivoId,
+                  );
+                  final aparelho = aparelhoEncontrado.isEmpty
+                      ? null
+                      : aparelhoEncontrado.first;
+                  final nomeAparelho = '${dispositivo['nome'] ?? aparelho?.nome ?? 'Aparelho'}';
+                  final nomeGrafico = '${grafico['nome'] ?? 'Gráfico modelo'}';
+                  final leituras = grafico['leituras'] is List
+                      ? (grafico['leituras'] as List).length
+                      : ((grafico['minutoAtual'] as num?)?.toInt() ?? 0);
+                  final consumoWh = grafico['consumoAcumulado'] is num
+                      ? (grafico['consumoAcumulado'] as num).toDouble()
+                      : 0.0;
+                  final consumoKwh = consumoWh / 1000;
+                  final tamanhoCard = (MediaQuery.sizeOf(context).width -
+                      2 * AppSpacing.pageHorizontal - AppSpacing.md) / 2;
+
+                  return SizedBox(
+                    width: tamanhoCard,
+                    child: GestureDetector(
+                      onTap: aparelho == null
+                          ? null
+                          : () => _abrirGraficoModelo(aparelho, grafico),
+                      child: _cardAparelho(
+                        nome: nomeGrafico,
+                        subtitulo: '$nomeAparelho • $leituras min',
+                        icone: aparelho?.icone ?? Icons.science_outlined,
+                        metrica: '${consumoKwh.toStringAsFixed(4).replaceAll('.', ',')} kWh',
+                        mostrarMiniGrafico: true,
+                      ),
+                    ),
+                  );
+                }).toList(growable: false),
+              ),
           ],
         );
       },
@@ -267,6 +383,168 @@ class _TelaGraficosState extends State<TelaGraficos> {
     );
   }
 
+  Future<void> _abrirCriacaoGraficoModelo() async {
+    try {
+      if (AparelhosStore.aparelhos.value.isEmpty) {
+        await AparelhosStore.carregarDoBackend();
+      }
+    } catch (erro) {
+      _mensagemGraficoIndisponivel(
+        erro is ApiException ? erro.message : 'Não foi possível carregar seus aparelhos.',
+      );
+      return;
+    }
+
+    final aparelhos = AparelhosStore.aparelhos.value
+        .where((aparelho) => aparelho.backendId.trim().isNotEmpty)
+        .toList(growable: false);
+    if (aparelhos.isEmpty) {
+      _mensagemGraficoIndisponivel('Cadastre um aparelho na sua conta antes de criar um gráfico modelo.');
+      return;
+    }
+
+    final nomeController = TextEditingController();
+    String dispositivoId = aparelhos.first.backendId;
+    int quantidade = 30;
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, atualizarDialogo) => AlertDialog(
+          title: const Text('Criar gráfico modelo'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF0B8),
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.science_outlined, color: AppColors.primary),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Este é um gráfico modelo. O FHIVE vai gerar leituras artificiais de potência, tensão, corrente e energia consumida a cada minuto. Elas serão salvas em Telemetrias com identificação de dados simulados e aparecerão no mesmo painel dos gráficos existentes.',
+                          style: AppTextStyles.caption,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  value: dispositivoId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Aparelho'),
+                  items: aparelhos.map((aparelho) => DropdownMenuItem<String>(
+                    value: aparelho.backendId,
+                    child: Text('${aparelho.nome} • ${aparelho.tipo}', overflow: TextOverflow.ellipsis),
+                  )).toList(growable: false),
+                  onChanged: (valor) {
+                    if (valor != null) atualizarDialogo(() => dispositivoId = valor);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: nomeController,
+                  maxLength: 80,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do gráfico (opcional)',
+                    hintText: 'Ex.: Teste de consumo noturno',
+                  ),
+                ),
+                DropdownButtonFormField<int>(
+                  value: quantidade,
+                  decoration: const InputDecoration(labelText: 'Quantidade de leituras'),
+                  items: const [10, 20, 30, 45, 60].map((valor) => DropdownMenuItem<int>(
+                    value: valor,
+                    child: Text('$valor leituras • 1 minuto cada'),
+                  )).toList(),
+                  onChanged: (valor) {
+                    if (valor != null) atualizarDialogo(() => quantidade = valor);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              icon: const Icon(Icons.add_chart_rounded),
+              label: const Text('Criar modelo'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final nome = nomeController.text.trim();
+    nomeController.dispose();
+    if (confirmado != true || !mounted) return;
+
+    setState(() => _carregandoModelos = true);
+    try {
+      final resposta = await GraficosModeloApi.criar(
+        dispositivoId: dispositivoId,
+        nome: nome,
+        quantidadeLeituras: quantidade,
+      );
+      final grafico = resposta['grafico'] is Map
+          ? (resposta['grafico'] as Map).map((key, value) => MapEntry('$key', value))
+          : resposta;
+      if (!mounted) return;
+      setState(() => _graficosModelo = <Map<String, dynamic>>[
+        Map<String, dynamic>.from(grafico),
+        ..._graficosModelo,
+      ]);
+      _mensagemGraficoIndisponivel('Gráfico modelo criado e salvo com sucesso.');
+    } catch (erro) {
+      _mensagemGraficoIndisponivel(
+        erro is ApiException ? erro.message : 'Não foi possível criar o gráfico modelo.',
+      );
+    } finally {
+      if (mounted) setState(() => _carregandoModelos = false);
+    }
+  }
+
+  void _abrirGraficoModelo(
+    AparelhoItem aparelho,
+    Map<String, dynamic> grafico,
+  ) {
+    final tipoNormalizado = aparelho.tipo.trim().toLowerCase();
+    final tipoGrafico = tipoNormalizado == 'tv' ||
+            tipoNormalizado == 'televisão' ||
+            tipoNormalizado == 'televisao'
+        ? TipoAparelho.tv
+        : tipoNormalizado.contains('ar condicionado') ||
+                tipoNormalizado.contains('ar-condicionado')
+            ? TipoAparelho.arCondicionado
+            : TipoAparelho.outro;
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TelaGraficosDetalhes(
+          tipo: tipoGrafico,
+          nomePersonalizado: aparelho.nome,
+          local: aparelho.local,
+          status: aparelho.status,
+          deviceBackendId: aparelho.backendId,
+          aparelhoSelecionado: aparelho,
+          graficoModelo: grafico,
+        ),
+      ),
+    );
+  }
+
   void _mensagemGraficoIndisponivel(String mensagem) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -285,6 +563,7 @@ class _TelaGraficosState extends State<TelaGraficos> {
           local: aparelho.local,
           status: aparelho.status,
           deviceBackendId: aparelho.backendId,
+          aparelhoSelecionado: aparelho,
         ),
       ),
     );
@@ -325,6 +604,8 @@ class _TelaGraficosState extends State<TelaGraficos> {
 
           Text(
             subtitulo,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTextStyles.caption,
           ),
           if (mostrarMiniGrafico && metrica != null) ...[
@@ -386,6 +667,9 @@ class TelaGraficosDetalhes extends StatefulWidget {
   final String local;
   final String status;
   final String? deviceBackendId;
+  final AparelhoItem? aparelhoSelecionado;
+  /// Quando informado, este mesmo painel usa uma sessão artificial de Telemetrias.
+  final Map<String, dynamic>? graficoModelo;
 
   const TelaGraficosDetalhes({
     super.key,
@@ -394,6 +678,8 @@ class TelaGraficosDetalhes extends StatefulWidget {
     this.local = 'Sala de Estar',
     this.status = 'Online',
     this.deviceBackendId,
+    this.aparelhoSelecionado,
+    this.graficoModelo,
   });
 
   @override
@@ -410,25 +696,87 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   String periodoSelecionado = '7 dias';
 
   bool get isTv => widget.tipo == TipoAparelho.tv;
+  bool get isOutro => widget.tipo == TipoAparelho.outro;
 
   bool get estaOnline => widget.status.trim().toLowerCase() == 'online';
 
-  String get nomeAparelho =>
-      widget.nomePersonalizado ?? (isTv ? 'TV - Cristal' : 'Ar condicionado');
+  String get nomeAparelho => widget.nomePersonalizado ??
+      (isTv ? 'TV - Cristal' : isOutro ? 'Aparelho' : 'Ar condicionado');
 
-  IconData get iconeAparelho => isTv ? Icons.tv_outlined : Icons.air;
+  IconData get iconeAparelho =>
+      isTv ? Icons.tv_outlined : isOutro ? Icons.devices_other_outlined : Icons.air;
 
-  int get pontos => isTv ? 76 : 82;
+  bool get ehGraficoModelo => widget.graficoModelo != null;
 
-  String get avaliacao => isTv ? 'Muito bom' : 'Excelente';
+  List<Map<String, dynamic>> get leiturasModelo {
+    final lista = widget.graficoModelo?['leituras'];
+    if (lista is! List) return <Map<String, dynamic>>[];
+    return lista.whereType<Map>().map((item) => item.map(
+      (key, value) => MapEntry('$key', value),
+    )).toList(growable: false);
+  }
 
-  double get gastoEnergia => isTv ? 12.5 : 28.4;
+  double get consumoModeloKwh {
+    final totalWh = widget.graficoModelo?['consumoAcumulado'];
+    return totalWh is num ? totalWh.toDouble() / 1000 : 0.0;
+  }
 
-  int get horasUsadas => isTv ? 12 : 18;
+  int get intervaloLeituraMinutos =>
+      (widget.graficoModelo?['intervaloLeituraMinutos'] as num?)?.toInt() ?? 1;
 
-  String get terceiraValor => isTv ? '72%' : '23°C';
+  List<double> get serieEnergiaModelo {
+    return leiturasModelo
+        .map((item) => item['energy_wh'])
+        .whereType<num>()
+        .map((item) => item.toDouble() / 1000)
+        .toList(growable: false);
+  }
+
+  List<double> _normalizarSerie(List<double> origem) {
+    if (origem.isEmpty) return <double>[];
+    final maximo = origem.reduce((a, b) => a > b ? a : b);
+    if (maximo <= 0) return List<double>.filled(origem.length, 0.0);
+    return origem.map((valor) => (valor / maximo).clamp(0.0, 1.0).toDouble()).toList(growable: false);
+  }
+
+  List<double> _amostrarSerie(List<double> origem, {int maxPontos = 7}) {
+    if (origem.length <= maxPontos) return origem;
+    return List<double>.generate(maxPontos, (indice) {
+      final posicao = (indice * (origem.length - 1) / (maxPontos - 1)).round();
+      return origem[posicao];
+    }, growable: false);
+  }
+
+  List<String> _etiquetasModelo(int quantidade) {
+    if (quantidade <= 0) return <String>[];
+    if (quantidade == 1) return <String>['1 min'];
+    return List<String>.generate(quantidade, (indice) {
+      final ponto = (indice * (leiturasModelo.length - 1) / (quantidade - 1)).round() + 1;
+      return '${ponto * intervaloLeituraMinutos}m';
+    }, growable: false);
+  }
+
+  int get pontos => isTv ? 76 : isOutro ? 80 : 82;
+
+  String get avaliacao => isTv ? 'Muito bom' : isOutro ? 'Modelo de teste' : 'Excelente';
+
+  double get gastoEnergia => ehGraficoModelo ? consumoModeloKwh : (isTv ? 12.5 : isOutro ? 18.0 : 28.4);
+
+  double get horasUsadas => ehGraficoModelo
+      ? leiturasModelo.length * intervaloLeituraMinutos / 60.0
+      : (isTv ? 12.0 : isOutro ? 8.0 : 18.0);
+
+  String get horasUsadasLabel => ehGraficoModelo
+      ? '${horasUsadas.toStringAsFixed(2).replaceAll('.', ',')} h'
+      : '${horasUsadas.toInt()} h';
+
+  String get terceiraValor => isTv ? '72%' : isOutro ? '—' : '23°C';
 
   List<double> get valoresGrafico {
+    if (ehGraficoModelo) {
+      return _normalizarSerie(_amostrarSerie(serieEnergiaModelo));
+    }
+
     if (periodoSelecionado == '4 semanas') {
       return isTv
           ? <double>[0.38, 0.52, 0.44, 0.61, 0.55, 0.72, 0.66]
@@ -447,6 +795,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   }
 
   List<String> get etiquetasGrafico {
+    if (ehGraficoModelo) return _etiquetasModelo(valoresGrafico.length);
     if (periodoSelecionado == '6 meses') {
       return <String>['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
     }
@@ -456,6 +805,12 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
     }
 
     return <String>['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (ehGraficoModelo) periodoSelecionado = 'Por minuto';
   }
 
   @override
@@ -561,6 +916,36 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                         ],
                       ),
 
+                      const SizedBox(height: 14),
+
+                      // Atalho contextual para dicas da IA sobre este aparelho.
+                      _barraNotificacaoDicas(),
+
+                      if (ehGraficoModelo) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0B8),
+                            borderRadius: BorderRadius.circular(AppRadius.button),
+                            border: Border.all(color: const Color(0xFFE1B54E)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.science_outlined, color: AppColors.primary, size: 18),
+                              const SizedBox(width: 7),
+                              Expanded(
+                                child: Text(
+                                  '${widget.graficoModelo?['nome'] ?? 'Gráfico modelo'} • DADOS SIMULADOS: valores de energia gerados a cada minuto; não são medições reais.',
+                                  style: AppTextStyles.caption,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(height: 20),
 
                       // ==================================================
@@ -662,6 +1047,110 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
     );
   }
 
+  // Barra de notificação com acesso direto às dicas contextualizadas do Gemini.
+  Widget _barraNotificacaoDicas() {
+    return Material(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: _abrirDicasDoAparelho,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceStrong,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                ),
+                child: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dicas para $nomeAparelho',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyBold.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Receba orientações da IA com o contexto deste aparelho.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                ),
+                child: Text(
+                  'Dicas',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _abrirDicasDoAparelho() {
+    final aparelho = widget.aparelhoSelecionado ??
+        AparelhoItem(
+          nome: nomeAparelho,
+          id: '',
+          backendId: widget.deviceBackendId ?? '',
+          tipo: isTv ? 'TV' : isOutro ? widget.aparelhoSelecionado?.tipo ?? 'Outro' : 'Ar condicionado',
+          fabricante: 'Não informado',
+          modelo: 'Não informado',
+          status: widget.status,
+          icone: iconeAparelho,
+          wifi: false,
+          local: widget.local,
+          conexao: 'Não informado',
+        );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TelaAjuda(
+          aparelhoContexto: aparelho,
+          abrirChatInicial: true,
+          graficoModeloId: widget.graficoModelo?['id']?.toString(),
+        ),
+      ),
+    );
+  }
+
   // ================================================================
   // CARD RESUMO COM PENTÁGONO
   // ================================================================
@@ -745,7 +1234,9 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 Text(
                   isTv
                       ? 'Resultado baseado no uso, gasto de energia e tempo de funcionamento.'
-                      : 'Resultado baseado no consumo, horas de uso e eficiência do aparelho.',
+                      : isOutro
+                          ? 'Resumo baseado nas leituras de consumo e funcionamento do aparelho.'
+                          : 'Resultado baseado no consumo, horas de uso e eficiência do aparelho.',
                   style: const TextStyle(
                     color: laranja,
                     fontSize: 12,
@@ -786,7 +1277,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           const Spacer(),
 
           Text(
-            '${gastoEnergia.toStringAsFixed(1)} kWh',
+            '${gastoEnergia.toStringAsFixed(ehGraficoModelo ? 4 : 1).replaceAll('.', ',')} kWh',
             style: const TextStyle(
               color: laranja,
               fontSize: 24,
@@ -858,7 +1349,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           const Spacer(),
 
           Text(
-            '$horasUsadas h',
+            horasUsadasLabel,
             style: const TextStyle(
               color: laranja,
               fontSize: 24,
@@ -882,7 +1373,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           Row(
             children: [
               Icon(
-                isTv ? Icons.trending_flat : Icons.trending_up,
+                isTv ? Icons.trending_flat : isOutro ? Icons.science_outlined : Icons.trending_up,
                 color: marrom,
                 size: 20,
               ),
@@ -890,7 +1381,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
               const SizedBox(width: 4),
 
               Text(
-                isTv ? 'Uso estável' : 'Uso elevado',
+                isTv ? 'Uso estável' : isOutro ? 'Sessão simulada' : 'Uso elevado',
                 style: AppTextStyles.caption,
               ),
             ],
@@ -928,87 +1419,47 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           // ==========================================================
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Uso ao longo do tempo',
+                  ehGraficoModelo ? 'Consumo por minuto' : 'Uso ao longo do tempo',
                   style: AppTextStyles.cardTitle,
                 ),
               ),
 
-              PopupMenuButton<String>(
-                initialValue: periodoSelecionado,
-                color: amareloClaro,
-                onSelected: (valor) {
-                  setState(() {
-                    periodoSelecionado = valor;
-                  });
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.button),
-                ),
-                itemBuilder: (context) {
-                  return const [
-                    PopupMenuItem(
-                      value: '7 dias',
-                      child: Text(
-                        '7 dias',
-                        style: TextStyle(
-                          color: marrom,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-
-                    PopupMenuItem(
-                      value: '4 semanas',
-                      child: Text(
-                        '4 semanas',
-                        style: TextStyle(
-                          color: marrom,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-
-                    PopupMenuItem(
-                      value: '6 meses',
-                      child: Text(
-                        '6 meses',
-                        style: TextStyle(
-                          color: marrom,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ];
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
+              if (ehGraficoModelo)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   decoration: BoxDecoration(
                     color: amareloClaro,
                     borderRadius: BorderRadius.circular(AppRadius.chip),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        periodoSelecionado,
-                        style: AppTextStyles.caption,
-                      ),
-
-                      const SizedBox(width: 4),
-
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: marrom,
-                        size: 17,
-                      ),
-                    ],
+                  child: Text('Por minuto', style: AppTextStyles.caption),
+                )
+              else
+                PopupMenuButton<String>(
+                  initialValue: periodoSelecionado,
+                  color: amareloClaro,
+                  onSelected: (valor) => setState(() => periodoSelecionado = valor),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                  ),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: '7 dias', child: Text('7 dias', style: TextStyle(color: marrom, fontWeight: FontWeight.w700))),
+                    PopupMenuItem(value: '4 semanas', child: Text('4 semanas', style: TextStyle(color: marrom, fontWeight: FontWeight.w700))),
+                    PopupMenuItem(value: '6 meses', child: Text('6 meses', style: TextStyle(color: marrom, fontWeight: FontWeight.w700))),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(color: amareloClaro, borderRadius: BorderRadius.circular(AppRadius.chip)),
+                    child: Row(
+                      children: [
+                        Text(periodoSelecionado, style: AppTextStyles.caption),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.keyboard_arrow_down, color: marrom, size: 17),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
 
@@ -1018,7 +1469,9 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           // DESCRIÇÃO
           // ==========================================================
           Text(
-            periodoSelecionado == '7 dias'
+            ehGraficoModelo
+                ? 'Consumo de energia gerado artificialmente a cada minuto.'
+                : periodoSelecionado == '7 dias'
                 ? 'Veja como o aparelho foi utilizado durante a semana.'
                 : periodoSelecionado == '4 semanas'
                 ? 'Compare o tempo de uso entre as últimas semanas.'
@@ -1078,7 +1531,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isTv ? 'Recomendações' : 'Temperatura',
+            isTv ? 'Recomendações' : isOutro ? 'Dados do aparelho' : 'Temperatura',
             style: const TextStyle(
               color: marrom,
               fontSize: 19,
@@ -1110,6 +1563,25 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 ],
               ),
             ),
+          ] else if (isOutro) ...[
+            const Text(
+              'Leituras simuladas',
+              style: TextStyle(
+                color: laranja,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _itemRecomendacaoGrande(Icons.bolt_rounded, 'Potência variando por minuto'),
+                  _itemRecomendacaoGrande(Icons.electric_meter_outlined, 'Energia acumulada na sessão'),
+                ],
+              ),
+            ),
           ] else ...[
             Text(
               terceiraValor,
@@ -1119,9 +1591,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 fontWeight: FontWeight.w900,
               ),
             ),
-
             const SizedBox(height: 2),
-
             const Text(
               'temperatura atual',
               style: TextStyle(
@@ -1130,18 +1600,12 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-
             const SizedBox(height: 15),
-
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _itemRecomendacaoGrande(
-                    Icons.check_circle_outline,
-                    'Faixa recomendada',
-                  ),
-
+                  _itemRecomendacaoGrande(Icons.check_circle_outline, 'Faixa recomendada'),
                   _itemRecomendacaoGrande(Icons.air, 'Boa condição de uso'),
                 ],
               ),
@@ -1192,7 +1656,7 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
   // ================================================================
 
   Widget _cardEficiencia() {
-    final double eficiencia = isTv ? 0.82 : 0.72;
+    final double eficiencia = isTv ? 0.82 : isOutro ? 0.75 : 0.72;
 
     return _cardBase(
       height: 240,
@@ -1269,7 +1733,9 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           Text(
             isTv
                 ? 'Bom aproveitamento do aparelho.'
-                : 'Há espaço para reduzir o consumo.',
+                : isOutro
+                    ? 'Acompanhe a variação das leituras simuladas.'
+                    : 'Há espaço para reduzir o consumo.',
             style: const TextStyle(
               color: marrom,
               fontSize: 12,
@@ -1326,6 +1792,8 @@ class _TelaGraficosDetalhesState extends State<TelaGraficosDetalhes> {
           local: widget.local,
           indicador: indicador,
           deviceBackendId: widget.deviceBackendId,
+          graficoModelo: widget.graficoModelo,
+          isGenerico: isOutro,
         ),
       ),
     );
