@@ -12,7 +12,9 @@ class ApiException implements Exception {
   const ApiException(this.message, {this.statusCode});
 
   @override
-  String toString() => message;
+  String toString() => statusCode == null
+      ? message
+      : 'HTTP $statusCode: $message';
 }
 
 /// Cliente HTTP único do Fhive. Configure a URL com
@@ -157,9 +159,17 @@ class ApiClient {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       String mensagem = 'Falha na requisição (${response.statusCode}).';
       if (dados is Map) {
-        final doBackend = dados['mensagem'] ?? dados['erro'];
+        final doBackend = dados['mensagem'] ??
+            dados['erro'] ??
+            dados['message'] ??
+            dados['error'];
         if (doBackend is String && doBackend.trim().isNotEmpty) {
-          mensagem = doBackend;
+          mensagem = doBackend.trim();
+        } else if (doBackend is Map) {
+          final detalhe = doBackend['message'] ?? doBackend['mensagem'];
+          if (detalhe is String && detalhe.trim().isNotEmpty) {
+            mensagem = detalhe.trim();
+          }
         }
       }
       if (response.statusCode == 401 && requisicaoAutenticada) {

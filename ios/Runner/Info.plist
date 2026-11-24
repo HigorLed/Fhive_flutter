@@ -29,7 +29,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>O Fhive precisa acessar sua galeria para permitir a escolha de uma foto de perfil.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>O Fhive precisa acessar o backend local durante o desenvolvimento para sincronizar a conta, os aparelhos e as rotinas.</string>
+	<string>O Fhive precisa acessar dispositivos da rede local, como televisões e outros aparelhos inteligentes, para parear e enviar comandos.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

@@ -50,6 +50,52 @@ class DispositivosApi {
     );
   }
 
+
+
+  /// Consulta os metadados do controle local vinculado ao dispositivo.
+  /// O token da TV não é retornado pelo backend; ele fica no armazenamento
+  /// seguro do celular que realizou o pareamento.
+  static Future<Map<String, dynamic>?> controleLocal(String id) async {
+    final resposta = await ApiClient.get(
+      '/dispositivos/${Uri.encodeComponent(id)}/controle',
+    );
+    if (resposta is! Map) {
+      throw const ApiException('A resposta da configuração de controle veio em formato inválido.');
+    }
+    final controle = resposta['controle'];
+    if (controle == null) return null;
+    return _map(controle);
+  }
+
+  /// Registra no backend somente os dados não secretos do vínculo da TV.
+  static Future<Map<String, dynamic>> vincularControleLocal({
+    required String dispositivoId,
+    required String provedor,
+    required String ip,
+    required String nome,
+    required String modelo,
+  }) async {
+    final resposta = await ApiClient.put(
+      '/dispositivos/${Uri.encodeComponent(dispositivoId)}/controle',
+      body: {
+        'provedor': provedor,
+        'ip': ip,
+        'nome': nome,
+        'modelo': modelo,
+      },
+    );
+    if (resposta is! Map) {
+      throw const ApiException('O backend retornou uma resposta inválida ao vincular a TV.');
+    }
+    return _map(resposta);
+  }
+
+  static Future<void> desvincularControleLocal(String dispositivoId) async {
+    await ApiClient.delete(
+      '/dispositivos/${Uri.encodeComponent(dispositivoId)}/controle',
+    );
+  }
+
   static Map<String, dynamic> _map(dynamic value) {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) return value.map((key, item) => MapEntry('$key', item));

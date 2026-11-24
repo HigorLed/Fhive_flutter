@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:tcc_mobile/shared/widgets/dialogo_texto.dart';
 import 'package:tcc_mobile/shared/widgets/cabecalho_pagina.dart';
 import 'package:tcc_mobile/core/theme/theme.dart';
+import 'package:tcc_mobile/core/network/api_client.dart' show ApiException;
 import 'package:tcc_mobile/shared/widgets/barra_navegacao.dart';
 import 'package:tcc_mobile/shared/state/aparelhos_store.dart';
 import 'package:tcc_mobile/features/analytics/presentation/graficos.dart';
+import 'package:tcc_mobile/features/devices/data/dispositivos_api.dart';
+import 'package:tcc_mobile/features/devices/data/samsung_ip_control_service.dart';
+import 'package:tcc_mobile/features/devices/presentation/samsung_tv_discovery_dialog.dart';
 
 class TelaDetalhesAparelho extends StatefulWidget {
   final String nome;
@@ -77,17 +81,36 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
 
   double temperatura = 22;
   double volume = 35;
+  double _volumeConfirmado = 35;
   double brilhoLampada = 76;
   double temperaturaCor = 50;
 
   int velocidadeVentilador = 2;
-  int canalAtual = 12;
+  int canalAtual = 0;
   String modoImagem = 'Padrão';
+
+  bool _samsungCarregando = false;
+  bool _samsungConectada = false;
+  bool _samsungConfiguradaNoBackend = false;
+  bool _estadoSamsungConhecido = false;
+  String? _samsungIp;
+  String? _samsungModelo;
+  String? _samsungNome;
   String modoAr = 'Frio';
   String cenaLampada = 'Relaxar';
   final List<String> _presetsArPersonalizados = <String>[];
   final List<String> _cenasPersonalizadas = <String>[];
   final List<String> _servicosPersonalizados = <String>[];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.tipo == 'TV' && widget.backendId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _restaurarControleSamsung();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +261,541 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     );
   }
 
+  Future<void> _restaurarControleSamsung() async {
+    if (widget.backendId.isEmpty || !mounted) return;
+
+    SamsungTvPairing? pareamento;
+    try {
+      pareamento = await SamsungIpControlService.carregarPareamento(
+        widget.backendId,
+      );
+    } catch (error) {
+      debugPrint('[FHIVE Samsung] Não foi possível ler o pareamento local: $error');
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _samsungConectada = pareamento != null;
+      _samsungIp = pareamento?.ip;
+      _samsungNome = pareamento?.name;
+      _samsungModelo = pareamento?.model;
+      _estadoSamsungConhecido = false;
+    });
+
+    try {
+      final configuracao = await DispositivosApi.controleLocal(widget.backendId);
+      if (!mounted) return;
+      setState(() {
+        _samsungConfiguradaNoBackend = configuracao != null &&
+            configuracao['provedor'] == 'samsung_ip_control';
+        if (pareamento == null && configuracao != null) {
+          _samsungIp = configuracao['ip']?.toString();
+          _samsungNome = configuracao['nome']?.toString();
+          _samsungModelo = configuracao['modelo']?.toString();
+        }
+      });
+    } catch (error) {
+      debugPrint('[FHIVE Samsung] Consulta do vínculo no backend falhou: $error');
+    }
+
+    // Se o token já existe no celular, tenta apenas sincronizar os metadados.
+    // Nunca solicita outro token automaticamente durante a restauração.
+    if (pareamento != null) {
+      await _sincronizarVinculoSamsung(
+        pareamento: pareamento,
+        mostrarSucesso: false,
+        mostrarErro: false,
+      );
+    }
+  }
+
+  Widget _cartaoConexaoSamsung() {
+    final conectado = _samsungConectada && _samsungConfiguradaNoBackend;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: conectado ? AppColors.successSoft : amareloCard,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(
+          color: conectado
+              ? AppColors.success.withValues(alpha: 0.35)
+              : marrom.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                conectado ? Icons.link_rounded : Icons.link_off_rounded,
+                color: conectado ? AppColors.success : marrom,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  conectado ? 'Samsung conectada' : 'Conexão com a televisão',
+                  style: AppTextStyles.bodyBold,
+                ),
+              ),
+              if (_samsungCarregando)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else if (conectado)
+                IconButton(
+                  tooltip: 'Atualizar estado da TV',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _atualizarEstadoSamsung(),
+                  icon: const Icon(Icons.refresh_rounded, color: marrom),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            conectado
+                ? '${_samsungNome ?? 'Samsung Smart TV'} • ${_samsungIp ?? ''}\n${_samsungModelo ?? 'Modelo Samsung'}'
+                : _samsungConectada && !_samsungConfiguradaNoBackend
+                    ? 'A TV já autorizou este celular, mas o backend ainda não registrou o vínculo. Você pode tentar novamente sem pedir outra autorização à TV.'
+                    : _samsungConfiguradaNoBackend
+                        ? 'A TV está vinculada no FHIVE, mas este celular ainda precisa realizar o pareamento local.'
+                        : 'Procure a TV Samsung na mesma rede Wi-Fi e autorize o FHIVE na televisão.',
+            style: TextStyle(
+              color: marrom.withValues(alpha: 0.78),
+              fontSize: 11,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (_samsungConectada && !_samsungConfiguradaNoBackend)
+                FilledButton.icon(
+                  onPressed: _samsungCarregando
+                      ? null
+                      : () => _sincronizarVinculoSamsung(),
+                  icon: const Icon(Icons.sync_rounded, size: 18),
+                  label: const Text('Tentar vínculo novamente'),
+                )
+              else
+                FilledButton.icon(
+                  onPressed: _samsungCarregando ? null : _conectarSamsung,
+                  icon: Icon(
+                    conectado ? Icons.refresh_rounded : Icons.wifi_find_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    conectado ? 'Parear outra TV' : 'Procurar TV Samsung',
+                  ),
+                ),
+              if (_samsungConectada && !_samsungConfiguradaNoBackend)
+                OutlinedButton.icon(
+                  onPressed: _samsungCarregando ? null : _conectarSamsung,
+                  icon: const Icon(Icons.tv_rounded, size: 17),
+                  label: const Text('Escolher outra TV'),
+                ),
+              if (conectado)
+                OutlinedButton.icon(
+                  onPressed: _samsungCarregando ? null : _desconectarSamsung,
+                  icon: const Icon(Icons.link_off_rounded, size: 17),
+                  label: const Text('Desvincular'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _conectarSamsung() async {
+    if (widget.backendId.isEmpty) {
+      _mensagem('Este aparelho ainda não possui um registro no backend FHIVE.');
+      return;
+    }
+
+    final tv = await showDialog<SamsungTvCandidate>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const SamsungTvDiscoveryDialog(),
+    );
+    if (!mounted || tv == null) return;
+
+    setState(() => _samsungCarregando = true);
+
+    SamsungTvPairing pareamento;
+    try {
+      _mensagem('Solicitando autorização na TV. Confirme na tela da televisão.');
+      pareamento = await SamsungIpControlService.parear(
+        dispositivoBackendId: widget.backendId,
+        tv: tv,
+      );
+    } on SamsungTvCommandException catch (error) {
+      debugPrint('[FHIVE Samsung] Falha na etapa de autorização da TV: $error');
+      if (mounted) {
+        _mensagem('A TV não concluiu o pareamento: ${error.toString()}');
+      }
+      return;
+    } catch (error, stackTrace) {
+      debugPrint('[FHIVE Samsung] Erro inesperado no pareamento local: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        _mensagem('Falha ao parear diretamente com a TV: $error');
+      }
+      return;
+    } finally {
+      if (mounted) setState(() => _samsungCarregando = false);
+    }
+
+    // Neste ponto, a Samsung já autorizou o celular e o token já está salvo
+    // no armazenamento seguro. A etapa seguinte é somente o vínculo no backend.
+    if (!mounted) return;
+    setState(() {
+      _samsungConectada = true;
+      _samsungConfiguradaNoBackend = false;
+      _estadoSamsungConhecido = false;
+      _samsungIp = pareamento.ip;
+      _samsungNome = pareamento.name;
+      _samsungModelo = pareamento.model;
+    });
+
+    await _sincronizarVinculoSamsung(
+      pareamento: pareamento,
+      mostrarSucesso: true,
+    );
+  }
+
+  /// Registra/sincroniza somente os metadados no backend.
+  /// Em caso de HTTP 400/500, o token local permanece salvo e este método
+  /// pode ser repetido sem solicitar um novo token à televisão.
+  Future<void> _sincronizarVinculoSamsung({
+    SamsungTvPairing? pareamento,
+    bool mostrarSucesso = true,
+    bool mostrarErro = true,
+  }) async {
+    if (widget.backendId.isEmpty) {
+      if (mostrarErro) _mensagem('O aparelho FHIVE não possui ID de backend.');
+      return;
+    }
+
+    if (!mounted) return;
+    var vinculadoComSucesso = false;
+    setState(() => _samsungCarregando = true);
+    try {
+      final pairing = pareamento ??
+          await SamsungIpControlService.carregarPareamento(widget.backendId);
+
+      if (pairing == null) {
+        throw const SamsungTvCommandException(
+          mensagem: 'Não existe token Samsung salvo neste celular. Faça o pareamento com a TV primeiro.',
+        );
+      }
+
+      await DispositivosApi.vincularControleLocal(
+        dispositivoId: widget.backendId,
+        provedor: 'samsung_ip_control',
+        ip: pairing.ip,
+        nome: pairing.name,
+        modelo: pairing.model,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _samsungConectada = true;
+        _samsungConfiguradaNoBackend = true;
+        _samsungIp = pairing.ip;
+        _samsungNome = pairing.name;
+        _samsungModelo = pairing.model;
+      });
+      vinculadoComSucesso = true;
+
+      if (mostrarSucesso) {
+        _mensagem('TV Samsung pareada e vínculo FHIVE registrado com sucesso.');
+      }
+    } on ApiException catch (error) {
+      debugPrint('[FHIVE Samsung] TV já pareada localmente; API FHIVE recusou o vínculo: $error');
+      if (!mounted) return;
+      setState(() => _samsungConfiguradaNoBackend = false);
+      if (mostrarErro) {
+        _mensagem(
+          'O pareamento com a TV foi concluído e o token está salvo neste celular, mas o backend recusou o vínculo (${error.toString()}). Use “Tentar vínculo novamente”; não é necessário parear outra vez.',
+        );
+      }
+    } on SamsungTvCommandException catch (error) {
+      // O pareamento/vínculo já foi registrado; esta falha ocorre na consulta
+      // posterior de estado da TV, não na gravação do vínculo.
+      debugPrint('[FHIVE Samsung] Falha ao consultar a TV após o vínculo: $error');
+      if (mounted && mostrarErro) {
+        _mensagem('Vínculo salvo no FHIVE, mas não foi possível consultar o estado da TV: $error');
+      }
+    } catch (error, stackTrace) {
+      debugPrint('[FHIVE Samsung] Falha ao sincronizar vínculo: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) setState(() => _samsungConfiguradaNoBackend = false);
+      if (mounted && mostrarErro) {
+        _mensagem('O token da TV foi preservado, mas o vínculo no backend falhou: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _samsungCarregando = false);
+    }
+
+    if (vinculadoComSucesso && mounted) {
+      await _atualizarEstadoSamsung(silencioso: true);
+    }
+  }
+
+  Future<void> _desconectarSamsung() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Desvincular televisão?'),
+        content: const Text(
+          'O FHIVE removerá o token salvo neste celular e o vínculo de controle deste aparelho.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Desvincular'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmar != true) return;
+
+    setState(() => _samsungCarregando = true);
+    await SamsungIpControlService.removerPareamento(widget.backendId);
+    if (mounted) {
+      setState(() {
+        _samsungConectada = false;
+        _samsungConfiguradaNoBackend = false;
+        _estadoSamsungConhecido = false;
+        _samsungIp = null;
+        _samsungNome = null;
+        _samsungModelo = null;
+      });
+    }
+
+    try {
+      await DispositivosApi.desvincularControleLocal(widget.backendId);
+      if (mounted) _mensagem('Controle Samsung desvinculado.');
+    } catch (error) {
+      if (mounted) {
+        _mensagem(
+          'O token foi removido deste celular, mas o backend não confirmou a remoção do vínculo: ${error.toString()}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _samsungCarregando = false);
+    }
+  }
+
+  Future<void> _atualizarEstadoSamsung({bool silencioso = false}) async {
+    if (!_samsungConectada || !_samsungConfiguradaNoBackend || _samsungCarregando) return;
+    setState(() => _samsungCarregando = true);
+    try {
+      final resposta = await SamsungIpControlService.consultarEstado(widget.backendId);
+      final tv = resposta['tv'] is Map
+          ? Map<String, dynamic>.from(resposta['tv'] as Map)
+          : <String, dynamic>{};
+      final energia = resposta['energia'] is Map
+          ? Map<String, dynamic>.from(resposta['energia'] as Map)
+          : <String, dynamic>{};
+
+      final volumeLido = double.tryParse('${tv['volume'] ?? ''}');
+      final muteValor = '${tv['mute'] ?? ''}'.toLowerCase();
+      final powerValor = '${energia['power'] ?? ''}'.toLowerCase();
+      final canalLido = int.tryParse('${tv['channelNum'] ?? tv['channel'] ?? ''}');
+
+      if (!mounted) return;
+      setState(() {
+        if (volumeLido != null) {
+          volume = volumeLido.clamp(0, 100).toDouble();
+          _volumeConfirmado = volume;
+        }
+        if (muteValor.isNotEmpty) {
+          mudo = muteValor == 'muteon' || muteValor == 'true' || muteValor == 'on';
+        }
+        if (powerValor.isNotEmpty) {
+          ligado = powerValor == 'poweron' || powerValor == 'on';
+          _estadoSamsungConhecido = true;
+        }
+        if (canalLido != null) canalAtual = canalLido;
+      });
+      if (!silencioso) _mensagem('Estado da televisão atualizado.');
+    } catch (error) {
+      if (!silencioso && mounted) {
+        _mensagem('Não foi possível consultar a TV: ${error.toString()}');
+      }
+    } finally {
+      if (mounted) setState(() => _samsungCarregando = false);
+    }
+  }
+
+  Future<bool> _executarComandoSamsung(
+    Future<void> Function() executar, {
+    required String sucesso,
+  }) async {
+    if (!_samsungConectada) {
+      _mensagem('Conecte e autorize uma TV Samsung antes de enviar comandos.');
+      return false;
+    }
+    if (!_samsungConfiguradaNoBackend) {
+      _mensagem('O backend ainda não confirmou o vínculo deste aparelho. Verifique sua conexão com o FHIVE e tente parear novamente.');
+      return false;
+    }
+    if (_samsungCarregando) return false;
+
+    setState(() => _samsungCarregando = true);
+    try {
+      await executar();
+      if (mounted) _mensagem(sucesso);
+      return true;
+    } on SamsungTvCommandException catch (error) {
+      if (!mounted) return false;
+      final codigo = error.codigo;
+      if (codigo == '-32601' || codigo == '-32602' || codigo == '-32003') {
+        _mensagem('A sua TV não oferece suporte a esse comando ou parâmetro. ${error.mensagem}');
+      } else if (codigo == '-32010') {
+        setState(() => _samsungConectada = false);
+        _mensagem('A autorização da TV expirou ou foi substituída. Faça o pareamento novamente.');
+      } else {
+        _mensagem(error.mensagem);
+      }
+      return false;
+    } catch (error) {
+      if (mounted) _mensagem('Falha ao enviar comando: ${error.toString()}');
+      return false;
+    } finally {
+      if (mounted) setState(() => _samsungCarregando = false);
+    }
+  }
+
+  Future<void> _alternarEnergiaSamsung() => _definirEnergiaSamsung(!ligado);
+
+  Future<void> _definirEnergiaSamsung(bool novoEstado) async {
+    await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.definirEnergia(
+          widget.backendId,
+          ligado: novoEstado,
+        );
+        if (mounted) setState(() => ligado = novoEstado);
+      },
+      sucesso: novoEstado ? 'Comando para ligar enviado à TV.' : 'Comando para desligar enviado à TV.',
+    );
+  }
+
+  Future<void> _enviarVolumeSamsung(double valor) async {
+    final enviado = await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.definirVolume(
+          widget.backendId,
+          volume: valor.round(),
+        );
+        if (mounted) {
+          setState(() {
+            volume = valor;
+            _volumeConfirmado = valor;
+          });
+        }
+      },
+      sucesso: 'Volume atualizado para ${valor.round()}%.',
+    );
+
+    if (!enviado && mounted) {
+      setState(() => volume = _volumeConfirmado);
+    }
+  }
+
+  Future<void> _alterarVolumeRelativoSamsung(bool aumentar) async {
+    await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.alterarVolumeRelativo(
+          widget.backendId,
+          aumentar: aumentar,
+        );
+        if (mounted) {
+          setState(() {
+            volume = (volume + (aumentar ? 1 : -1)).clamp(0, 100).toDouble();
+            _volumeConfirmado = volume;
+          });
+        }
+      },
+      sucesso: aumentar ? 'Volume aumentado.' : 'Volume diminuído.',
+    );
+  }
+
+  Future<void> _definirSilencioSamsung(bool novoEstado) async {
+    await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.definirSilencio(
+          widget.backendId,
+          silenciado: novoEstado,
+        );
+        if (mounted) setState(() => mudo = novoEstado);
+      },
+      sucesso: novoEstado ? 'Televisão silenciada.' : 'Som da televisão ativado.',
+    );
+  }
+
+  Future<void> _trocarCanalSamsung({required bool avancar}) async {
+    await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.trocarCanal(
+          widget.backendId,
+          avancar: avancar,
+        );
+        if (mounted && canalAtual > 0) {
+          setState(() => canalAtual = (canalAtual + (avancar ? 1 : -1)).clamp(0, 999));
+        }
+      },
+      sucesso: avancar ? 'Comando para avançar um canal enviado.' : 'Comando para voltar um canal enviado.',
+    );
+  }
+
+  Future<void> _abrirAplicativoSamsung(String nome) async {
+    const aplicativos = <String, String>{
+      'YouTube': 'youTube',
+      'Netflix': 'netflix',
+      'Prime': 'amazon',
+    };
+    final applicationName = aplicativos[nome];
+    if (applicationName == null) {
+      _mensagem('O aplicativo $nome ainda não foi validado nesta TV. Nenhum comando foi enviado.');
+      return;
+    }
+
+    await _executarComandoSamsung(
+      () => SamsungIpControlService.abrirAplicativo(
+        widget.backendId,
+        applicationName: applicationName,
+      ),
+      sucesso: 'Solicitação para abrir $nome enviada. Confira a tela da TV.',
+    );
+  }
+
+  Future<void> _alterarModoImagemSamsung(String modo) async {
+    await _executarComandoSamsung(
+      () async {
+        await SamsungIpControlService.definirModoImagem(
+          widget.backendId,
+          modo: modo,
+        );
+        if (mounted) setState(() => modoImagem = modo);
+      },
+      sucesso: 'Modo de imagem $modo aplicado.',
+    );
+  }
+
   Widget _conteudoPorTipo() {
     switch (widget.tipo) {
       case 'TV':
@@ -258,6 +816,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
   }
 
   Widget _conteudoTV() {
+    final estadoConhecido = _samsungConectada && _estadoSamsungConhecido;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -310,7 +869,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                           decoration: BoxDecoration(
-                            color: ligado
+                            color: estadoConhecido && ligado
                                 ? AppColors.successSoft
                                 : AppColors.surfaceLight.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(AppRadius.card),
@@ -319,13 +878,21 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                ligado ? Icons.check_circle : Icons.power_settings_new,
+                                estadoConhecido && ligado
+                                    ? Icons.check_circle
+                                    : Icons.power_settings_new,
                                 size: 13,
-                                color: ligado ? AppColors.success : marrom,
+                                color: estadoConhecido && ligado
+                                    ? AppColors.success
+                                    : marrom,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                ligado ? 'Ligada' : 'Desligada',
+                                !estadoConhecido
+                                    ? 'Estado não consultado'
+                                    : ligado
+                                        ? 'Ligada'
+                                        : 'Desligada',
                                 style: const TextStyle(
                                   color: marrom,
                                   fontSize: 10,
@@ -344,7 +911,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
                     shape: const CircleBorder(),
                     child: IconButton(
                       tooltip: ligado ? 'Desligar TV' : 'Ligar TV',
-                      onPressed: () => setState(() => ligado = !ligado),
+                      onPressed: _samsungCarregando ? null : _alternarEnergiaSamsung,
                       icon: Icon(
                         ligado ? Icons.power_settings_new_rounded : Icons.power_settings_new,
                         color: AppColors.white,
@@ -358,7 +925,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => setState(() => ligado = !ligado),
+                  onPressed: _samsungCarregando ? null : _alternarEnergiaSamsung,
                   icon: Icon(ligado ? Icons.power_off_rounded : Icons.power_rounded),
                   label: Text(ligado ? 'Desligar TV' : 'Ligar TV'),
                 ),
@@ -366,6 +933,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
             ],
           ),
         ),
+        const SizedBox(height: 14),
+        _cartaoConexaoSamsung(),
         const SizedBox(height: 18),
         const Text(
           'Controles rápidos',
@@ -380,6 +949,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           textoValor: '${volume.round()}%',
           iconeFinal: Icons.volume_up_rounded,
           onChanged: (valor) => setState(() => volume = valor),
+          onChangeEnd: (valor) => _enviarVolumeSamsung(valor),
+          enabled: _samsungConectada && _samsungConfiguradaNoBackend && !_samsungCarregando,
         ),
         const SizedBox(height: 9),
         Container(
@@ -400,17 +971,17 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               ),
               IconButton.filledTonal(
                 visualDensity: VisualDensity.compact,
-                onPressed: () => setState(() => canalAtual = (canalAtual - 1).clamp(1, 999)),
+                onPressed: !_samsungConectada || !_samsungConfiguradaNoBackend || _samsungCarregando ? null : () => _trocarCanalSamsung(avancar: false),
                 icon: const Icon(Icons.remove_rounded),
                 style: IconButton.styleFrom(foregroundColor: marrom, backgroundColor: AppColors.surfaceLight),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 9),
-                child: Text('$canalAtual', style: AppTextStyles.cardTitle),
+                child: Text(canalAtual > 0 ? '$canalAtual' : '—', style: AppTextStyles.cardTitle),
               ),
               IconButton.filledTonal(
                 visualDensity: VisualDensity.compact,
-                onPressed: () => setState(() => canalAtual = (canalAtual + 1).clamp(1, 999)),
+                onPressed: !_samsungConectada || !_samsungConfiguradaNoBackend || _samsungCarregando ? null : () => _trocarCanalSamsung(avancar: true),
                 icon: const Icon(Icons.add_rounded),
                 style: IconButton.styleFrom(foregroundColor: marrom, backgroundColor: AppColors.surfaceLight),
               ),
@@ -422,13 +993,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           'Desligamento automático',
           temporizador,
           Icons.timer_outlined,
-          (valor) => setState(() => temporizador = valor),
-        ),
-        _linhaSwitch(
-          'Controle remoto',
-          controleRemoto,
-          Icons.settings_remote_outlined,
-          (valor) => setState(() => controleRemoto = valor),
+          (valor) => _mensagem(
+            'O temporizador ainda não foi validado para esta TV. Nenhuma alteração foi enviada.',
+          ),
         ),
         const SizedBox(height: 12),
         const Text(
@@ -449,7 +1016,9 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               ),
               label: Text(modo),
               selected: selecionado,
-              onSelected: (_) => setState(() => modoImagem = modo),
+              onSelected: _samsungConectada && _samsungConfiguradaNoBackend && !_samsungCarregando
+                  ? (_) => _alterarModoImagemSamsung(modo)
+                  : null,
               selectedColor: amareloBotao,
               backgroundColor: amareloCard,
               labelStyle: const TextStyle(color: marrom, fontWeight: FontWeight.w800, fontSize: 12),
@@ -493,7 +1062,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
           _streamingGrid(),
           const SizedBox(height: 8),
           Text(
-            'Os comandos são demonstrativos nesta versão. O controle físico será conectado futuramente ao serviço IoT.',
+            'Os comandos compatíveis são enviados diretamente à TV pela rede Wi-Fi. Aplicativos não validados são bloqueados com uma mensagem.',
             style: TextStyle(
               color: marrom.withValues(alpha: 0.7),
               fontSize: 10,
@@ -626,39 +1195,38 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     _mensagem('Atalho "${dados.$1}" adicionado. Toque nele para executar; mantenha pressionado para remover.');
   }
 
-  void _executarAtalhoTV(String comando) {
-    setState(() {
-      switch (comando) {
-        case 'Ligar TV':
-          ligado = true;
-          break;
-        case 'Desligar TV':
-          ligado = false;
-          break;
-        case 'Aumentar volume':
-          volume = (volume + 5).clamp(0, 100).toDouble();
-          break;
-        case 'Diminuir volume':
-          volume = (volume - 5).clamp(0, 100).toDouble();
-          break;
-        case 'Silenciar':
-          mudo = !mudo;
-          break;
-        case 'Canal +':
-          canalAtual = (canalAtual + 1).clamp(1, 999);
-          break;
-        case 'Canal -':
-          canalAtual = (canalAtual - 1).clamp(1, 999);
-          break;
-        case 'Modo Cinema':
-          modoImagem = 'Cinema';
-          break;
-        case 'Modo Jogo':
-          modoImagem = 'Jogo';
-          break;
-      }
-    });
-    _mensagem('Atalho executado: $comando. A ação é local nesta versão de demonstração.');
+  Future<void> _executarAtalhoTV(String comando) async {
+    switch (comando) {
+      case 'Ligar TV':
+        await _definirEnergiaSamsung(true);
+        break;
+      case 'Desligar TV':
+        await _definirEnergiaSamsung(false);
+        break;
+      case 'Aumentar volume':
+        await _alterarVolumeRelativoSamsung(true);
+        break;
+      case 'Diminuir volume':
+        await _alterarVolumeRelativoSamsung(false);
+        break;
+      case 'Silenciar':
+        await _definirSilencioSamsung(!mudo);
+        break;
+      case 'Canal +':
+        await _trocarCanalSamsung(avancar: true);
+        break;
+      case 'Canal -':
+        await _trocarCanalSamsung(avancar: false);
+        break;
+      case 'Modo Cinema':
+        await _alterarModoImagemSamsung('Cinema');
+        break;
+      case 'Modo Jogo':
+        await _alterarModoImagemSamsung('Jogo');
+        break;
+      default:
+        _mensagem('Esse atalho não possui um comando físico configurado.');
+    }
   }
 
   Future<void> _removerAtalhoTV(String id) async {
@@ -990,6 +1558,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
     required String textoValor,
     required IconData iconeFinal,
     required ValueChanged<double> onChanged,
+    ValueChanged<double>? onChangeEnd,
+    bool enabled = true,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1016,7 +1586,8 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               min: min,
               max: max,
               value: valor.clamp(min, max).toDouble(),
-              onChanged: onChanged,
+              onChanged: enabled ? onChanged : null,
+              onChangeEnd: enabled ? onChangeEnd : null,
             ),
           ),
         ),
@@ -1177,9 +1748,7 @@ class _TelaDetalhesAparelhoState extends State<TelaDetalhesAparelho> {
               if (ehAdicionar) {
                 _adicionarServicoStreaming();
               } else {
-                _mensagem(
-                  'O serviço ${item.$1} foi selecionado. Para abrir o streaming, é necessário configurar o aplicativo ou link externo correspondente.',
-                );
+                _abrirAplicativoSamsung(item.$1);
               }
             },
             borderRadius: BorderRadius.circular(7),
